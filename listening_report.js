@@ -812,6 +812,18 @@ function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
 }
 
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function rgbToHex(rgb){
+  return '#' + rgb.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+}
+function lerpColor(hexLow, hexHigh, t){
+  const a = hexToRgb(hexLow), b = hexToRgb(hexHigh);
+  return rgbToHex(a.map((v,i) => v + (b[i]-v)*t));
+}
+
 // Renders a hoverable world map into #containerId, keyed on ISO2 country codes.
 // countryRows: [{country, iso, count, topArtist, topArtistCount}], from countryRowsFor().
 function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
@@ -822,8 +834,23 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
   const withIso = (countryRows||[]).filter(c=>c.iso);
   if(!withIso.length) return;
 
-  const values = {}, meta = {};
-  withIso.forEach(c=>{ values[c.iso] = c.count; meta[c.iso] = c; });
+  const meta = {};
+  withIso.forEach(c=>{ meta[c.iso] = c; });
+
+  // Compute each region's fill color ourselves (dark -> gold, low -> high play count)
+  // rather than leaning on jsVectorMap's built-in scale/normalizeFunction, whose
+  // min/max direction turned out unreliable for this skewed data. A log scale keeps
+  // a handful of huge countries from crushing every smaller one to the same shade.
+  const counts = withIso.map(c=>c.count);
+  const maxCount = Math.max(...counts), minCount = Math.min(...counts);
+  const LOW = '#5c4a30', HIGH = '#d6a24c';
+  const fillByIso = {};
+  withIso.forEach(c=>{
+    const t = maxCount>minCount
+      ? Math.log(c.count-minCount+1) / Math.log(maxCount-minCount+1)
+      : 1;
+    fillByIso[c.iso] = lerpColor(LOW, HIGH, Math.max(t, 0.12));
+  });
 
   MAP_REFS[refKey] = new jsVectorMap({
     selector: '#'+containerId,
@@ -838,9 +865,8 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     },
     series: {
       regions: [{
-        values,
-        scale: ['#5c4a30', '#d6a24c'],
-        normalizeFunction: 'polynomial'
+        attribute: 'fill',
+        values: fillByIso
       }]
     },
     onRegionTooltipShow(event, tooltip, code){

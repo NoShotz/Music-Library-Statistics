@@ -480,9 +480,9 @@ function renderOverview(){
   s.forEach(r=>{ artistCounts[r.artist] = (artistCounts[r.artist]||0)+1; });
   const uniqueArtists = Object.keys(artistCounts).length;
 
-  const topArtists = topN(s, r=>r.artist, 10, (k,c)=>({artist:k,count:c}));
-  const topTracks = topN(s, r=>r.artist+'|||'+r.track, 10, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
-  const topAlbums = topN(s, r=>r.artist+'|||'+r.album, 10, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; });
+  const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
+  const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
+  const topAlbums = topN(s, r=>r.artist+'|||'+r.album, 5, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; });
 
   const yearCounts = {};
   s.forEach(r=>{ yearCounts[r.year] = (yearCounts[r.year]||0)+1; });

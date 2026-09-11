@@ -80,7 +80,7 @@
   }
   .hero-num{
     font-family:'Bebas Neue',sans-serif;
-    font-size:88px;
+    font-size:96px;
     line-height:0.85;
     letter-spacing:.01em;
     color:var(--gold);
@@ -153,7 +153,7 @@
   .two-col{
     display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }
-  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:64px;} }
+  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:72px;} }
 
   /* ---------- CHART LIST (ranked) ---------- */
   .ranked{list-style:none;margin:0;padding:0;}
@@ -182,11 +182,6 @@
     font-size:14.5px;line-height:1.6;color:var(--text);
   }
   .callout b{color:var(--gold);}
-  .callout.pending{
-    border-left-color:var(--muted-2);
-    background:linear-gradient(90deg, rgba(122,108,92,0.09), transparent);
-    color:var(--muted);
-  }
 
   .fact-grid{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -204,37 +199,22 @@
     margin-top:60px;font-family:'JetBrains Mono',monospace;
     letter-spacing:.05em;
   }
-
-  code{font-family:'JetBrains Mono',monospace;}
 </style>
 </head>
 <body>
-
-<div id="loadError" style="display:none; max-width:600px; margin:100px auto; text-align:center; font-size:14px; color:var(--muted); line-height:1.65; padding:0 24px;">
-  <p style="font-family:'Bebas Neue',sans-serif; font-size:30px; color:var(--gold); margin-bottom:14px; letter-spacing:.02em;">Couldn't load lastfm_data.json</p>
-  <p>This page reads your raw Last.fm export straight from <code style="color:var(--teal);">lastfm_data.json</code>, which needs to sit in the <b style="color:var(--text);">same folder</b> as this HTML file. To update the report, just drop in a fresh export renamed to that exact filename.</p>
-  <p>Most browsers block a page opened by double-click (a <code style="color:var(--teal);">file://</code> URL) from fetching another local file. Run a tiny local server from that folder instead, e.g.:</p>
-  <p style="font-family:'JetBrains Mono',monospace; background:var(--surface-2); padding:10px 16px; display:inline-block; margin:10px 0; border:1px solid var(--hair);">python3 -m http.server 8000</p>
-  <p>then open <span style="color:var(--teal);">http://localhost:8000/listening_report.html</span> in your browser.</p>
-</div>
-
-<div class="wrap" id="mainWrap" style="display:none;">
+<div class="wrap">
 
   <div class="hero">
     <div class="vinyl"></div>
     <div class="hero-text">
-      <p class="eyebrow">Listening Report · <span id="heroUser"></span></p>
-      <p class="hero-num" id="heroScrobbles">—</p>
-      <p class="eyebrow" style="margin-top:2px;">scrobbles logged</p>
-      <p class="hero-sub">Spanning <b id="heroSpan">—</b> of Last.fm history — <span id="heroDates"></span>.</p>
+      <p class="eyebrow">Listening Report · noshotz</p>
+      <p class="hero-num" id="heroHours">—</p>
+      <p class="eyebrow" style="margin-top:2px;">hours logged</p>
+      <p class="hero-sub">Drawn from <b id="heroScrobbles">—</b> scrobbles across <b id="heroSpan">—</b> of Last.fm history — <span id="heroDates"></span>.</p>
     </div>
   </div>
 
   <div class="stat-grid" id="statGrid"></div>
-
-  <div id="countryPendingNotice" class="callout pending" style="display:none; margin-top:20px;">
-    No <code>artist_countries.json</code> found alongside this page yet, so Canadian-content stats are hidden. Drop that file in the same folder (mapping artist name → country) and reload to enable them.
-  </div>
 
   <!-- SIDE A -->
   <div class="side">
@@ -245,17 +225,20 @@
 
   <div class="card">
     <h3>Scrobbles per year</h3>
-    <p class="desc">Volume of tracked listening, year over year.</p>
+    <p class="desc">Volume of tracked listening, 2016 – present. Dashed line marks CanCon Radio going live (Mar 20, 2026).</p>
     <div class="chart-box"><canvas id="yearChart"></canvas></div>
   </div>
 
-  <div class="card" id="canChartCard" style="display:none;">
+  <div class="card">
     <h3>Canadian content, year over year</h3>
-    <p class="desc">Share of scrobbles by Canadian artists.</p>
+    <p class="desc">Share of scrobbles by Canadian artists, before and after the CanCon Radio build.</p>
     <div class="chart-box"><canvas id="canChart"></canvas></div>
   </div>
 
-  <div class="callout" id="canCallout" style="display:none;"></div>
+  <div class="callout">
+    Lifetime average sits at <b id="lifetimePct">—</b>% Canadian — dragged down by a decade of pre-2026 history.
+    The last 30 days run <b id="recentPct">—</b>%, right at target.
+  </div>
 
   <div class="two-col">
     <div class="card">
@@ -272,7 +255,7 @@
 
   <div class="card">
     <h3>Top albums</h3>
-    <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
+    <p class="desc">Combined plays across all tracks from that album in your library.</p>
     <ol class="ranked" id="albumList"></ol>
   </div>
 
@@ -291,9 +274,15 @@
     </div>
     <div class="card">
       <h3>Day of week</h3>
-      <p class="desc">Which days you listen most.</p>
+      <p class="desc">Weekday listening dominates.</p>
       <div class="chart-box"><canvas id="dowChart"></canvas></div>
     </div>
+  </div>
+
+  <div class="card">
+    <h3>Decade of release</h3>
+    <p class="desc">What era the music you play actually comes from (matched tracks only).</p>
+    <div class="chart-box"><canvas id="decadeChart"></canvas></div>
   </div>
 
   <div class="card">
@@ -305,13 +294,14 @@
   <div class="fact-grid">
     <div class="fact"><div class="fact-num" id="factStreak">—</div><div class="fact-lbl">longest consecutive listening streak, days</div></div>
     <div class="fact"><div class="fact-num" id="factArtists">—</div><div class="fact-lbl">unique artists ever scrobbled</div></div>
-    <div class="fact"><div class="fact-num" id="factActive">—</div><div class="fact-lbl">of days since tracking began had at least one scrobble</div></div>
+    <div class="fact"><div class="fact-num" id="factActive">—</div><div class="fact-lbl">of days since 2016 had at least one scrobble</div></div>
     <div class="fact"><div class="fact-num" id="factTop10">—</div><div class="fact-lbl">of all scrobbles come from just your top 10 artists</div></div>
   </div>
 
-  <footer>END OF SIDE B — DATA SOURCE: LAST.FM EXPORT (LIVE-LOADED, UNMODIFIED)</footer>
+  <footer>END OF SIDE B — DATA SOURCE: LAST.FM EXPORT + MUSICBEE LIBRARY EXPORT</footer>
 </div>
 
 <script src="listening_report.js"></script>
+
 </body>
 </html>

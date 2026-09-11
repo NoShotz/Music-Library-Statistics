@@ -830,7 +830,7 @@ function renderReport(){
   renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist);
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
-  const DISCOVERY_LIMIT = 12;
+  const DISCOVERY_LIMIT = 5;
   renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.');
   renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.');
   renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.');

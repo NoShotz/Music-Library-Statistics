@@ -837,7 +837,7 @@ function renderReport(){
   destroyChart('hour');
   CHART_REFS.hour = new Chart(document.getElementById('reportHourChart'), {
     type:'bar',
-    data:{ labels: cur.hourArr.map((_,h)=> (h%12===0?12:h%12) + (h<12?'a':'p')),
+    data:{ labels: cur.hourArr.map((_,h)=> (h%12===0?12:h%12) + (h<12?'AM':'PM')),
       datasets:[{ data: cur.hourArr, backgroundColor:'rgba(90,154,148,0.35)', borderRadius:2 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:8 } }, y:{ grid:{color:'#241d16'} } } }

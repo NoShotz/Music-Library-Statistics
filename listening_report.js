@@ -9,6 +9,7 @@ let GLOBAL_FIRST = null;   // {firstArtist, firstAlbum, firstTrack} -> earliest 
 let PERIOD_INDEXES = null; // {year:[...], month:[...], week:[...]} continuous, ascending
 
 const CHART_REFS = {};     // holds Chart.js instances so we can destroy/recreate on re-render
+const MAP_REFS = {};       // holds jsVectorMap instances so we can destroy/recreate on re-render
 
 const STATE = { reportType: 'year', reportKey: null };
 
@@ -293,6 +294,77 @@ function totalSecondsFor(scrobbles){
   return total;
 }
 
+// Maps common English country names (MusicBrainz-style, including UK constituent
+// countries) to ISO 3166-1 alpha-2 codes, which is what the world map's regions use.
+const COUNTRY_NAME_TO_ISO2 = (() => {
+  const table = {
+    'Afghanistan':'AF','Albania':'AL','Algeria':'DZ','Andorra':'AD','Angola':'AO',
+    'Argentina':'AR','Armenia':'AM','Australia':'AU','Austria':'AT','Azerbaijan':'AZ',
+    'Bahamas':'BS','Bahrain':'BH','Bangladesh':'BD','Barbados':'BB','Belarus':'BY',
+    'Belgium':'BE','Belize':'BZ','Benin':'BJ','Bhutan':'BT','Bolivia':'BO',
+    'Bosnia and Herzegovina':'BA','Botswana':'BW','Brazil':'BR','Brunei':'BN',
+    'Bulgaria':'BG','Burkina Faso':'BF','Burundi':'BI','Cambodia':'KH','Cameroon':'CM',
+    'Canada':'CA','Cape Verde':'CV','Cabo Verde':'CV','Central African Republic':'CF',
+    'Chad':'TD','Chile':'CL','China':'CN','Colombia':'CO','Comoros':'KM',
+    'Congo':'CG','Republic of the Congo':'CG','Democratic Republic of the Congo':'CD',
+    'DR Congo':'CD','Costa Rica':'CR','Croatia':'HR','Cuba':'CU','Cyprus':'CY',
+    'Czech Republic':'CZ','Czechia':'CZ','Denmark':'DK','Djibouti':'DJ','Dominica':'DM',
+    'Dominican Republic':'DO','Ecuador':'EC','Egypt':'EG','El Salvador':'SV',
+    'England':'GB','Equatorial Guinea':'GQ','Eritrea':'ER','Estonia':'EE',
+    'Eswatini':'SZ','Swaziland':'SZ','Ethiopia':'ET','Fiji':'FJ','Finland':'FI',
+    'France':'FR','Gabon':'GA','Gambia':'GM','Georgia':'GE','Germany':'DE',
+    'Ghana':'GH','Greece':'GR','Grenada':'GD','Guatemala':'GT','Guinea':'GN',
+    'Guinea-Bissau':'GW','Guyana':'GY','Haiti':'HT','Honduras':'HN','Hong Kong':'HK',
+    'Hungary':'HU','Iceland':'IS','India':'IN','Indonesia':'ID','Iran':'IR',
+    'Iraq':'IQ','Ireland':'IE','Israel':'IL','Italy':'IT','Ivory Coast':'CI',
+    "Cote d'Ivoire":'CI','Jamaica':'JM','Japan':'JP','Jordan':'JO','Kazakhstan':'KZ',
+    'Kenya':'KE','Kiribati':'KI','Kosovo':'XK','Kuwait':'KW','Kyrgyzstan':'KG',
+    'Laos':'LA','Latvia':'LV','Lebanon':'LB','Lesotho':'LS','Liberia':'LR',
+    'Libya':'LY','Liechtenstein':'LI','Lithuania':'LT','Luxembourg':'LU',
+    'Madagascar':'MG','Malawi':'MW','Malaysia':'MY','Maldives':'MV','Mali':'ML',
+    'Malta':'MT','Mauritania':'MR','Mauritius':'MU','Mexico':'MX','Micronesia':'FM',
+    'Moldova':'MD','Monaco':'MC','Mongolia':'MN','Montenegro':'ME','Morocco':'MA',
+    'Mozambique':'MZ','Myanmar':'MM','Burma':'MM','Namibia':'NA','Nauru':'NR',
+    'Nepal':'NP','Netherlands':'NL','New Zealand':'NZ','Nicaragua':'NI','Niger':'NE',
+    'Nigeria':'NG','North Korea':'KP','North Macedonia':'MK','Macedonia':'MK',
+    'Northern Ireland':'GB','Norway':'NO','Oman':'OM','Pakistan':'PK','Palau':'PW',
+    'Palestine':'PS','Panama':'PA','Papua New Guinea':'PG','Paraguay':'PY',
+    'Peru':'PE','Philippines':'PH','Poland':'PL','Portugal':'PT','Puerto Rico':'PR',
+    'Qatar':'QA','Romania':'RO','Russia':'RU','Russian Federation':'RU','Rwanda':'RW',
+    'Saint Lucia':'LC','Samoa':'WS','San Marino':'SM','Saudi Arabia':'SA',
+    'Scotland':'GB','Senegal':'SN','Serbia':'RS','Seychelles':'SC','Sierra Leone':'SL',
+    'Singapore':'SG','Slovakia':'SK','Slovenia':'SI','Solomon Islands':'SB',
+    'Somalia':'SO','South Africa':'ZA','South Korea':'KR','Korea, South':'KR',
+    'South Sudan':'SS','Spain':'ES','Sri Lanka':'LK','Sudan':'SD','Suriname':'SR',
+    'Sweden':'SE','Switzerland':'CH','Syria':'SY','Taiwan':'TW','Tajikistan':'TJ',
+    'Tanzania':'TZ','Thailand':'TH','Timor-Leste':'TL','Togo':'TG','Tonga':'TO',
+    'Trinidad and Tobago':'TT','Tunisia':'TN','Turkey':'TR','Turkmenistan':'TM',
+    'Tuvalu':'TV','Uganda':'UG','Ukraine':'UA','United Arab Emirates':'AE',
+    'United Kingdom':'GB','UK':'GB','Great Britain':'GB',
+    'United States':'US','United States of America':'US','USA':'US','U.S.A.':'US',
+    'Uruguay':'UY','Uzbekistan':'UZ','Vanuatu':'VU','Vatican City':'VA',
+    'Holy See':'VA','Venezuela':'VE','Vietnam':'VN','Viet Nam':'VN','Wales':'GB',
+    'Yemen':'YE','Zambia':'ZM','Zimbabwe':'ZW'
+  };
+  const lower = {};
+  Object.keys(table).forEach(k => { lower[k.toLowerCase()] = table[k]; });
+  return lower;
+})();
+
+// Canonical display name per ISO2 code, for when several country strings
+// (e.g. "England", "Scotland", "United Kingdom") collapse onto the same map region.
+const ISO2_TO_DISPLAY_NAME = {
+  GB:'United Kingdom', US:'United States', CG:'Republic of the Congo',
+  CD:'Democratic Republic of the Congo', CZ:'Czechia', CI:"Cote d'Ivoire",
+  KR:'South Korea', KP:'North Korea', MK:'North Macedonia', SZ:'Eswatini',
+  MM:'Myanmar', RU:'Russia', VA:'Vatican City', VN:'Vietnam'
+};
+
+function isoForCountry(name){
+  if(!name) return null;
+  return COUNTRY_NAME_TO_ISO2[name.trim().toLowerCase()] || null;
+}
+
 // country of an artist, taken as the first (most specific) semicolon-separated segment
 function primaryCountry(countryStr){
   return countryStr.split(';')[0].trim();
@@ -332,18 +404,27 @@ function canadianYearlyFor(scrobbles){
 
 function countryRowsFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
-  const totals = {}, byArtist = {};
+  const totals = {}, byArtist = {}, displayName = {};
   scrobbles.forEach(r=>{
     const country = COUNTRY_BY_ARTIST[r.na];
     if(country===undefined) return;
-    const c = primaryCountry(country);
-    totals[c] = (totals[c]||0)+1;
-    byArtist[c] = byArtist[c] || {};
-    byArtist[c][r.artist] = (byArtist[c][r.artist]||0)+1;
+    const primary = primaryCountry(country);
+    const iso = isoForCountry(primary);
+    // group by ISO2 code when we recognize the name (so "England"/"Scotland"/
+    // "United Kingdom" all collapse into one map region); otherwise fall back
+    // to the raw name so unrecognized countries still show up in stats/lists.
+    const key = iso || primary;
+    totals[key] = (totals[key]||0)+1;
+    byArtist[key] = byArtist[key] || {};
+    byArtist[key][r.artist] = (byArtist[key][r.artist]||0)+1;
+    displayName[key] = iso ? (ISO2_TO_DISPLAY_NAME[iso] || primary) : primary;
   });
-  return Object.keys(totals).map(country=>{
-    const top = Object.entries(byArtist[country]).sort((a,b)=>b[1]-a[1])[0];
-    return {country, count: totals[country], topArtist: top[0], topArtistCount: top[1]};
+  return Object.keys(totals).map(key=>{
+    const top = Object.entries(byArtist[key]).sort((a,b)=>b[1]-a[1])[0];
+    return {
+      country: displayName[key], iso: isoForCountry(displayName[key]),
+      count: totals[key], topArtist: top[0], topArtistCount: top[1]
+    };
   }).sort((a,b)=>b.count-a.count);
 }
 
@@ -534,7 +615,6 @@ function paintOverview(DATA){
   const GOLD_DIM = 'rgba(214,162,76,0.35)';
   const TEAL = '#5a9a94';
   const TEAL_DIM = 'rgba(90,154,148,0.35)';
-  const COUNTRY_PALETTE = ['#d6a24c','#5a9a94','#c0392b','#8a6c3a','#7a9ec9','#a76fc9','#c98f5a','#6c9a5a'];
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
   const years = (DATA.span_days/365.25).toFixed(1);
@@ -606,26 +686,8 @@ function paintOverview(DATA){
 
   // Top countries -- replaces the old Canada-only chart
   if(DATA.country_rows && DATA.country_rows.length){
-    document.getElementById('countryChartCard').style.display = 'block';
-    document.getElementById('countryListCard').style.display = 'block';
-    const top8 = DATA.country_rows.slice(0,8);
-    new Chart(document.getElementById('countryChart'), {
-      type:'bar',
-      data:{ labels: top8.map(d=>d.country),
-        datasets:[{ data: top8.map(d=>d.count), backgroundColor: top8.map((_,i)=>COUNTRY_PALETTE[i%COUNTRY_PALETTE.length]), borderRadius:2, barPercentage:0.65 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:'#241d16'} }, y:{ grid:{display:false} } } }
-    });
-    document.getElementById('countryTopList').innerHTML = top8.map((c,i)=>`
-      <li>
-        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
-        <div class="rank-main">
-          <div class="rank-title">${c.country}</div>
-          <div class="rank-sub">top artist: ${c.topArtist}</div>
-        </div>
-        <span class="rank-count">${fmtNum(c.count)}</span>
-      </li>`).join('');
+    document.getElementById('countryMapCard').style.display = 'block';
+    renderCountryMap('countryMap', 'overview', DATA.country_rows, DATA.total_scrobbles);
     document.getElementById('countryPendingNotice').style.display = 'none';
   } else {
     document.getElementById('countryPendingNotice').style.display = 'block';
@@ -693,6 +755,11 @@ function initTabs(){
       document.getElementById('tab-overview').style.display = tab==='overview' ? 'block' : 'none';
       document.getElementById('tab-report').style.display = tab==='report' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      // jsVectorMap sizes itself from the container at creation time and (unlike
+      // Chart.js) doesn't auto-recalculate once a hidden container becomes visible,
+      // so nudge it to re-measure whenever its tab is switched into view.
+      const refKey = tab==='overview' ? 'overview' : 'report';
+      if(MAP_REFS[refKey]) MAP_REFS[refKey].updateSize();
     });
   });
 }
@@ -743,6 +810,51 @@ function populatePeriodSelect(){
 
 function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
+}
+
+// Renders a hoverable world map into #containerId, keyed on ISO2 country codes.
+// countryRows: [{country, iso, count, topArtist, topArtistCount}], from countryRowsFor().
+function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
+  if(MAP_REFS[refKey]){ MAP_REFS[refKey].destroy(); MAP_REFS[refKey]=null; }
+  const el = document.getElementById(containerId);
+  if(!el) return;
+
+  const withIso = (countryRows||[]).filter(c=>c.iso);
+  if(!withIso.length) return;
+
+  const values = {}, meta = {};
+  withIso.forEach(c=>{ values[c.iso] = c.count; meta[c.iso] = c; });
+
+  MAP_REFS[refKey] = new jsVectorMap({
+    selector: '#'+containerId,
+    map: 'world',
+    backgroundColor: 'transparent',
+    zoomButtons: false,
+    zoomOnScroll: false,
+    showTooltip: true,
+    regionStyle: {
+      initial: { fill:'#332a1f', fillOpacity:1, stroke:'#15110d', strokeWidth:0.6 },
+      hover: { fillOpacity:1, cursor:'pointer' }
+    },
+    series: {
+      regions: [{
+        values,
+        scale: ['#5c4a30', '#d6a24c'],
+        normalizeFunction: 'polynomial'
+      }]
+    },
+    onRegionTooltipShow(event, tooltip, code){
+      const m = meta[code];
+      if(!m) return; // no scrobbles matched to this country -- fall back to default tooltip
+      const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
+      tooltip.text(
+        `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
+        `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
+        `<div style="opacity:0.75;">top artist: ${m.topArtist}</div>`,
+        true
+      );
+    }
+  });
 }
 
 function renderReport(){
@@ -886,15 +998,7 @@ function renderReport(){
   if(cur.countryRows && cur.countryRows.length){
     document.getElementById('reportCountryCard').style.display = 'block';
     document.getElementById('reportCountryPending').style.display = 'none';
-    document.getElementById('reportCountryList').innerHTML = cur.countryRows.map((c,i)=>`
-      <li>
-        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
-        <div class="rank-main">
-          <div class="rank-title">${c.country}</div>
-          <div class="rank-sub">top artist: ${c.topArtist}</div>
-        </div>
-        <span class="rank-count">${fmtNum(c.count)}</span>
-      </li>`).join('');
+    renderCountryMap('reportCountryMap', 'report', cur.countryRows, cur.n);
   } else {
     document.getElementById('reportCountryCard').style.display = 'none';
     document.getElementById('reportCountryPending').style.display = TRACK_META ? 'none' : 'block';

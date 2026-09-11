@@ -158,7 +158,7 @@
     const renderTable = (filter = "") => {
       const q = filter.trim().toLowerCase();
       const visible = tracks.filter(t => !q || [
-        t.title, t.artist, t.album, t.year, t.artistCountry, t.length, t.playCount
+        t.title, t.artist, t.album, t.year, t.artistCountry, t.length
       ].some(v => String(v).toLowerCase().includes(q)));
 
       document.querySelector("#libraryTable tbody").innerHTML = visible.map(t => `
@@ -169,7 +169,6 @@
           <td style="padding:8px 9px;border-bottom:1px solid var(--hair);text-align:right;">${t.year}</td>
           <td style="padding:8px 9px;border-bottom:1px solid var(--hair);">${escapeHtml(t.artistCountry)}</td>
           <td style="padding:8px 9px;border-bottom:1px solid var(--hair);text-align:right;">${escapeHtml(t.length)}</td>
-          <td style="padding:8px 9px;border-bottom:1px solid var(--hair);text-align:right;">${t.playCount.toLocaleString()}</td>
         </tr>
       `).join("");
     };

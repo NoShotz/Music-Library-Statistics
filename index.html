@@ -19,6 +19,7 @@
     --text:#f2e8d8;
     --muted:#a4937f;
     --muted-2:#7a6c5c;
+    --green:#7fae7a;
   }
   *{box-sizing:border-box;}
   body{
@@ -95,6 +96,23 @@
   }
   .hero-sub b{color:var(--text);font-weight:600;}
 
+  /* ---------- TABS ---------- */
+  .tabnav{
+    display:flex;gap:8px;
+    max-width:980px;margin:0 auto;padding:0 24px;
+  }
+  .tab-btn{
+    background:var(--surface);
+    border:1px solid var(--hair);
+    color:var(--muted);
+    padding:11px 22px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+    cursor:pointer;
+  }
+  .tab-btn.active{ color:var(--gold); border-color:var(--gold-dim); background:var(--surface-2); }
+  .tab-btn:hover{ color:var(--text); }
+
   /* ---------- SIDE DIVIDER ---------- */
   .side{
     display:flex;align-items:center;gap:16px;
@@ -128,6 +146,7 @@
   .stat-val{
     font-family:'Bebas Neue',sans-serif;
     font-size:38px;color:var(--gold);line-height:1;
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   }
   .stat-lbl{
     font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.4;
@@ -153,7 +172,7 @@
   .two-col{
     display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }
-  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:64px;} }
+  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:64px;} .report-controls{flex-direction:column;align-items:stretch;} }
 
   /* ---------- CHART LIST (ranked) ---------- */
   .ranked{list-style:none;margin:0;padding:0;}
@@ -206,6 +225,36 @@
   }
 
   code{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- REPORT CONTROLS ---------- */
+  .report-controls{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
+    margin:28px 0 24px;
+  }
+  .seg{ display:flex; border:1px solid var(--hair); }
+  .seg-btn{
+    background:var(--surface); color:var(--muted); border:none;
+    padding:9px 18px; font-family:'JetBrains Mono',monospace; font-size:12px;
+    letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
+  }
+  .seg-btn + .seg-btn{ border-left:1px solid var(--hair); }
+  .seg-btn.active{ background:var(--surface-2); color:var(--gold); }
+  .period-nav{ display:flex; align-items:center; gap:10px; }
+  .nav-arrow{
+    background:var(--surface); border:1px solid var(--hair); color:var(--text);
+    width:34px;height:34px; font-size:16px; cursor:pointer; line-height:1;
+  }
+  .nav-arrow:disabled{ opacity:.3; cursor:default; }
+  .nav-arrow:not(:disabled):hover{ border-color:var(--gold-dim); color:var(--gold); }
+  #periodSelect{
+    background:var(--surface); color:var(--text); border:1px solid var(--hair);
+    padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12.5px;
+    min-width:160px;
+  }
+
+  .cmp{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:400; }
+  .cmp.up{ color:var(--green); }
+  .cmp.down{ color:var(--red); }
 </style>
 </head>
 <body>
@@ -218,7 +267,7 @@
   <p>then open <span style="color:var(--teal);">http://localhost:8000/listening_report.html</span> in your browser.</p>
 </div>
 
-<div class="wrap" id="mainWrap" style="display:none;">
+<div id="mainWrap" style="display:none;">
 
   <div class="hero">
     <div class="vinyl"></div>
@@ -230,92 +279,191 @@
     </div>
   </div>
 
-  <div class="stat-grid" id="statGrid"></div>
-
-  <div id="countryPendingNotice" class="callout pending" style="display:none; margin-top:20px;">
-    No <code>library_data.json</code> found alongside this page yet, so Canadian-content, total-hours, and decade-of-release stats are hidden. Drop that file in the same folder and reload to enable them.
+  <div class="tabnav">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="report">Report</button>
   </div>
 
-  <!-- SIDE A -->
-  <div class="side">
-    <span class="side-label">Side A</span>
-    <div class="side-line"></div>
-  </div>
-  <p class="side-title" style="margin-top:-24px;margin-bottom:24px;">The Rotation</p>
+  <!-- ============================================================ -->
+  <!-- OVERVIEW TAB                                                  -->
+  <!-- ============================================================ -->
+  <div class="wrap" id="tab-overview">
 
-  <div class="card">
-    <h3>Scrobbles per year</h3>
-    <p class="desc">Volume of tracked listening, year over year.</p>
-    <div class="chart-box"><canvas id="yearChart"></canvas></div>
-  </div>
+    <div class="stat-grid" id="statGrid" style="margin-top:32px;"></div>
 
-  <div class="card" id="canChartCard" style="display:none;">
-    <h3>Canadian content, year over year</h3>
-    <p class="desc">Share of scrobbles by Canadian artists.</p>
-    <div class="chart-box"><canvas id="canChart"></canvas></div>
-  </div>
-
-  <div class="callout" id="canCallout" style="display:none;"></div>
-
-  <div class="two-col">
-    <div class="card">
-      <h3>Top artists</h3>
-      <p class="desc">By total scrobble count, all-time.</p>
-      <ol class="ranked" id="artistList"></ol>
+    <div id="countryPendingNotice" class="callout pending" style="display:none; margin-top:20px;">
+      No <code>library_data.json</code> found alongside this page yet, so artist-country, total-hours, and decade-of-release stats are hidden. Drop that file in the same folder and reload to enable them.
     </div>
+
+    <!-- SIDE A -->
+    <div class="side">
+      <span class="side-label">Side A</span>
+      <div class="side-line"></div>
+    </div>
+    <p class="side-title" style="margin-top:-24px;margin-bottom:24px;">The Rotation</p>
+
     <div class="card">
-      <h3>Top tracks</h3>
-      <p class="desc">Most-played individual songs.</p>
-      <ol class="ranked" id="trackList"></ol>
+      <h3>Scrobbles per year</h3>
+      <p class="desc">Volume of tracked listening, year over year.</p>
+      <div class="chart-box"><canvas id="yearChart"></canvas></div>
+    </div>
+
+    <div class="card" id="countryChartCard" style="display:none;">
+      <h3>Where your music comes from</h3>
+      <p class="desc">Scrobbles by artist's country of origin, all-time.</p>
+      <div class="chart-box"><canvas id="countryChart"></canvas></div>
+    </div>
+
+    <div class="card" id="countryListCard" style="display:none;">
+      <h3>Top artist per country</h3>
+      <p class="desc">Your most-played artist from each of your top countries.</p>
+      <ol class="ranked" id="countryTopList"></ol>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Top artists</h3>
+        <p class="desc">By total scrobble count, all-time.</p>
+        <ol class="ranked" id="artistList"></ol>
+      </div>
+      <div class="card">
+        <h3>Top tracks</h3>
+        <p class="desc">Most-played individual songs.</p>
+        <ol class="ranked" id="trackList"></ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Top albums</h3>
+      <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
+      <ol class="ranked" id="albumList"></ol>
+    </div>
+
+    <div class="card" id="decadeChartCard" style="display:none;">
+      <h3>Decade of release</h3>
+      <p class="desc">What era the music you play actually comes from, weighted by scrobbles.</p>
+      <div class="chart-box"><canvas id="decadeChart"></canvas></div>
+    </div>
+
+    <!-- SIDE B -->
+    <div class="side">
+      <span class="side-label">Side B</span>
+      <div class="side-line"></div>
+    </div>
+    <p class="side-title" style="margin-top:-24px;margin-bottom:24px;">The Habits</p>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Hour of day</h3>
+        <p class="desc">Local time (ET). When the needle drops.</p>
+        <div class="chart-box"><canvas id="hourChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Day of week</h3>
+        <p class="desc">Which days you listen most.</p>
+        <div class="chart-box"><canvas id="dowChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>New artists discovered per year</h3>
+      <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
+      <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
+    </div>
+
+    <div class="fact-grid">
+      <div class="fact"><div class="fact-num" id="factStreak">—</div><div class="fact-lbl">longest consecutive listening streak, days</div></div>
+      <div class="fact"><div class="fact-num" id="factArtists">—</div><div class="fact-lbl">unique artists ever scrobbled</div></div>
+      <div class="fact"><div class="fact-num" id="factActive">—</div><div class="fact-lbl">of days since tracking began had at least one scrobble</div></div>
+      <div class="fact"><div class="fact-num" id="factTop10">—</div><div class="fact-lbl">of all scrobbles come from just your top 10 artists</div></div>
+    </div>
+
+    <footer>END OF SIDE B — DATA SOURCE: LAST.FM EXPORT (LIVE-LOADED, UNMODIFIED)</footer>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- REPORT TAB                                                    -->
+  <!-- ============================================================ -->
+  <div class="wrap" id="tab-report" style="display:none;">
+
+    <div class="report-controls">
+      <div class="seg">
+        <button class="seg-btn active" data-type="year">Year</button>
+        <button class="seg-btn" data-type="month">Month</button>
+        <button class="seg-btn" data-type="week">Week</button>
+      </div>
+      <div class="period-nav">
+        <button class="nav-arrow" id="periodPrev">‹</button>
+        <select id="periodSelect"></select>
+        <button class="nav-arrow" id="periodNext">›</button>
+      </div>
+    </div>
+
+    <div id="reportEmpty" class="callout pending" style="display:none;">No scrobbles logged in this period.</div>
+
+    <div id="reportBody">
+      <div class="stat-grid" id="reportStatGrid"></div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3 id="subPeriodTitle">Scrobbles</h3>
+        <p class="desc" id="subPeriodDesc"></p>
+        <div class="chart-box"><canvas id="subPeriodChart"></canvas></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Top artists</h3>
+          <p class="desc" id="reportArtistsDesc"></p>
+          <ol class="ranked" id="reportArtistList"></ol>
+        </div>
+        <div class="card">
+          <h3>Top tracks</h3>
+          <p class="desc" id="reportTracksDesc"></p>
+          <ol class="ranked" id="reportTrackList"></ol>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Top albums</h3>
+        <p class="desc" id="reportAlbumsDesc"></p>
+        <ol class="ranked" id="reportAlbumList"></ol>
+      </div>
+
+      <div class="callout" id="firstTrackCallout"></div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Day of week</h3>
+          <p class="desc">This period vs. the previous one.</p>
+          <div class="chart-box"><canvas id="reportDowChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Listening clock</h3>
+          <p class="desc">Local time (ET), scrobbles by hour.</p>
+          <div class="chart-box"><canvas id="reportHourChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card" id="reportCountryCard" style="display:none;">
+        <h3>Artist map</h3>
+        <p class="desc">Scrobbles by artist country, this period.</p>
+        <ol class="ranked" id="reportCountryList"></ol>
+      </div>
+      <div class="callout pending" id="reportCountryPending" style="display:none;">
+        No <code>library_data.json</code> found, so the artist map is hidden.
+      </div>
+
+      <div class="card" id="reportDecadeCard" style="display:none;">
+        <h3>Music by decade</h3>
+        <p class="desc">What era the music you played this period comes from.</p>
+        <div class="chart-box"><canvas id="reportDecadeChart"></canvas></div>
+        <ol class="ranked" id="reportDecadeList" style="margin-top:16px;"></ol>
+      </div>
+
+      <div class="fact-grid" id="reportFactGrid"></div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>Top albums</h3>
-    <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
-    <ol class="ranked" id="albumList"></ol>
-  </div>
-
-  <div class="card" id="decadeChartCard" style="display:none;">
-    <h3>Decade of release</h3>
-    <p class="desc">What era the music you play actually comes from, weighted by scrobbles.</p>
-    <div class="chart-box"><canvas id="decadeChart"></canvas></div>
-  </div>
-
-  <!-- SIDE B -->
-  <div class="side">
-    <span class="side-label">Side B</span>
-    <div class="side-line"></div>
-  </div>
-  <p class="side-title" style="margin-top:-24px;margin-bottom:24px;">The Habits</p>
-
-  <div class="two-col">
-    <div class="card">
-      <h3>Hour of day</h3>
-      <p class="desc">Local time (ET). When the needle drops.</p>
-      <div class="chart-box"><canvas id="hourChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h3>Day of week</h3>
-      <p class="desc">Which days you listen most.</p>
-      <div class="chart-box"><canvas id="dowChart"></canvas></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>New artists discovered per year</h3>
-    <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
-    <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
-  </div>
-
-  <div class="fact-grid">
-    <div class="fact"><div class="fact-num" id="factStreak">—</div><div class="fact-lbl">longest consecutive listening streak, days</div></div>
-    <div class="fact"><div class="fact-num" id="factArtists">—</div><div class="fact-lbl">unique artists ever scrobbled</div></div>
-    <div class="fact"><div class="fact-num" id="factActive">—</div><div class="fact-lbl">of days since tracking began had at least one scrobble</div></div>
-    <div class="fact"><div class="fact-num" id="factTop10">—</div><div class="fact-lbl">of all scrobbles come from just your top 10 artists</div></div>
-  </div>
-
-  <footer>END OF SIDE B — DATA SOURCE: LAST.FM EXPORT (LIVE-LOADED, UNMODIFIED)</footer>
 </div>
 
 <script src="listening_report.js"></script>

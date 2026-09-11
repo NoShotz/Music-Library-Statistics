@@ -349,20 +349,15 @@ function countryRowsFor(scrobbles){
 
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
-  const counts = {}, artistsByDecade = {};
+  const counts = {};
   scrobbles.forEach(r=>{
     const meta = TRACK_META[r.na+'|||'+r.nt];
     if(meta && meta.year){
       const dec = Math.floor(meta.year/10)*10;
       counts[dec] = (counts[dec]||0)+1;
-      artistsByDecade[dec] = artistsByDecade[dec] || {};
-      artistsByDecade[dec][r.artist] = (artistsByDecade[dec][r.artist]||0)+1;
     }
   });
-  return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>{
-    const top = Object.entries(artistsByDecade[dec]).sort((a,b)=>b[1]-a[1])[0];
-    return {decade:dec, count:counts[dec], topArtist:top[0], topCount:top[1]};
-  });
+  return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>({decade:dec, count:counts[dec]}));
 }
 
 function computeNew(scrobbles, type, periodType, periodKey){
@@ -888,15 +883,6 @@ function renderReport(){
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
         scales:{ x:{ grid:{color:'#241d16'} }, y:{ grid:{display:false} } } }
     });
-    document.getElementById('reportDecadeList').innerHTML = cur.decades.slice().reverse().map(d=>`
-      <li>
-        <span class="rank-num">${d.decade}s</span>
-        <div class="rank-main">
-          <div class="rank-title">${d.topArtist}</div>
-          <div class="rank-sub">top artist</div>
-        </div>
-        <span class="rank-count">${fmtNum(d.count)}</span>
-      </li>`).join('');
   } else {
     document.getElementById('reportDecadeCard').style.display = 'none';
   }

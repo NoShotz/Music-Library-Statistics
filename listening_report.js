@@ -812,18 +812,60 @@ function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
 }
 
+// ---- manual color scale (see renderCountryMap comment for why this is
+// computed by hand instead of handed to jsvectormap's built-in scale/
+// normalizeFunction) ----
+const MAP_COLOR_LOW = [0x5c,0x4a,0x30];   // #5c4a30
+const MAP_COLOR_HIGH = [0xd6,0xa2,0x4c];  // #d6a24c
+const MAP_BUCKET_COUNT = 10;
+
+function lerpColor(t){
+  const c = MAP_COLOR_LOW.map((lo,i)=>Math.round(lo + (MAP_COLOR_HIGH[i]-lo)*t));
+  return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
 // Renders a hoverable world map into #containerId, keyed on ISO2 country codes.
 // countryRows: [{country, iso, count, topArtist, topArtistCount}], from countryRowsFor().
 function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
-  if(MAP_REFS[refKey]){ MAP_REFS[refKey].destroy(); MAP_REFS[refKey]=null; }
+  // jsvectormap has a known bug where re-initializing a map on a container
+  // that already held one (e.g. switching year -> month -> week on the
+  // Report tab) can leave the old SVG behind (duplicate map) and miscompute
+  // its color scale on the new instance (regions render black/inverted).
+  // destroy() alone isn't reliable against this, so we also force-clear the
+  // container's DOM ourselves before creating the next instance.
+  if(MAP_REFS[refKey]){
+    try { MAP_REFS[refKey].destroy(); } catch(e){ /* ignore -- clearing DOM below is what actually matters */ }
+    MAP_REFS[refKey] = null;
+  }
   const el = document.getElementById(containerId);
   if(!el) return;
+  el.innerHTML = '';
 
   const withIso = (countryRows||[]).filter(c=>c.iso);
   if(!withIso.length) return;
 
+  // Precompute each country's fill color ourselves (log scale, since one or
+  // two countries -- e.g. the US -- usually dwarf everything else) and hand
+  // jsvectormap a discrete color bucket per region rather than raw counts.
+  // This sidesteps its internal min/max/scale computation entirely, which is
+  // the actual source of the black/inverted coloring bug.
+  const counts = withIso.map(c=>c.count);
+  const min = Math.min(...counts), max = Math.max(...counts);
+  const logMin = Math.log(min+1), logMax = Math.log(max+1);
+  const span = logMax - logMin;
+
+  const scale = {};
+  for(let i=0;i<MAP_BUCKET_COUNT;i++){
+    scale['b'+i] = lerpColor(i/(MAP_BUCKET_COUNT-1));
+  }
+
   const values = {}, meta = {};
-  withIso.forEach(c=>{ values[c.iso] = c.count; meta[c.iso] = c; });
+  withIso.forEach(c=>{
+    const t = span>0 ? (Math.log(c.count+1)-logMin)/span : 1;
+    const bucket = Math.min(MAP_BUCKET_COUNT-1, Math.round(t*(MAP_BUCKET_COUNT-1)));
+    values[c.iso] = 'b'+bucket;
+    meta[c.iso] = c;
+  });
 
   MAP_REFS[refKey] = new jsVectorMap({
     selector: '#'+containerId,
@@ -838,9 +880,9 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     },
     series: {
       regions: [{
+        attribute: 'fill',
         values,
-        scale: ['#5c4a30', '#d6a24c'],
-        normalizeFunction: 'polynomial'
+        scale
       }]
     },
     onRegionTooltipShow(event, tooltip, code){

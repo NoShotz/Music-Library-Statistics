@@ -649,7 +649,7 @@ function paintOverview(DATA){
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
-          ${subFn(it) ? `<div class="rank-sub">${subFn(it)}</div>` : ''}
+          <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
@@ -812,7 +812,15 @@ function renderReport(){
   // ---- top lists + new stats ----
   function renderRankedList(elId, items, mainFn, subFn, emptyMsg){
     if(!items.length && emptyMsg){
-      document.getElementById(elId).innerHTML = `<li style="border-bottom:none;"><span class="rank-sub">${emptyMsg}</span></li>`;
+      document.getElementById(elId).innerHTML = `
+        <li>
+          <span class="rank-num">&nbsp;</span>
+          <div class="rank-main">
+            <div class="rank-title" style="color:var(--muted-2);">${emptyMsg}</div>
+            <div class="rank-sub">&nbsp;</div>
+          </div>
+          <span class="rank-count">&nbsp;</span>
+        </li>`;
       return;
     }
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
@@ -820,7 +828,7 @@ function renderReport(){
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
-          ${subFn(it) ? `<div class="rank-sub">${subFn(it)}</div>` : ''}
+          <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');

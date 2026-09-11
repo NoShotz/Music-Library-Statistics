@@ -380,18 +380,33 @@ function computeNew(scrobbles, type, periodType, periodKey){
   let topNew = null;
   newKeys.forEach(k=>{ if(!topNew || counts[k]>counts[topNew]) topNew=k; });
 
+  const newItems = newKeys.map(k=>({key:k, count:counts[k]})).sort((a,b)=>b.count-a.count);
+
   return {
     uniqueCount: uniqueKeys.length,
     newCount: newKeys.length,
     newPct: uniqueKeys.length ? Math.round(newKeys.length/uniqueKeys.length*1000)/10 : 0,
-    topNew: topNew ? {key:topNew, count:counts[topNew]} : null
+    topNew: topNew ? {key:topNew, count:counts[topNew]} : null,
+    newItems
   };
+}
+
+// turns computeNew()'s flat "artist|||thing" keyed newItems into display-ready rows
+function discoveryRows(newResult, type){
+  return newResult.newItems.map(it=>{
+    if(type==='artist') return {artist:it.key, count:it.count};
+    const [artist, rest] = it.key.split('|||');
+    return type==='album' ? {artist, album:rest, count:it.count} : {artist, track:rest, count:it.count};
+  });
 }
 
 function computeStats(scrobbles, periodType, periodKey){
   const weekday = weekdayPattern(scrobbles);
   const hourArr = hourPattern(scrobbles);
   const {activeDays, longestStreak} = streakStats(scrobbles);
+  const newArtists = computeNew(scrobbles,'artist',periodType,periodKey);
+  const newAlbums = computeNew(scrobbles,'album',periodType,periodKey);
+  const newTracks = computeNew(scrobbles,'track',periodType,periodKey);
   return {
     n: scrobbles.length,
     weekday, hourArr,
@@ -402,9 +417,12 @@ function computeStats(scrobbles, periodType, periodKey){
     topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
     topAlbums: topN(scrobbles, r=>r.artist+'|||'+r.album, 5, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; }),
     topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; }),
-    newArtists: computeNew(scrobbles,'artist',periodType,periodKey),
-    newAlbums: computeNew(scrobbles,'album',periodType,periodKey),
-    newTracks: computeNew(scrobbles,'track',periodType,periodKey),
+    newArtists, newAlbums, newTracks,
+    discoveries: {
+      artists: discoveryRows(newArtists,'artist'),
+      albums: discoveryRows(newAlbums,'album'),
+      tracks: discoveryRows(newTracks,'track')
+    },
     firstScrobble: scrobbles.length ? scrobbles[0] : null,
     countryRows: countryRowsFor(scrobbles),
     canadian: canadianStatsFor(scrobbles),
@@ -792,7 +810,11 @@ function renderReport(){
   });
 
   // ---- top lists + new stats ----
-  function renderRankedList(elId, items, mainFn, subFn){
+  function renderRankedList(elId, items, mainFn, subFn, emptyMsg){
+    if(!items.length && emptyMsg){
+      document.getElementById(elId).innerHTML = `<li style="border-bottom:none;"><span class="rank-sub">${emptyMsg}</span></li>`;
+      return;
+    }
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
       <li>
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
@@ -813,6 +835,22 @@ function renderReport(){
     `${cur.newTracks.newPct}% new this period` + (cur.newTracks.topNew ? ` · top new: ${cur.newTracks.topNew.key.split('|||')[1]}` : '');
   document.getElementById('reportAlbumsDesc').textContent =
     `${cur.newAlbums.newPct}% new this period` + (cur.newAlbums.topNew ? ` · top new: ${cur.newAlbums.topNew.key.split('|||')[1]}` : '');
+
+  // ---- discoveries: full lists of new artists/albums/tracks this period ----
+  const DISCOVERY_LIMIT = 12;
+  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.');
+  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.');
+  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.');
+
+  document.getElementById('reportNewArtistsDesc').textContent =
+    `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +
+    (cur.discoveries.artists.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
+  document.getElementById('reportNewTracksDesc').textContent =
+    `${fmtNum(cur.newTracks.newCount)} new track${cur.newTracks.newCount===1?'':'s'} this period` +
+    (cur.discoveries.tracks.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
+  document.getElementById('reportNewAlbumsDesc').textContent =
+    `${fmtNum(cur.newAlbums.newCount)} new album${cur.newAlbums.newCount===1?'':'s'} this period` +
+    (cur.discoveries.albums.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
 
   const first = cur.firstScrobble;
   document.getElementById('firstTrackCallout').innerHTML = first

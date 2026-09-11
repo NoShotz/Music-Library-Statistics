@@ -642,7 +642,7 @@ function paintOverview(DATA){
 
   new Chart(document.getElementById('hourChart'), {
     type:'bar',
-    data:{ labels: DATA.hour_of_day.map(d=> (d.hour%12===0?12:d.hour%12) + (d.hour<12?'a':'p')),
+    data:{ labels: DATA.hour_of_day.map(d=> (d.hour%12===0?12:d.hour%12) + (d.hour<12?'AM':'PM')),
       datasets:[{ data: DATA.hour_of_day.map(d=>d.count), backgroundColor: TEAL_DIM, borderRadius:2 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:8 } }, y:{ grid:{color:'#241d16'} } } }

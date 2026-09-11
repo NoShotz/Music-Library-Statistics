@@ -172,7 +172,10 @@
   .two-col{
     display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }
-  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:64px;} .report-controls{flex-direction:column;align-items:stretch;} }
+  .three-col{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;
+  }
+  @media (max-width:700px){ .two-col{grid-template-columns:1fr;} .three-col{grid-template-columns:1fr;} .hero{gap:28px;padding-top:44px;} .hero-num{font-size:64px;} .report-controls{flex-direction:column;align-items:stretch;} }
 
   /* ---------- CHART LIST (ranked) ---------- */
   .ranked{list-style:none;margin:0;padding:0;}
@@ -297,23 +300,22 @@
 
     <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Statistics</p>
 
-    <div class="two-col">
+    <div class="three-col">
       <div class="card">
         <h3>Top artists</h3>
         <p class="desc">By total scrobble count, all-time.</p>
         <ol class="ranked" id="artistList"></ol>
       </div>
       <div class="card">
+        <h3>Top albums</h3>
+        <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
+        <ol class="ranked" id="albumList"></ol>
+      </div>
+      <div class="card">
         <h3>Top tracks</h3>
         <p class="desc">Most-played individual songs.</p>
         <ol class="ranked" id="trackList"></ol>
       </div>
-    </div>
-
-    <div class="card">
-      <h3>Top albums</h3>
-      <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
-      <ol class="ranked" id="albumList"></ol>
     </div>
 
     <div class="card">
@@ -405,11 +407,16 @@
 
       <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Statistics</p>
       
-      <div class="two-col">
+      <div class="three-col">
         <div class="card">
           <h3>Top artists</h3>
           <p class="desc" id="reportArtistsDesc"></p>
           <ol class="ranked" id="reportArtistList"></ol>
+        </div>
+        <div class="card">
+          <h3>Top albums</h3>
+          <p class="desc" id="reportAlbumsDesc"></p>
+          <ol class="ranked" id="reportAlbumList"></ol>
         </div>
         <div class="card">
           <h3>Top tracks</h3>
@@ -418,33 +425,26 @@
         </div>
       </div>
 
-      <div class="card">
-        <h3>Top albums</h3>
-        <p class="desc" id="reportAlbumsDesc"></p>
-        <ol class="ranked" id="reportAlbumList"></ol>
-      </div>
-
       <div class="callout" id="firstTrackCallout"></div>
 
       <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Discoveries</p>
 
-      <div class="two-col">
+      <div class="three-col">
         <div class="card">
           <h3>New artists</h3>
           <p class="desc" id="reportNewArtistsDesc"></p>
           <ol class="ranked" id="reportNewArtistList"></ol>
         </div>
         <div class="card">
+          <h3>New albums</h3>
+          <p class="desc" id="reportNewAlbumsDesc"></p>
+          <ol class="ranked" id="reportNewAlbumList"></ol>
+        </div>
+        <div class="card">
           <h3>New tracks</h3>
           <p class="desc" id="reportNewTracksDesc"></p>
           <ol class="ranked" id="reportNewTrackList"></ol>
         </div>
-      </div>
-
-      <div class="card">
-        <h3>New albums</h3>
-        <p class="desc" id="reportNewAlbumsDesc"></p>
-        <ol class="ranked" id="reportNewAlbumList"></ol>
       </div>
 
       <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Charts</p>

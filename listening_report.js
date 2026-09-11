@@ -829,13 +829,6 @@ function renderReport(){
   renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist);
   renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist);
 
-  document.getElementById('reportArtistsDesc').textContent =
-    `${cur.newArtists.newPct}% new this period` + (cur.newArtists.topNew ? ` · top new: ${cur.newArtists.topNew.key}` : '');
-  document.getElementById('reportTracksDesc').textContent =
-    `${cur.newTracks.newPct}% new this period` + (cur.newTracks.topNew ? ` · top new: ${cur.newTracks.topNew.key.split('|||')[1]}` : '');
-  document.getElementById('reportAlbumsDesc').textContent =
-    `${cur.newAlbums.newPct}% new this period` + (cur.newAlbums.topNew ? ` · top new: ${cur.newAlbums.topNew.key.split('|||')[1]}` : '');
-
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 12;
   renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.');

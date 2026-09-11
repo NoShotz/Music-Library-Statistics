@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Listening Report — NoShotz</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/jsvectormap.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/jsvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -169,6 +172,20 @@
   }
   .chart-box{position:relative;height:280px;}
   .chart-box.tall{height:340px;}
+  .map-box{position:relative;height:380px;}
+  .map-box .jvm-region{cursor:pointer;}
+  .jvm-tooltip{
+    background:var(--surface-2) !important;
+    border:1px solid var(--hair) !important;
+    color:var(--text) !important;
+    font-family:'Work Sans',sans-serif !important;
+    font-size:13px !important;
+    line-height:1.5 !important;
+    padding:8px 12px !important;
+    border-radius:6px !important;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45) !important;
+    opacity:1 !important;
+  }
   .two-col{
     display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }
@@ -359,16 +376,10 @@
 
     <div class="callout" id="canCallout" style="display:none;"></div>
 
-    <div class="card" id="countryChartCard" style="display:none;">
+    <div class="card" id="countryMapCard" style="display:none;">
       <h3>Where your music comes from</h3>
-      <p class="desc">Scrobbles by artist's country of origin, all-time.</p>
-      <div class="chart-box"><canvas id="countryChart"></canvas></div>
-    </div>
-
-    <div class="card" id="countryListCard" style="display:none;">
-      <h3>Top artist per country</h3>
-      <p class="desc">Your most-played artist from each of your top countries.</p>
-      <ol class="ranked" id="countryTopList"></ol>
+      <p class="desc">Scrobbles by artist's country of origin, all-time. Hover a country for details.</p>
+      <div class="map-box" id="countryMap"></div>
     </div>
 
     <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Quick facts</p>
@@ -477,8 +488,8 @@
       <div class="callout" id="reportCanCallout" style="display:none;"></div>
       <div class="card" id="reportCountryCard" style="display:none;">
         <h3>Artist map</h3>
-        <p class="desc">Scrobbles by artist country, this period.</p>
-        <ol class="ranked" id="reportCountryList"></ol>
+        <p class="desc">Scrobbles by artist country, this period. Hover a country for details.</p>
+        <div class="map-box" id="reportCountryMap"></div>
       </div>
       <div class="callout pending" id="reportCountryPending" style="display:none;">
         No <code>library_data.json</code> found, so the artist map is hidden.

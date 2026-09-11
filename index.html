@@ -224,16 +224,16 @@
     <div class="vinyl"></div>
     <div class="hero-text">
       <p class="eyebrow">Listening Report · <span id="heroUser"></span></p>
-      <p class="hero-num" id="heroScrobbles">—</p>
-      <p class="eyebrow" style="margin-top:2px;">scrobbles logged</p>
-      <p class="hero-sub">Spanning <b id="heroSpan">—</b> of Last.fm history — <span id="heroDates"></span>.</p>
+      <p class="hero-num" id="heroHours">—</p>
+      <p class="eyebrow" style="margin-top:2px;">hours logged</p>
+      <p class="hero-sub"><b id="heroScrobbles">—</b> scrobbles spanning <b id="heroSpan">—</b> of Last.fm history — <span id="heroDates"></span>.</p>
     </div>
   </div>
 
   <div class="stat-grid" id="statGrid"></div>
 
   <div id="countryPendingNotice" class="callout pending" style="display:none; margin-top:20px;">
-    No <code>artist_countries.json</code> found alongside this page yet, so Canadian-content stats are hidden. Drop that file in the same folder (mapping artist name → country) and reload to enable them.
+    No <code>library_data.json</code> found alongside this page yet, so Canadian-content, total-hours, and decade-of-release stats are hidden. Drop that file in the same folder and reload to enable them.
   </div>
 
   <!-- SIDE A -->
@@ -274,6 +274,12 @@
     <h3>Top albums</h3>
     <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
     <ol class="ranked" id="albumList"></ol>
+  </div>
+
+  <div class="card" id="decadeChartCard" style="display:none;">
+    <h3>Decade of release</h3>
+    <p class="desc">What era the music you play actually comes from, weighted by scrobbles.</p>
+    <div class="chart-box"><canvas id="decadeChart"></canvas></div>
   </div>
 
   <!-- SIDE B -->

@@ -1,7 +1,9 @@
 const LOCAL_UTC_OFFSET_HOURS = -4; // Eastern (adjust if needed)
 
 let SCROBBLES = null;
-let ARTIST_COUNTRY = null; // null until artist_countries.json loads successfully
+let LIBRARY = null; // null until library_data.json loads successfully
+let COUNTRY_BY_ARTIST = null;   // normArtist -> country string
+let TRACK_META = null;          // "normArtist|||normTrack" -> {year, length_sec, album}
 
 async function boot(){
   // 1. Load the raw, unmodified Last.fm export -- required
@@ -20,18 +22,44 @@ async function boot(){
   document.getElementById('mainWrap').style.display = 'block';
   document.getElementById('heroUser').textContent = raw.username || '';
 
-  // 2. Try to load the artist -> country lookup -- optional, may not exist yet
+  // 2. Try to load the library metadata (artist country, release year, track length) -- optional
   try {
-    const res2 = await fetch('./artist_countries.json', {cache:'no-store'});
+    const res2 = await fetch('./library_data.json', {cache:'no-store'});
     if(res2.ok){
-      ARTIST_COUNTRY = await res2.json();
+      LIBRARY = await res2.json();
+      buildLibraryLookups();
     }
   } catch(err){
-    // fine -- country-based stats just stay hidden
-    console.log('artist_countries.json not found yet; Canadian stats hidden.', err);
+    console.log('library_data.json not found yet; country/hours/decade stats hidden.', err);
   }
 
   render();
+}
+
+function buildLibraryLookups(){
+  COUNTRY_BY_ARTIST = {};
+  TRACK_META = {};
+  if(!LIBRARY || !Array.isArray(LIBRARY.artists)) return;
+  LIBRARY.artists.forEach(a=>{
+    COUNTRY_BY_ARTIST[normArtist(a.artist)] = a.artistCountry;
+    (a.albums||[]).forEach(al=>{
+      (al.tracks||[]).forEach(t=>{
+        const key = normArtist(a.artist) + '|||' + normTrack(t.title);
+        TRACK_META[key] = {
+          year: al.year,
+          length_sec: parseLength(t.length),
+          album: al.album
+        };
+      });
+    });
+  });
+}
+
+function parseLength(str){
+  if(!str) return null;
+  const parts = String(str).split(':').map(Number);
+  if(parts.some(isNaN)) return null;
+  return parts.reduce((acc,v)=>acc*60+v, 0);
 }
 
 // ---------- helpers ----------
@@ -42,6 +70,14 @@ function normArtist(s){
     .replace(/\s+/g,' ')
     .trim()
     .replace(/^the /,'');
+}
+
+function normTrack(s){
+  return String(s).toLowerCase()
+    .replace(/&/g,'and')
+    .replace(/[^a-z0-9 ]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
 function localDate(ms){
@@ -145,26 +181,40 @@ function render(){
   const discovery = Object.keys(discoveryByYear).map(Number).sort((a,b)=>a-b)
     .map(y=>({year:y, count:discoveryByYear[y]}));
 
-  // ---------- Canadian content, only if country map loaded ----------
+  // ---------- Canadian content, total listening hours, decade breakdown ----------
+  // all three depend on library_data.json (artist country / release year / track length)
   let canStats = null;
-  if(ARTIST_COUNTRY){
-    const countryNorm = {};
-    Object.keys(ARTIST_COUNTRY).forEach(k=>{ countryNorm[normArtist(k)] = ARTIST_COUNTRY[k]; });
+  let totalHours = null;
+  let decade = null;
 
+  if(COUNTRY_BY_ARTIST && TRACK_META){
     let matched=0, canYearCounts={}, canYearTotal={}, canTotal=0, canMatched=0;
     let last30Total=0, last30Can=0;
     const cutoff30 = lastMs - 30*86400000;
 
+    let totalSeconds = 0;
+    const avgLenFallback = averageKnownLength();
+    const decadeCounts = {};
+
     s.forEach(r=>{
-      const country = countryNorm[normArtist(r.artist)];
-      if(country===undefined) return;
-      matched++;
-      const isCan = /canada/i.test(country);
-      const year = new Date(r.date).getUTCFullYear();
-      canYearTotal[year] = (canYearTotal[year]||0)+1;
-      if(isCan){ canYearCounts[year]=(canYearCounts[year]||0)+1; canTotal++; }
-      canMatched++;
-      if(r.date>=cutoff30){ last30Total++; if(isCan) last30Can++; }
+      const na = normArtist(r.artist);
+      const country = COUNTRY_BY_ARTIST[na];
+      if(country!==undefined){
+        matched++;
+        const isCan = /canada/i.test(country);
+        const year = new Date(r.date).getUTCFullYear();
+        canYearTotal[year] = (canYearTotal[year]||0)+1;
+        if(isCan){ canYearCounts[year]=(canYearCounts[year]||0)+1; canTotal++; }
+        canMatched++;
+        if(r.date>=cutoff30){ last30Total++; if(isCan) last30Can++; }
+      }
+
+      const meta = TRACK_META[na + '|||' + normTrack(r.track)];
+      totalSeconds += (meta && meta.length_sec) ? meta.length_sec : avgLenFallback;
+      if(meta && meta.year){
+        const dec = Math.floor(meta.year/10)*10;
+        decadeCounts[dec] = (decadeCounts[dec]||0)+1;
+      }
     });
 
     const yearlyCanadian = Object.keys(canYearTotal).map(Number).sort((a,b)=>a-b).map(y=>({
@@ -177,6 +227,12 @@ function render(){
       recentPct: last30Total ? Math.round(last30Can/last30Total*1000)/10 : null,
       yearlyCanadian
     };
+
+    totalHours = Math.round(totalSeconds/3600 * 10)/10;
+
+    decade = Object.keys(decadeCounts).map(Number).sort((a,b)=>a-b)
+      .map(d=>({decade:d, count:decadeCounts[d]}))
+      .filter(d=>d.count>5);
   }
 
   paint({
@@ -185,8 +241,17 @@ function render(){
     last_date: ymd(new Date(lastMs)), span_days: spanDays, active_days: activeDays,
     longest_streak: longestStreak, yearly, top_artists: topArtists, top_tracks: topTracks,
     top_albums: topAlbums, hour_of_day: hourOfDay, day_of_week: dayOfWeek, discovery,
-    can: canStats
+    can: canStats, total_hours: totalHours, decade
   });
+}
+
+// Fallback average track length (seconds) for scrobbles whose track doesn't match
+// a known library entry -- computed from whatever lengths we do have, so an
+// unmatched scrobble doesn't just get counted as zero.
+function averageKnownLength(){
+  const lens = Object.values(TRACK_META).map(m=>m.length_sec).filter(Boolean);
+  if(!lens.length) return 0;
+  return lens.reduce((a,b)=>a+b,0)/lens.length;
 }
 
 function raw_username(){ return document.getElementById('heroUser').textContent; }
@@ -208,6 +273,16 @@ function paint(DATA){
   const years = (DATA.span_days/365.25).toFixed(1);
   document.getElementById('heroSpan').textContent = years + ' years';
   document.getElementById('heroDates').textContent = DATA.first_date + ' to ' + DATA.last_date;
+
+  const heroHoursEl = document.getElementById('heroHours');
+  const heroEyebrow = heroHoursEl.nextElementSibling; // "hours logged" label
+  if(DATA.total_hours != null){
+    heroHoursEl.textContent = fmtNum(Math.round(DATA.total_hours));
+  } else {
+    // no library data yet -- fall back to scrobble count as the headline number
+    heroHoursEl.textContent = fmtNum(DATA.total_scrobbles);
+    if(heroEyebrow) heroEyebrow.textContent = 'scrobbles logged';
+  }
 
   const stats = [
     [fmtNum(DATA.total_scrobbles), 'total scrobbles'],
@@ -259,6 +334,19 @@ function paint(DATA){
     document.getElementById('countryPendingNotice').style.display = 'none';
   } else {
     document.getElementById('countryPendingNotice').style.display = 'block';
+  }
+
+  // Decade of release -- only render if library data available
+  if(DATA.decade && DATA.decade.length){
+    document.getElementById('decadeChartCard').style.display = 'block';
+    new Chart(document.getElementById('decadeChart'), {
+      type:'bar',
+      data:{ labels: DATA.decade.map(d=>d.decade+'s'),
+        datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: GOLD, borderRadius:2, barPercentage:0.65 }] },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
+        scales:{ x:{ grid:{color:'#241d16'} }, y:{ grid:{display:false} } } }
+    });
   }
 
   function renderList(elId, items, mainFn, subFn){

@@ -295,7 +295,7 @@
       No <code>library_data.json</code> found alongside this page yet, so artist-country, total-hours, and decade-of-release stats are hidden. Drop that file in the same folder and reload to enable them.
     </div>
 
-    <div></div>
+    <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Statistics</p>
 
     <div class="two-col">
       <div class="card">
@@ -315,6 +315,14 @@
       <p class="desc">Combined plays across all scrobbled tracks from that album.</p>
       <ol class="ranked" id="albumList"></ol>
     </div>
+
+    <div class="card">
+      <h3>New artists discovered per year</h3>
+      <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
+      <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
+    </div>
+
+    <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Charts</p>
 
     <div class="card">
       <h3>Scrobbles per year</h3>
@@ -361,12 +369,6 @@
       <ol class="ranked" id="countryTopList"></ol>
     </div>
 
-    <div class="card">
-      <h3>New artists discovered per year</h3>
-      <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
-      <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
-    </div>
-
     <div class="fact-grid">
       <div class="fact"><div class="fact-num" id="factStreak">—</div><div class="fact-lbl">longest consecutive listening streak, days</div></div>
       <div class="fact"><div class="fact-num" id="factArtists">—</div><div class="fact-lbl">unique artists ever scrobbled</div></div>
@@ -399,6 +401,8 @@
     <div id="reportBody">
       <div class="stat-grid" id="reportStatGrid"></div>
 
+      <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Statistics</p>
+      
       <div class="two-col">
         <div class="card">
           <h3>Top artists</h3>
@@ -419,6 +423,8 @@
       </div>
 
       <div class="callout" id="firstTrackCallout"></div>
+
+      <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Charts</p>
 
       <div class="card" style="margin-top:20px;">
         <h3 id="subPeriodTitle">Scrobbles</h3>

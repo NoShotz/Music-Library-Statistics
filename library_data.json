@@ -1,0 +1,4660 @@
+{
+  "tracks": [
+    {
+      "title": "Ocean Pearl",
+      "artist": "54-40",
+      "album": "Smilin' Buddha Cabaret",
+      "length": "3:28",
+      "year": 1994,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Dancing Queen",
+      "artist": "ABBA",
+      "album": "Arrival",
+      "length": "3:50",
+      "year": 1976,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Super Trouper",
+      "artist": "ABBA",
+      "album": "Super Trouper",
+      "length": "4:14",
+      "year": 1980,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "T.N.T",
+      "artist": "AC/DC",
+      "album": "T.N.T",
+      "length": "3:34",
+      "year": 1975,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Dirty Deeds Done Dirt Cheap",
+      "artist": "AC/DC",
+      "album": "Dirty Deeds Done Dirt Cheap",
+      "length": "3:51",
+      "year": 1976,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Highway To Hell",
+      "artist": "AC/DC",
+      "album": "Highway To Hell",
+      "length": "3:28",
+      "year": 1979,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Back In Black",
+      "artist": "AC/DC",
+      "album": "Back In Black",
+      "length": "4:15",
+      "year": 1980,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Rock And Roll Ain't Noise Pollution",
+      "artist": "AC/DC",
+      "album": "Back In Black",
+      "length": "4:26",
+      "year": 1980,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Shoot To Thrill",
+      "artist": "AC/DC",
+      "album": "Back In Black",
+      "length": "5:17",
+      "year": 1980,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "You Shook Me All Night Long",
+      "artist": "AC/DC",
+      "album": "Back In Black",
+      "length": "3:30",
+      "year": 1980,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "For Those About To Rock (We Salute You)",
+      "artist": "AC/DC",
+      "album": "For Those About To Rock We Salute You",
+      "length": "5:43",
+      "year": 1981,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Moneytalks",
+      "artist": "AC/DC",
+      "album": "The Razors Edge",
+      "length": "3:51",
+      "year": 1990,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Thunderstruck",
+      "artist": "AC/DC",
+      "album": "The Razors Edge",
+      "length": "4:54",
+      "year": 1990,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Dream On",
+      "artist": "Aerosmith",
+      "album": "Aerosmith",
+      "length": "4:28",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sweet Emotion",
+      "artist": "Aerosmith",
+      "album": "Toys In The Attic",
+      "length": "5:08",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Walk This Way",
+      "artist": "Aerosmith",
+      "album": "Toys In The Attic",
+      "length": "3:40",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Livin' On The Edge",
+      "artist": "Aerosmith",
+      "album": "Get A Grip",
+      "length": "6:15",
+      "year": 1993,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Deuces Are Wild",
+      "artist": "Aerosmith",
+      "album": "Big Ones",
+      "length": "3:36",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "You Oughta Know",
+      "artist": "Alanis Morissette",
+      "album": "Jagged Little Pill",
+      "length": "4:09",
+      "year": 1995,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Black Velvet",
+      "artist": "Alannah Myles",
+      "album": "Alannah Myles",
+      "length": "4:47",
+      "year": 1989,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Fucked With An Anchor",
+      "artist": "Alestorm",
+      "album": "No Grave But The Sea",
+      "length": "3:27",
+      "year": 2017,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "School's Out",
+      "artist": "Alice Cooper",
+      "album": "School's Out",
+      "length": "3:37",
+      "year": 1972,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Billion Dollar Babies",
+      "artist": "Alice Cooper",
+      "album": "Billion Dollar Babies",
+      "length": "3:43",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "No More Mr. Nice Guy",
+      "artist": "Alice Cooper",
+      "album": "Billion Dollar Babies",
+      "length": "3:07",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Poison",
+      "artist": "Alice Cooper",
+      "album": "Trash",
+      "length": "4:28",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Man In The Box",
+      "artist": "Alice In Chains",
+      "album": "Facelift",
+      "length": "4:44",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Them Bones",
+      "artist": "Alice In Chains",
+      "album": "Dirt",
+      "length": "2:29",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ramblin' Man",
+      "artist": "The Allman Brothers Band",
+      "album": "Brothers And Sisters",
+      "length": "4:48",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bend Me, Shape Me",
+      "artist": "The American Breed",
+      "album": "Bend Me, Shape Me",
+      "length": "2:27",
+      "year": 1968,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "You Could Have Been A Lady",
+      "artist": "April Wine",
+      "album": "On Record",
+      "length": "3:24",
+      "year": 1972,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Roller",
+      "artist": "April Wine",
+      "album": "First Glance",
+      "length": "4:16",
+      "year": 1978,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Say Hello",
+      "artist": "April Wine",
+      "album": "Harder ... Faster",
+      "length": "2:57",
+      "year": 1979,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Sign Of The Gypsy Queen",
+      "artist": "April Wine",
+      "album": "The Nature Of The Beast",
+      "length": "4:18",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Do I Wanna Know?",
+      "artist": "Arctic Monkeys",
+      "album": "AM",
+      "length": "4:32",
+      "year": 2013,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Heat Of The Moment",
+      "artist": "Asia",
+      "album": "Asia",
+      "length": "3:51",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Frontier Psychiatrist",
+      "artist": "The Avalanches",
+      "album": "Since I Left You",
+      "length": "4:47",
+      "year": 2000,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Takin' Care Of Business",
+      "artist": "Bachman-Turner Overdrive",
+      "album": "Bachman-Turner Overdrive II",
+      "length": "4:49",
+      "year": 1973,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "You Ain't Seen Nothing Yet",
+      "artist": "Bachman-Turner Overdrive",
+      "album": "Not Fragile",
+      "length": "3:30",
+      "year": 1974,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Zombie",
+      "artist": "Bad Wolves",
+      "album": "Disobey",
+      "length": "4:14",
+      "year": 2018,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Weight",
+      "artist": "The Band",
+      "album": "Music From Big Pink",
+      "length": "4:33",
+      "year": 1968,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Wouldn't It Be Nice",
+      "artist": "The Beach Boys",
+      "album": "Pet Sounds",
+      "length": "2:33",
+      "year": 1966,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Fight For Your Right",
+      "artist": "Beastie Boys",
+      "album": "Licensed To Ill",
+      "length": "3:27",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "No Sleep Till Brooklyn",
+      "artist": "Beastie Boys",
+      "album": "Licensed To Ill",
+      "length": "4:06",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sabotage",
+      "artist": "Beastie Boys",
+      "album": "Ill Communication",
+      "length": "2:54",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Twist And Shout",
+      "artist": "The Beatles",
+      "album": "Please Please Me",
+      "length": "2:36",
+      "year": 1963,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "All You Need Is Love",
+      "artist": "The Beatles",
+      "album": "Magical Mystery Tour",
+      "length": "3:44",
+      "year": 1967,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "I Am The Walrus",
+      "artist": "The Beatles",
+      "album": "Magical Mystery Tour",
+      "length": "4:35",
+      "year": 1967,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "With A Little Help From My Friends",
+      "artist": "The Beatles",
+      "album": "Sgt. Pepper's Lonely Hearts Club Band",
+      "length": "2:44",
+      "year": 1967,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Come Together",
+      "artist": "The Beatles",
+      "album": "Abbey Road",
+      "length": "4:19",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Here Comes The Sun",
+      "artist": "The Beatles",
+      "album": "Abbey Road",
+      "length": "3:04",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Don't Let Me Down",
+      "artist": "The Beatles",
+      "album": "Hey Jude",
+      "length": "3:36",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Hey Jude",
+      "artist": "The Beatles",
+      "album": "Hey Jude",
+      "length": "7:05",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Revolution",
+      "artist": "The Beatles",
+      "album": "Hey Jude",
+      "length": "3:25",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Dig A Pony",
+      "artist": "The Beatles",
+      "album": "Let It Be",
+      "length": "3:55",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Now And Then",
+      "artist": "The Beatles",
+      "album": "Now And Then",
+      "length": "4:08",
+      "year": 2023,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Piece Of My Heart",
+      "artist": "Big Brother And The Holding Company",
+      "album": "Cheap Thrills",
+      "length": "4:15",
+      "year": 1968,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Turn The Lights On",
+      "artist": "Big Sugar",
+      "album": "Heated",
+      "length": "3:55",
+      "year": 1998,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Albatross",
+      "artist": "Big Wreck",
+      "album": "Albatross",
+      "length": "4:14",
+      "year": 2012,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Mony Mony",
+      "artist": "Billy Idol",
+      "album": "Don't Stop",
+      "length": "5:02",
+      "year": 1981,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "White Wedding Part 1",
+      "artist": "Billy Idol",
+      "album": "Billy Idol",
+      "length": "4:12",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Rebel Yell",
+      "artist": "Billy Idol",
+      "album": "Rebel Yell",
+      "length": "4:46",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "It's Still Rock And Roll To Me",
+      "artist": "Billy Joel",
+      "album": "Glass Houses",
+      "length": "2:56",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "We Didn't Start The Fire",
+      "artist": "Billy Joel",
+      "album": "Storm Front",
+      "length": "4:47",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lonely Is The Night",
+      "artist": "Billy Squier",
+      "album": "Don't Say No",
+      "length": "4:42",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Stroke",
+      "artist": "Billy Squier",
+      "album": "Don't Say No",
+      "length": "3:37",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Fallen Leaves",
+      "artist": "Billy Talent",
+      "album": "Billy Talent II",
+      "length": "3:19",
+      "year": 2006,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Rusted From The Rain",
+      "artist": "Billy Talent",
+      "album": "Billy Talent III",
+      "length": "4:13",
+      "year": 2009,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Hard To Handle",
+      "artist": "The Black Crowes",
+      "album": "Shake Your Money Maker",
+      "length": "3:08",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "She Talks To Angels",
+      "artist": "The Black Crowes",
+      "album": "Shake Your Money Maker",
+      "length": "5:29",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Howlin' For You",
+      "artist": "The Black Keys",
+      "album": "Brothers",
+      "length": "3:10",
+      "year": 2010,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Next Girl",
+      "artist": "The Black Keys",
+      "album": "Brothers",
+      "length": "3:18",
+      "year": 2010,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Gold On The Ceiling",
+      "artist": "The Black Keys",
+      "album": "El Camino",
+      "length": "3:44",
+      "year": 2011,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lonely Boy",
+      "artist": "The Black Keys",
+      "album": "El Camino",
+      "length": "3:13",
+      "year": 2011,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "N.I.B.",
+      "artist": "Black Sabbath",
+      "album": "Black Sabbath",
+      "length": "6:04",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Iron Man",
+      "artist": "Black Sabbath",
+      "album": "Paranoid",
+      "length": "5:51",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Paranoid",
+      "artist": "Black Sabbath",
+      "album": "Paranoid",
+      "length": "2:48",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "War Pigs",
+      "artist": "Black Sabbath",
+      "album": "Paranoid",
+      "length": "7:54",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "No Rain",
+      "artist": "Blind Melon",
+      "album": "Blind Melon",
+      "length": "3:37",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "All The Small Things",
+      "artist": "Blink-182",
+      "album": "Enema Of The State",
+      "length": "2:48",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "One Way Or Another",
+      "artist": "Blondie",
+      "album": "Parallel Lines",
+      "length": "3:15",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "(Don't Fear) The Reaper",
+      "artist": "Blue Öyster Cult",
+      "album": "Agents Of Fortune",
+      "length": "5:09",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Night Moves",
+      "artist": "Bob Seger & The Silver Bullet Band",
+      "album": "Night Moves",
+      "length": "5:24",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hollywood Nights",
+      "artist": "Bob Seger & The Silver Bullet Band",
+      "album": "Stranger In Town",
+      "length": "5:03",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Old Time Rock & Roll",
+      "artist": "Bob Seger & The Silver Bullet Band",
+      "album": "Stranger In Town",
+      "length": "3:15",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Livin' On A Prayer",
+      "artist": "Bon Jovi",
+      "album": "Slippery When Wet",
+      "length": "3:59",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Wanted Dead Or Alive",
+      "artist": "Bon Jovi",
+      "album": "Slippery When Wet",
+      "length": "4:09",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "You Give Love A Bad Name",
+      "artist": "Bon Jovi",
+      "album": "Slippery When Wet",
+      "length": "3:42",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bad Medicine",
+      "artist": "Bon Jovi",
+      "album": "New Jersey",
+      "length": "5:16",
+      "year": 1988,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "It's My Life",
+      "artist": "Bon Jovi",
+      "album": "Crush",
+      "length": "3:47",
+      "year": 2000,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Rasputin",
+      "artist": "Boney M.",
+      "album": "Nightflight To Venus",
+      "length": "4:25",
+      "year": 1978,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Green Onions",
+      "artist": "Booker T. & The M.G.'s",
+      "album": "Green Onions",
+      "length": "2:56",
+      "year": 1962,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Foreplay / Long Time",
+      "artist": "Boston",
+      "album": "Boston",
+      "length": "7:47",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "More Than A Feeling",
+      "artist": "Boston",
+      "album": "Boston",
+      "length": "4:45",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Peace Of Mind",
+      "artist": "Boston",
+      "album": "Boston",
+      "length": "5:03",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Born To Run",
+      "artist": "Bruce Springsteen",
+      "album": "Born To Run",
+      "length": "4:30",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Somebody",
+      "artist": "Bryan Adams",
+      "album": "Reckless",
+      "length": "4:43",
+      "year": 1984,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Summer Of '69",
+      "artist": "Bryan Adams",
+      "album": "Reckless",
+      "length": "3:33",
+      "year": 1984,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "For What It's Worth",
+      "artist": "Buffalo Springfield",
+      "album": "Buffalo Springfield",
+      "length": "2:39",
+      "year": 1967,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Comedown",
+      "artist": "Bush",
+      "album": "Sixteen Stone",
+      "length": "5:27",
+      "year": 1994,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Glycerine",
+      "artist": "Bush",
+      "album": "Sixteen Stone",
+      "length": "4:26",
+      "year": 1994,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Ain't No Rest For The Wicked",
+      "artist": "Cage The Elephant",
+      "album": "Cage The Elephant",
+      "length": "2:58",
+      "year": 2008,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Good Times Roll",
+      "artist": "The Cars",
+      "album": "The Cars",
+      "length": "3:45",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Just What I Needed",
+      "artist": "The Cars",
+      "album": "The Cars",
+      "length": "3:45",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "My Best Friend's Girl",
+      "artist": "The Cars",
+      "album": "The Cars",
+      "length": "3:43",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "You're All I've Got Tonight",
+      "artist": "The Cars",
+      "album": "The Cars",
+      "length": "4:14",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hello There",
+      "artist": "Cheap Trick",
+      "album": "In Color",
+      "length": "1:41",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Surrender",
+      "artist": "Cheap Trick",
+      "album": "Heaven Tonight",
+      "length": "4:16",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "If You Leave Me Now",
+      "artist": "Chicago",
+      "album": "Chicago X",
+      "length": "3:55",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sh-Boom",
+      "artist": "The Chords",
+      "album": "The Chords",
+      "length": "2:24",
+      "year": 1954,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Johnny B. Goode",
+      "artist": "Chuck Berry",
+      "album": "Chuck Berry Is On Top",
+      "length": "2:42",
+      "year": 1959,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Rock The Casbah",
+      "artist": "The Clash",
+      "album": "Combat Rock",
+      "length": "3:42",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Should I Stay Or Should I Go",
+      "artist": "The Clash",
+      "album": "Combat Rock",
+      "length": "3:09",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Shine",
+      "artist": "Collective Soul",
+      "album": "Hints Allegations And Things Left Unsaid",
+      "length": "5:06",
+      "year": 1993,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "December",
+      "artist": "Collective Soul",
+      "album": "Collective Soul",
+      "length": "4:45",
+      "year": 1995,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Take Me Home, Country Roads",
+      "artist": "Copilot Music + Sound",
+      "album": "Fallout 76",
+      "length": "3:02",
+      "year": 2018,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sunshine Of Your Love",
+      "artist": "Cream",
+      "album": "Disraeli Gears",
+      "length": "4:10",
+      "year": 1967,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Bad Moon Rising",
+      "artist": "Creedence Clearwater Revival",
+      "album": "Green River",
+      "length": "2:18",
+      "year": 1969,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Down On The Corner",
+      "artist": "Creedence Clearwater Revival",
+      "album": "Willy And The Poor Boys",
+      "length": "2:37",
+      "year": 1969,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Fortunate Son",
+      "artist": "Creedence Clearwater Revival",
+      "album": "Willy And The Poor Boys",
+      "length": "2:20",
+      "year": 1969,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Run Through The Jungle",
+      "artist": "Creedence Clearwater Revival",
+      "album": "Cosmo's Factory",
+      "length": "3:06",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Have You Ever Seen The Rain",
+      "artist": "Creedence Clearwater Revival",
+      "album": "Pendulum",
+      "length": "2:38",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "She Sells Sanctuary",
+      "artist": "The Cult",
+      "album": "Love",
+      "length": "4:12",
+      "year": 1985,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Love Removal Machine",
+      "artist": "The Cult",
+      "album": "Electric",
+      "length": "4:17",
+      "year": 1987,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "(I Just) Died In Your Arms",
+      "artist": "Cutting Crew",
+      "album": "Broadcast",
+      "length": "4:40",
+      "year": 1986,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Civilization",
+      "artist": "Danny Kaye & The Andrews Sisters",
+      "album": "Civilization",
+      "length": "3:00",
+      "year": 1947,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Mother",
+      "artist": "Danzig",
+      "album": "Danzig",
+      "length": "3:25",
+      "year": 1988,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Space Oddity",
+      "artist": "David Bowie",
+      "album": "Space Oddity",
+      "length": "5:16",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "The Man Who Sold The World",
+      "artist": "David Bowie",
+      "album": "The Man Who Sold The World",
+      "length": "4:01",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Changes",
+      "artist": "David Bowie",
+      "album": "Hunky Dory",
+      "length": "3:37",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Life On Mars",
+      "artist": "David Bowie",
+      "album": "Hunky Dory",
+      "length": "3:57",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Starman",
+      "artist": "David Bowie",
+      "album": "The Rise And Fall Of Ziggy Stardust And The Spiders From Mars",
+      "length": "4:17",
+      "year": 1972,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Ziggy Stardust",
+      "artist": "David Bowie",
+      "album": "The Rise And Fall Of Ziggy Stardust And The Spiders From Mars",
+      "length": "3:14",
+      "year": 1972,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Fame",
+      "artist": "David Bowie",
+      "album": "Young Americans",
+      "length": "4:24",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Rebel Rebel",
+      "artist": "David Bowie",
+      "album": "Diamond Dogs",
+      "length": "4:30",
+      "year": 1976,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "I'm Afraid Of Americans",
+      "artist": "David Bowie",
+      "album": "Earthling",
+      "length": "5:00",
+      "year": 1997,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Ain't That A Kick In The Head",
+      "artist": "Dean Martin",
+      "album": "Ain't That A Kick In The Head",
+      "length": "2:26",
+      "year": 1960,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Highway Star",
+      "artist": "Deep Purple",
+      "album": "Machine Head",
+      "length": "6:06",
+      "year": 1972,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Photograph",
+      "artist": "Def Leppard",
+      "album": "Pyromania",
+      "length": "4:08",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Rock Of Ages",
+      "artist": "Def Leppard",
+      "album": "Pyromania",
+      "length": "4:08",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Animal",
+      "artist": "Def Leppard",
+      "album": "Hysteria",
+      "length": "4:04",
+      "year": 1987,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Pour Some Sugar On Me",
+      "artist": "Def Leppard",
+      "album": "Hysteria",
+      "length": "4:19",
+      "year": 1987,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Where My Heart Will Take Me",
+      "artist": "Russell Watson",
+      "album": "Enterprise",
+      "length": "1:26",
+      "year": 2002,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Layla",
+      "artist": "Derek And The Dominos",
+      "album": "Layla And Other Assorted Love Songs",
+      "length": "7:00",
+      "year": 1970,
+      "artistCountry": "United States; England; United Kingdom"
+    },
+    {
+      "title": "Money For Nothing",
+      "artist": "Dire Straits",
+      "album": "Brothers In Arms",
+      "length": "8:30",
+      "year": 1985,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Down With The Sickness",
+      "artist": "Disturbed",
+      "album": "The Sickness",
+      "length": "4:39",
+      "year": 2000,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "American Pie",
+      "artist": "Don McLean",
+      "album": "American Pie",
+      "length": "8:31",
+      "year": 1971,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Listen To The Music",
+      "artist": "Doobie Brothers",
+      "album": "Toulouse Street",
+      "length": "4:39",
+      "year": 1972,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Break On Through (To The Other Side)",
+      "artist": "The Doors",
+      "album": "The Doors",
+      "length": "2:27",
+      "year": 1967,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Through The Fire And Flames",
+      "artist": "Dragonforce",
+      "album": "Inhuman Rampage",
+      "length": "7:24",
+      "year": 2006,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Troopers Of The Stars",
+      "artist": "Dragonforce",
+      "album": "Extreme Power Metal",
+      "length": "5:03",
+      "year": 2019,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Moskau",
+      "artist": "Dschinghis Khan",
+      "album": "Dschinghis Khan",
+      "length": "3:21",
+      "year": 1979,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Hungry Like The Wolf",
+      "artist": "Duran Duran",
+      "album": "Rio",
+      "length": "3:24",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Invisible",
+      "artist": "Duran Duran",
+      "album": "Future Past",
+      "length": "3:11",
+      "year": 2021,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Hotel California",
+      "artist": "Eagles",
+      "album": "Hotel California",
+      "length": "6:30",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Life In The Fast Lane",
+      "artist": "Eagles",
+      "album": "Hotel California",
+      "length": "4:47",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "September",
+      "artist": "Earth, Wind & Fire",
+      "album": "The Best Of Earth, Wind & Fire, Vol. 1",
+      "length": "3:35",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hard Sun",
+      "artist": "Eddie Vedder",
+      "album": "Into The Wild",
+      "length": "5:22",
+      "year": 2007,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Electric Avenue",
+      "artist": "Eddy Grant",
+      "album": "Killer On The Rampage",
+      "length": "3:47",
+      "year": 1982,
+      "artistCountry": "Guyana; England; United Kingdom"
+    },
+    {
+      "title": "Free Ride",
+      "artist": "The Edgar Winter Group",
+      "album": "They Only Come Out At Night",
+      "length": "3:08",
+      "year": 1972,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "War",
+      "artist": "Edwin Starr",
+      "album": "War & Peace",
+      "length": "3:21",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Mr. Blue Sky",
+      "artist": "Electric Light Orchestra",
+      "album": "Out Of The Blue",
+      "length": "5:05",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Rocket Man (I Think It's Going To Be A Long Long Time)",
+      "artist": "Elton John",
+      "album": "Honky Château",
+      "length": "4:41",
+      "year": 1972,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Pump It Up",
+      "artist": "Elvis Costello",
+      "album": "This Year's Model",
+      "length": "3:18",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Jailhouse Rock",
+      "artist": "Elvis Presley",
+      "album": "Jailhouse Rock",
+      "length": "2:32",
+      "year": 1957,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Cliffs Of Dover",
+      "artist": "Eric Johnson",
+      "album": "Ah Via Musicom",
+      "length": "4:12",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Final Countdown",
+      "artist": "Europe",
+      "album": "The Final Countdown",
+      "length": "5:06",
+      "year": 1986,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Bring Me To Life",
+      "artist": "Evanescence",
+      "album": "Fallen",
+      "length": "3:55",
+      "year": 2003,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Epic",
+      "artist": "Faith No More",
+      "album": "The Real Thing",
+      "length": "4:53",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ain't That A Shame",
+      "artist": "Fats Domino",
+      "album": "Rock And Rollin' With Fats Domino",
+      "length": "2:28",
+      "year": 1955,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Paralyzer",
+      "artist": "Finger Eleven",
+      "album": "Them vs. You vs. Me",
+      "length": "3:28",
+      "year": 2007,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Signs",
+      "artist": "Five Man Electrical Band",
+      "album": "Good-Byes And Butterflies",
+      "length": "3:05",
+      "year": 1970,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "O-O-H Child",
+      "artist": "The Five Stairsteps",
+      "album": "Stairsteps",
+      "length": "3:18",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Chain",
+      "artist": "Fleetwood Mac",
+      "album": "Rumours",
+      "length": "4:29",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Go Your Own Way",
+      "artist": "Fleetwood Mac",
+      "album": "Rumours",
+      "length": "3:43",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom; United States"
+    },
+    {
+      "title": "Slow Ride",
+      "artist": "Foghat",
+      "album": "Fool For The City",
+      "length": "8:16",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Everlong",
+      "artist": "Foo Fighters",
+      "album": "The Colour And The Shape",
+      "length": "4:10",
+      "year": 1997,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Monkey Wrench",
+      "artist": "Foo Fighters",
+      "album": "The Colour And The Shape",
+      "length": "3:51",
+      "year": 1997,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "My Hero",
+      "artist": "Foo Fighters",
+      "album": "The Colour And The Shape",
+      "length": "4:19",
+      "year": 1997,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Learn To Fly",
+      "artist": "Foo Fighters",
+      "album": "There Is Nothing Left To Lose",
+      "length": "3:55",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "All My Life",
+      "artist": "Foo Fighters",
+      "album": "One By One",
+      "length": "4:23",
+      "year": 2002,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Times Like These",
+      "artist": "Foo Fighters",
+      "album": "One By One",
+      "length": "4:25",
+      "year": 2002,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Best Of You",
+      "artist": "Foo Fighters",
+      "album": "In Your Honor",
+      "length": "4:15",
+      "year": 2005,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Pretender",
+      "artist": "Foo Fighters",
+      "album": "Echoes, Silence, Patience & Grace",
+      "length": "4:30",
+      "year": 2007,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bridge Burning",
+      "artist": "Foo Fighters",
+      "album": "Wasting Light",
+      "length": "4:46",
+      "year": 2011,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "These Days",
+      "artist": "Foo Fighters",
+      "album": "Wasting Light",
+      "length": "4:59",
+      "year": 2011,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hot Blooded",
+      "artist": "Foreigner",
+      "album": "Double Vision",
+      "length": "4:28",
+      "year": 1978,
+      "artistCountry": "United States; England; United Kingdom"
+    },
+    {
+      "title": "Juke Box Hero",
+      "artist": "Foreigner",
+      "album": "4",
+      "length": "4:27",
+      "year": 1981,
+      "artistCountry": "United States; England; United Kingdom"
+    },
+    {
+      "title": "That's Life",
+      "artist": "Frank Sinatra",
+      "album": "That's Life",
+      "length": "3:07",
+      "year": 1966,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Take Me Out",
+      "artist": "Franz Ferdinand",
+      "album": "Franz Ferdinand",
+      "length": "3:57",
+      "year": 2004,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Time Waits For No One",
+      "artist": "Freddie Mercury",
+      "album": "Time",
+      "length": "3:27",
+      "year": 1986,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "All Right Now",
+      "artist": "Free",
+      "album": "Fire And Water",
+      "length": "5:42",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "That's All",
+      "artist": "Genesis",
+      "album": "Genesis",
+      "length": "4:24",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Bad To The Bone",
+      "artist": "George Thorogood And The Destroyers",
+      "album": "Bad To The Bone",
+      "length": "4:57",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Habanera",
+      "artist": "Georges Bizet",
+      "album": "Carmen",
+      "length": "4:18",
+      "year": 1875,
+      "artistCountry": "France"
+    },
+    {
+      "title": "Baker Street",
+      "artist": "Gerry Rafferty",
+      "album": "City To City",
+      "length": "6:05",
+      "year": 1978,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Cirice",
+      "artist": "Ghost",
+      "album": "Meliora",
+      "length": "6:02",
+      "year": 2015,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Square Hammer",
+      "artist": "Ghost",
+      "album": "Popestar",
+      "length": "3:59",
+      "year": 2016,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "I Will Survive",
+      "artist": "Gloria Gaynor",
+      "album": "Love Tracks",
+      "length": "3:41",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Mama",
+      "artist": "The Glorious Sons",
+      "album": "The Union",
+      "length": "3:09",
+      "year": 2014,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Schweine",
+      "artist": "Glukoza",
+      "album": "Moskva",
+      "length": "4:23",
+      "year": 2005,
+      "artistCountry": "Russia"
+    },
+    {
+      "title": "(You're A) Strange Animal",
+      "artist": "Gowan",
+      "album": "Strange Animal",
+      "length": "4:37",
+      "year": 1985,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Basket Case",
+      "artist": "Green Day",
+      "album": "Dookie",
+      "length": "3:01",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Longview",
+      "artist": "Green Day",
+      "album": "Dookie",
+      "length": "3:59",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Brain Stew",
+      "artist": "Green Day",
+      "album": "Insomniac",
+      "length": "3:13",
+      "year": 1995,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "American Idiot",
+      "artist": "Green Day",
+      "album": "American Idiot",
+      "length": "2:54",
+      "year": 2004,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Boulevard Of Broken Dreams",
+      "artist": "Green Day",
+      "album": "American Idiot",
+      "length": "4:19",
+      "year": 2004,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "21 Guns",
+      "artist": "Green Day",
+      "album": "21st Century Breakdown",
+      "length": "5:21",
+      "year": 2009,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Know Your Enemy",
+      "artist": "Green Day",
+      "album": "21st Century Breakdown",
+      "length": "3:11",
+      "year": 2009,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "No Time",
+      "artist": "The Guess Who",
+      "album": "Canned Wheat",
+      "length": "3:47",
+      "year": 1969,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "American Woman",
+      "artist": "The Guess Who",
+      "album": "American Woman",
+      "length": "3:53",
+      "year": 1970,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Rain Dance",
+      "artist": "The Guess Who",
+      "album": "So Long, Bannatyne",
+      "length": "2:45",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Paradise City",
+      "artist": "Guns N' Roses",
+      "album": "Appetite For Destruction",
+      "length": "6:45",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sweet Child O' Mine",
+      "artist": "Guns N' Roses",
+      "album": "Appetite For Destruction",
+      "length": "5:56",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Welcome To The Jungle",
+      "artist": "Guns N' Roses",
+      "album": "Appetite For Destruction",
+      "length": "4:33",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Live And Let Die",
+      "artist": "Guns N' Roses",
+      "album": "Use Your Illusion I",
+      "length": "3:04",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Knockin' On Heaven's Door",
+      "artist": "Guns N' Roses",
+      "album": "Use Your Illusion II",
+      "length": "5:34",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Innocence",
+      "artist": "Harlequin",
+      "album": "Love Crimes",
+      "length": "4:19",
+      "year": 1980,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Cat's In The Cradle",
+      "artist": "Harry Chapin",
+      "album": "Verities & Balderdash",
+      "length": "3:46",
+      "year": 1974,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Tweeter And The Monkey Man",
+      "artist": "Headstones",
+      "album": "Picture Of Health",
+      "length": "3:39",
+      "year": 1993,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Long Way To Neverland",
+      "artist": "Headstones",
+      "album": "Love + Fury",
+      "length": "2:56",
+      "year": 2013,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Crazy On You",
+      "artist": "Heart",
+      "album": "Dreamboat Annie",
+      "length": "4:53",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Barracuda",
+      "artist": "Heart",
+      "album": "Little Queen",
+      "length": "4:24",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Just A Fair Weather Friend",
+      "artist": "Henry King & His Orchestra",
+      "album": "Just A Fair Weather Friend",
+      "length": "3:06",
+      "year": 1934,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "New Girl Now",
+      "artist": "Honeymoon Suite",
+      "album": "Honeymoon Suite",
+      "length": "3:36",
+      "year": 1984,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Every 1's A Winner",
+      "artist": "Hot Chocolate",
+      "album": "Every 1's A Winner",
+      "length": "4:49",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Radioactive",
+      "artist": "Imagine Dragons",
+      "album": "Night Visions",
+      "length": "3:06",
+      "year": 2012,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Don't Want To Set The World On Fire",
+      "artist": "The Ink Spots",
+      "album": "I Don't Want To Set The World On Fire",
+      "length": "3:07",
+      "year": 1941,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Need You Tonight",
+      "artist": "INXS",
+      "album": "Kick",
+      "length": "3:04",
+      "year": 1987,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "In-A-Gadda-Da-Vida",
+      "artist": "Iron Butterfly",
+      "album": "In-A-Gadda-Da-Vida",
+      "length": "17:04",
+      "year": 1968,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Number Of The Beast",
+      "artist": "Iron Maiden",
+      "album": "The Number Of The Beast",
+      "length": "4:51",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Run To The Hills",
+      "artist": "Iron Maiden",
+      "album": "The Number Of The Beast",
+      "length": "3:51",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "The Trooper",
+      "artist": "Iron Maiden",
+      "album": "Piece Of Mind",
+      "length": "4:12",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Centerfold",
+      "artist": "J. Geils Band",
+      "album": "Freeze Frame",
+      "length": "3:36",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Don't Wanna Fall In Love",
+      "artist": "Jane Child",
+      "album": "Jane Child",
+      "length": "4:07",
+      "year": 1989,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Somebody To Love",
+      "artist": "Jefferson Airplane",
+      "album": "Surrealistic Pillow",
+      "length": "2:58",
+      "year": 1967,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "White Rabbit",
+      "artist": "Jefferson Airplane",
+      "album": "Surrealistic Pillow",
+      "length": "2:29",
+      "year": 1967,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Are You Gonna Be My Girl",
+      "artist": "Jet",
+      "album": "Get Born",
+      "length": "3:34",
+      "year": 2003,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Aqualung",
+      "artist": "Jethro Tull",
+      "album": "Aqualung",
+      "length": "6:35",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "The Middle",
+      "artist": "Jimmy Eat World",
+      "album": "Bleed American",
+      "length": "2:45",
+      "year": 2001,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bad Reputation",
+      "artist": "Joan Jett",
+      "album": "Bad Reputation",
+      "length": "2:49",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Love Rock 'N Roll",
+      "artist": "Joan Jett",
+      "album": "I Love Rock 'N Roll",
+      "length": "2:55",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Blue Danube",
+      "artist": "Johann Strauss II",
+      "album": "The Blue Danube",
+      "length": "10:07",
+      "year": 1867,
+      "artistCountry": "Austria"
+    },
+    {
+      "title": "Hurts So Good",
+      "artist": "John Mellencamp",
+      "album": "American Fool",
+      "length": "3:39",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ring Of Fire",
+      "artist": "Johnny Cash",
+      "album": "Ring Of Fire: The Best Of Johnny Cash",
+      "length": "2:35",
+      "year": 1963,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hurt",
+      "artist": "Johnny Cash",
+      "album": "American IV: The Man Comes Around",
+      "length": "3:36",
+      "year": 2002,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Any Way You Want It",
+      "artist": "Journey",
+      "album": "Departure",
+      "length": "3:21",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Don't Stop Believin'",
+      "artist": "Journey",
+      "album": "Escape",
+      "length": "4:08",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Separate Ways (Worlds Apart)",
+      "artist": "Journey",
+      "album": "Frontiers",
+      "length": "5:26",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Love Will Tear Us Apart",
+      "artist": "Joy Division",
+      "album": "Love Will Tear Us Apart",
+      "length": "3:26",
+      "year": 1980,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "You've Got Another Thing Comin'",
+      "artist": "Judas Priest",
+      "album": "Screaming For Vengeance",
+      "length": "5:10",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Carry On Wayward Son",
+      "artist": "Kansas",
+      "album": "Leftoverture",
+      "length": "5:25",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Walking On Sunshine",
+      "artist": "Katrina & The Waves",
+      "album": "Walking On Sunshine",
+      "length": "3:58",
+      "year": 1983,
+      "artistCountry": "United States; England; United Kingdom"
+    },
+    {
+      "title": "Jingle, Jangle, Jingle",
+      "artist": "Kay Kyser",
+      "album": "Jingle, Jangle, Jingle",
+      "length": "3:19",
+      "year": 1942,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Switchin' To Glide",
+      "artist": "The Kings",
+      "album": "The Kings Are Here",
+      "length": "2:35",
+      "year": 1980,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Use Somebody",
+      "artist": "Kings Of Leon",
+      "album": "Only By The Night",
+      "length": "3:50",
+      "year": 2008,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lola",
+      "artist": "The Kinks",
+      "album": "Lola Versus Powerman And The Moneygoround, Part One",
+      "length": "4:02",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Black Diamond",
+      "artist": "Kiss",
+      "album": "Kiss",
+      "length": "5:13",
+      "year": 1974,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Strutter",
+      "artist": "Kiss",
+      "album": "Kiss",
+      "length": "3:12",
+      "year": 1974,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Rock And Roll All Nite",
+      "artist": "Kiss",
+      "album": "Dressed To Kill",
+      "length": "2:57",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Detroit Rock City",
+      "artist": "Kiss",
+      "album": "Destroyer",
+      "length": "3:34",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "God Of Thunder",
+      "artist": "Kiss",
+      "album": "Destroyer",
+      "length": "4:17",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Shout It Out Loud",
+      "artist": "Kiss",
+      "album": "Destroyer",
+      "length": "2:49",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Love Gun",
+      "artist": "Kiss",
+      "album": "Love Gun",
+      "length": "3:17",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Shock Me",
+      "artist": "Kiss",
+      "album": "Love Gun",
+      "length": "3:45",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Was Made For Lovin' You",
+      "artist": "Kiss",
+      "album": "Dynasty",
+      "length": "4:33",
+      "year": 1979,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Love It Loud",
+      "artist": "Kiss",
+      "album": "Creatures Of The Night",
+      "length": "4:08",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lick It Up",
+      "artist": "Kiss",
+      "album": "Lick It Up",
+      "length": "3:56",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Heaven's On Fire",
+      "artist": "Kiss",
+      "album": "Animalize",
+      "length": "3:11",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "God Gave Rock 'N' Roll To You II",
+      "artist": "Kiss",
+      "album": "Revenge",
+      "length": "5:19",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Say Yeah",
+      "artist": "Kiss",
+      "album": "Sonic Boom",
+      "length": "4:23",
+      "year": 2009,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Outta This World",
+      "artist": "Kiss",
+      "album": "Monster",
+      "length": "4:29",
+      "year": 2012,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "My Sharona",
+      "artist": "The Knack",
+      "album": "Get The Knack",
+      "length": "4:56",
+      "year": 1979,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Heartbreaker",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin II",
+      "length": "4:15",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Whole Lotta Love",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin II",
+      "length": "5:34",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Immigrant Song",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin III",
+      "length": "2:25",
+      "year": 1970,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Black Dog",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin IV",
+      "length": "4:54",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Stairway To Heaven",
+      "artist": "Led Zeppelin",
+      "album": "Led Zeppelin IV",
+      "length": "8:00",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "The Ocean",
+      "artist": "Led Zeppelin",
+      "album": "Houses Of The Holy",
+      "length": "4:33",
+      "year": 1973,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Kashmir",
+      "artist": "Led Zeppelin",
+      "album": "Physical Graffiti",
+      "length": "8:28",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Fly Away",
+      "artist": "Lenny Kravitz",
+      "album": "5",
+      "length": "3:41",
+      "year": 1998,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "1849",
+      "artist": "Lighthouse",
+      "album": "One Fine Morning",
+      "length": "6:17",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Hats Off To The Stranger",
+      "artist": "Lighthouse",
+      "album": "One Fine Morning",
+      "length": "3:35",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "One Fine Morning",
+      "artist": "Lighthouse",
+      "album": "One Fine Morning",
+      "length": "5:15",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "I Just Wanna Be Your Friend",
+      "artist": "Lighthouse",
+      "album": "Thoughts Of Movin' On",
+      "length": "3:10",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Take It Slow",
+      "artist": "Lighthouse",
+      "album": "Thoughts Of Movin' On",
+      "length": "3:11",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Broken Guitar Blues",
+      "artist": "Lighthouse",
+      "album": "Sunny Days",
+      "length": "4:30",
+      "year": 1972,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Sunny Days",
+      "artist": "Lighthouse",
+      "album": "Sunny Days",
+      "length": "4:16",
+      "year": 1972,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Pretty Lady",
+      "artist": "Lighthouse",
+      "album": "Can You Feel It",
+      "length": "4:03",
+      "year": 1974,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "In the End",
+      "artist": "Linkin Park",
+      "album": "Hybrid Theory",
+      "length": "3:36",
+      "year": 2000,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "What I've Done",
+      "artist": "Linkin Park",
+      "album": "Minutes to Midnight",
+      "length": "3:25",
+      "year": 2007,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "My Own Worst Enemy",
+      "artist": "Lit",
+      "album": "A Place In The Sun",
+      "length": "2:49",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lightning Crashes",
+      "artist": "Live",
+      "album": "Throwing Copper",
+      "length": "5:24",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "What A Wonderful World",
+      "artist": "Louis Armstrong",
+      "album": "What A Wonderful World",
+      "length": "2:19",
+      "year": 1968,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Turn Me Loose",
+      "artist": "Loverboy",
+      "album": "Loverboy",
+      "length": "5:38",
+      "year": 1980,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Working For The Weekend",
+      "artist": "Loverboy",
+      "album": "Get Lucky",
+      "length": "3:41",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Freebird",
+      "artist": "Lynyrd Skynyrd",
+      "album": "(Pronounced 'Lĕh-'Nérd 'Skin-'Nérd)",
+      "length": "9:07",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Gimme Three Steps",
+      "artist": "Lynyrd Skynyrd",
+      "album": "(Pronounced 'Lĕh-'Nérd 'Skin-'Nérd)",
+      "length": "4:27",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sweet Home Alabama",
+      "artist": "Lynyrd Skynyrd",
+      "album": "Second Helping",
+      "length": "4:45",
+      "year": 1974,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Our House",
+      "artist": "Madness",
+      "album": "The Rise & Fall",
+      "length": "3:23",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Blinded By The Light",
+      "artist": "Manfred Mann's Earth Band",
+      "album": "The Roaring Silence",
+      "length": "7:08",
+      "year": 1976,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Sons Of Odin",
+      "artist": "Manowar",
+      "album": "Gods Of War",
+      "length": "6:26",
+      "year": 2007,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Big Iron",
+      "artist": "Marty Robins",
+      "album": "Gunfighter Ballads And Trail Songs",
+      "length": "3:57",
+      "year": 1959,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Break My Stride",
+      "artist": "Matthew Wilder",
+      "album": "I Don't Speak The Language",
+      "length": "3:04",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Paradise Skies",
+      "artist": "Max Webster",
+      "album": "A Million Vacations",
+      "length": "3:28",
+      "year": 1979,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "U Can't Touch This",
+      "artist": "MC Hammer",
+      "album": "Please Hammer Don't Hurt 'Em",
+      "length": "4:17",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bat Out Of Hell",
+      "artist": "Meat Loaf",
+      "album": "Bat Out Of Hell",
+      "length": "9:50",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Who Can It Be Now?",
+      "artist": "Men At Work",
+      "album": "Business As Usual",
+      "length": "3:21",
+      "year": 1981,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "The Safety Dance",
+      "artist": "Men Without Hats",
+      "album": "Rhythm Of Youth",
+      "length": "2:43",
+      "year": 1982,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Fade To Black",
+      "artist": "Metallica",
+      "album": "Ride The Lightning",
+      "length": "6:57",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Battery",
+      "artist": "Metallica",
+      "album": "Master Of Puppets",
+      "length": "5:12",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Master Of Puppets",
+      "artist": "Metallica",
+      "album": "Master Of Puppets",
+      "length": "8:35",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Enter Sandman",
+      "artist": "Metallica",
+      "album": "Metallica",
+      "length": "5:33",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Nothing Else Matters",
+      "artist": "Metallica",
+      "album": "Metallica",
+      "length": "6:36",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sad But True",
+      "artist": "Metallica",
+      "album": "Metallica",
+      "length": "5:23",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Unforgiven",
+      "artist": "Metallica",
+      "album": "Metallica",
+      "length": "6:27",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Beat It",
+      "artist": "Michael Jackson",
+      "album": "Thriller",
+      "length": "4:18",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Gordon Freeman Saved My Life",
+      "artist": "Miracle Of Sound",
+      "album": "Level 1",
+      "length": "3:39",
+      "year": 2011,
+      "artistCountry": "Ireland"
+    },
+    {
+      "title": "Shout At The Devil",
+      "artist": "Mötley Crüe",
+      "album": "Shout At The Devil",
+      "length": "3:14",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Wild Side",
+      "artist": "Mötley Crüe",
+      "album": "Girls, Girls, Girls",
+      "length": "4:38",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Dr. Feelgood",
+      "artist": "Mötley Crüe",
+      "album": "Dr. Feelgood",
+      "length": "4:50",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Kickstart My Heart",
+      "artist": "Mötley Crüe",
+      "album": "Dr. Feelgood",
+      "length": "4:43",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Saints Of Los Angeles",
+      "artist": "Mötley Crüe",
+      "album": "Saints Of Los Angeles",
+      "length": "3:40",
+      "year": 2008,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ace Of Spades",
+      "artist": "Motörhead",
+      "album": "Ace Of Spades",
+      "length": "2:46",
+      "year": 1980,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Mississippi Queen",
+      "artist": "Mountain",
+      "album": "Climbing!",
+      "length": "2:29",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Uprising",
+      "artist": "Muse",
+      "album": "The Resistance",
+      "length": "5:06",
+      "year": 2009,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Teenagers",
+      "artist": "My Chemical Romance",
+      "album": "The Black Parade",
+      "length": "2:41",
+      "year": 2006,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Orange Colored Sky",
+      "artist": "Nat King Cole",
+      "album": "Orange Colored Sky",
+      "length": "2:33",
+      "year": 1950,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hair Of The Dog",
+      "artist": "Nazareth",
+      "album": "Hair Of The Dog",
+      "length": "4:09",
+      "year": 1975,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Sweet Caroline",
+      "artist": "Neil Diamond",
+      "album": "Brother Love's Travelling Salvation Show",
+      "length": "3:22",
+      "year": 1969,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Heart Of Gold",
+      "artist": "Neil Young",
+      "album": "Harvest",
+      "length": "3:07",
+      "year": 1972,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Old Man",
+      "artist": "Neil Young",
+      "album": "Harvest",
+      "length": "3:31",
+      "year": 1972,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Rockin' In The Free World",
+      "artist": "Neil Young",
+      "album": "Freedom",
+      "length": "4:40",
+      "year": 1989,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Hot Child In The City",
+      "artist": "Nick Gilder",
+      "album": "City Nights",
+      "length": "3:34",
+      "year": 1978,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Burn It To The Ground",
+      "artist": "Nickelback",
+      "album": "Dark Horse",
+      "length": "3:30",
+      "year": 2008,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "I Won't Let The Sun Go Down On Me",
+      "artist": "Nik Kershaw",
+      "album": "Human Racing",
+      "length": "3:17",
+      "year": 1984,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Come As You Are",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "length": "3:38",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Drain You",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "length": "3:43",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "In Bloom",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "length": "4:14",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lithium",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "length": "4:15",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Smells Like Teen Spirit",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "length": "5:01",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Heart-Shaped Box",
+      "artist": "Nirvana",
+      "album": "In Utero",
+      "length": "4:44",
+      "year": 1993,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Spirit In The Sky",
+      "artist": "Norman Greenbaum",
+      "album": "Spirit In The Sky",
+      "length": "3:59",
+      "year": 1969,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Self Esteem",
+      "artist": "The Offspring",
+      "album": "Smash",
+      "length": "4:17",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Kids Aren't Alright",
+      "artist": "The Offspring",
+      "album": "Americana",
+      "length": "3:00",
+      "year": 1998,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Why Don't You Get A Job?",
+      "artist": "The Offspring",
+      "album": "Americana",
+      "length": "2:51",
+      "year": 1998,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Here It Goes Again",
+      "artist": "OK Go",
+      "album": "Oh No",
+      "length": "2:59",
+      "year": 2005,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Superman's Dead",
+      "artist": "Our Lady Peace",
+      "album": "Clumsy",
+      "length": "4:15",
+      "year": 1997,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Crazy Train",
+      "artist": "Ozzy Osbourne",
+      "album": "Blizzard Of Ozz",
+      "length": "5:06",
+      "year": 1980,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Mr. Crowley",
+      "artist": "Ozzy Osbourne",
+      "album": "Blizzard Of Ozz",
+      "length": "5:02",
+      "year": 1980,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Bark At The Moon",
+      "artist": "Ozzy Osbourne",
+      "album": "Bark At The Moon",
+      "length": "4:16",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Mama, I'm Coming Home",
+      "artist": "Ozzy Osbourne",
+      "album": "No More Tears",
+      "length": "4:11",
+      "year": 1991,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "No More Tears",
+      "artist": "Ozzy Osbourne",
+      "album": "No More Tears",
+      "length": "7:23",
+      "year": 1991,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "I Don't Wanna Stop",
+      "artist": "Ozzy Osbourne",
+      "album": "Black Rain",
+      "length": "3:59",
+      "year": 2007,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Heartbreaker",
+      "artist": "Pat Benatar",
+      "album": "In The Heat Of The Night",
+      "length": "3:29",
+      "year": 1979,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hit Me With Your Best Shot",
+      "artist": "Pat Benatar",
+      "album": "Crimes Of Passion",
+      "length": "2:52",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Shadows Of The Night",
+      "artist": "Pat Benatar",
+      "album": "Get Nervous",
+      "length": "4:21",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Band On The Run",
+      "artist": "Paul Mccartney & Wings",
+      "album": "Band On The Run",
+      "length": "5:17",
+      "year": 1973,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Eyes Of A Stranger",
+      "artist": "Payolas",
+      "album": "No Stranger To Danger",
+      "length": "4:58",
+      "year": 1982,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Alive",
+      "artist": "Pearl Jam",
+      "album": "Ten",
+      "length": "5:41",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Even Flow",
+      "artist": "Pearl Jam",
+      "album": "Ten",
+      "length": "4:52",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Don't Care Anymore",
+      "artist": "Phil Collins",
+      "album": "Hello, I Must Be Going!",
+      "length": "5:04",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Money",
+      "artist": "Pink Floyd",
+      "album": "The Dark Side Of The Moon",
+      "length": "6:44",
+      "year": 1973,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Time",
+      "artist": "Pink Floyd",
+      "album": "The Dark Side Of The Moon",
+      "length": "6:59",
+      "year": 1973,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Welcome To The Machine",
+      "artist": "Pink Floyd",
+      "album": "Wish You Were Here",
+      "length": "7:31",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Wish You Were Here",
+      "artist": "Pink Floyd",
+      "album": "Wish You Were Here",
+      "length": "5:34",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Another Brick In The Wall Part 2",
+      "artist": "Pink Floyd",
+      "album": "The Wall",
+      "length": "3:59",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Comfortably Numb",
+      "artist": "Pink Floyd",
+      "album": "The Wall",
+      "length": "6:22",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Where Is My Mind?",
+      "artist": "Pixies",
+      "album": "Surfer Rosa",
+      "length": "3:55",
+      "year": 1988,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Nothin' But A Good Time",
+      "artist": "Poison",
+      "album": "Open Up And Say... Ahh!",
+      "length": "3:46",
+      "year": 1988,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Message In A Bottle",
+      "artist": "The Police",
+      "album": "Reggatta De Blanc",
+      "length": "4:49",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Brass In Pocket",
+      "artist": "The Pretenders",
+      "album": "Pretenders",
+      "length": "3:05",
+      "year": 1980,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Heaven Knows",
+      "artist": "The Pretty Reckless",
+      "album": "Going To Hell",
+      "length": "3:45",
+      "year": 2014,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Lay Down",
+      "artist": "Priestess",
+      "album": "Hello Master",
+      "length": "3:05",
+      "year": 2005,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Spaceship Superstar",
+      "artist": "Prism",
+      "album": "Prism",
+      "length": "4:06",
+      "year": 1977,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "I'm Gonna Be (500 Miles)",
+      "artist": "The Proclaimers",
+      "album": "Sunshine On Leith",
+      "length": "3:38",
+      "year": 1988,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Killer Queen",
+      "artist": "Queen",
+      "album": "Sheer Heart Attack",
+      "length": "3:02",
+      "year": 1974,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Bohemian Rhapsody",
+      "artist": "Queen",
+      "album": "A Night At The Opera",
+      "length": "5:57",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Death On Two Legs (Dedicated To...)",
+      "artist": "Queen",
+      "album": "A Night At The Opera",
+      "length": "3:42",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "You're My Best Friend",
+      "artist": "Queen",
+      "album": "A Night At The Opera",
+      "length": "2:50",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Somebody To Love",
+      "artist": "Queen",
+      "album": "A Day At The Races",
+      "length": "4:52",
+      "year": 1976,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Tie Your Mother Down",
+      "artist": "Queen",
+      "album": "A Day At The Races",
+      "length": "3:51",
+      "year": 1976,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "We Are The Champions",
+      "artist": "Queen",
+      "album": "News Of The World",
+      "length": "3:01",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "We Will Rock You",
+      "artist": "Queen",
+      "album": "News Of The World",
+      "length": "2:14",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Don't Stop Me Now",
+      "artist": "Queen",
+      "album": "Jazz",
+      "length": "3:29",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Fat Bottomed Girls",
+      "artist": "Queen",
+      "album": "Jazz",
+      "length": "4:17",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Under Pressure",
+      "artist": "Queen",
+      "album": "Hot Space",
+      "length": "4:03",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Hammer To Fall",
+      "artist": "Queen",
+      "album": "The Works",
+      "length": "3:38",
+      "year": 1984,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Radio Ga Ga",
+      "artist": "Queen",
+      "album": "The Works",
+      "length": "5:43",
+      "year": 1984,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Princes Of The Universe",
+      "artist": "Queen",
+      "album": "A Kind Of Magic",
+      "length": "3:31",
+      "year": 1986,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Who Wants To Live Forever",
+      "artist": "Queen",
+      "album": "A Kind Of Magic",
+      "length": "4:54",
+      "year": 1986,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "No One Knows",
+      "artist": "Queens Of The Stone Age",
+      "album": "Songs For The Deaf",
+      "length": "4:13",
+      "year": 2002,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bang Your Head (Metal Health)",
+      "artist": "Quiet Riot",
+      "album": "Metal Health",
+      "length": "5:17",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Cum On Feel The Noize",
+      "artist": "Quiet Riot",
+      "album": "Metal Health",
+      "length": "4:51",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "It's The End Of The World As We Know It (And I Feel Fine)",
+      "artist": "R.E.M.",
+      "album": "Document",
+      "length": "4:05",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Creep",
+      "artist": "Radiohead",
+      "album": "Pablo Honey",
+      "length": "3:58",
+      "year": 1993,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Killing In The Name",
+      "artist": "Rage Against The Machine",
+      "album": "Rage Against The Machine",
+      "length": "5:13",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bulls On Parade",
+      "artist": "Rage Against The Machine",
+      "album": "Evil Empire",
+      "length": "3:49",
+      "year": 1996,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Since You Been Gone",
+      "artist": "Rainbow",
+      "album": "Down To Earth",
+      "length": "3:17",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Black Betty",
+      "artist": "Ram Jam",
+      "album": "Ram Jam",
+      "length": "3:57",
+      "year": 1977,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Du Hast",
+      "artist": "Rammstein",
+      "album": "Sehnsucht",
+      "length": "3:54",
+      "year": 1997,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Blitzkreig Bop",
+      "artist": "Ramones",
+      "album": "Ramones",
+      "length": "2:14",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Wanna Be Sedated",
+      "artist": "Ramones",
+      "album": "Road To Ruin",
+      "length": "2:29",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Life Is A Highway",
+      "artist": "Rascal Flatts",
+      "album": "Me And My Gang",
+      "length": "4:36",
+      "year": 2006,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Round And Round",
+      "artist": "Ratt",
+      "album": "Out Of The Cellar",
+      "length": "4:26",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Under The Bridge",
+      "artist": "Red Hot Chili Peppers",
+      "album": "Blood Sugar Sex Magik",
+      "length": "4:25",
+      "year": 1991,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Californication",
+      "artist": "Red Hot Chili Peppers",
+      "album": "Californication",
+      "length": "5:29",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Can't Stop",
+      "artist": "Red Hot Chili Peppers",
+      "album": "By The Way",
+      "length": "4:29",
+      "year": 2002,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Dani California",
+      "artist": "Red Hot Chili Peppers",
+      "album": "Stadium Arcadium",
+      "length": "4:42",
+      "year": 2006,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Come And Get Your Love",
+      "artist": "Redbone",
+      "album": "Wovoka",
+      "length": "4:59",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Time Warp",
+      "artist": "Richard O'Brien",
+      "album": "The Rocky Horror Picture Show",
+      "length": "3:18",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Never Gonna Give You Up",
+      "artist": "Rick Astley",
+      "album": "Whenever You Need Somebody",
+      "length": "3:33",
+      "year": 1987,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Rock And Roll, Hoochie Koo",
+      "artist": "Rick Derringer",
+      "album": "All American Boy",
+      "length": "3:42",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Jessie's Girl",
+      "artist": "Rick Springfield",
+      "album": "Working Class Dog",
+      "length": "3:15",
+      "year": 1981,
+      "artistCountry": "Australia; United States"
+    },
+    {
+      "title": "Voodoo Child",
+      "artist": "Rogue Traders",
+      "album": "Here Come The Drums",
+      "length": "3:31",
+      "year": 2005,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Paint It Black",
+      "artist": "The Rolling Stones",
+      "album": "Aftermath",
+      "length": "3:23",
+      "year": 1966,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Gimme Shelter",
+      "artist": "The Rolling Stones",
+      "album": "Let It Bleed",
+      "length": "4:30",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "You Can't Always Get What You Want",
+      "artist": "The Rolling Stones",
+      "album": "Let It Bleed",
+      "length": "7:28",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Can't You Hear Me Knocking",
+      "artist": "The Rolling Stones",
+      "album": "Sticky Fingers",
+      "length": "7:16",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Beast Of Burden",
+      "artist": "The Rolling Stones",
+      "album": "Some Girls",
+      "length": "4:25",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Start Me Up",
+      "artist": "The Rolling Stones",
+      "album": "Tattoo You",
+      "length": "3:28",
+      "year": 1981,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Angry",
+      "artist": "The Rolling Stones",
+      "album": "Hackney Diamonds",
+      "length": "3:46",
+      "year": 2023,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Live By The Sword",
+      "artist": "The Rolling Stones",
+      "album": "Hackney Diamonds",
+      "length": "3:59",
+      "year": 2023,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "What I Like About You",
+      "artist": "The Romantics",
+      "album": "The Romantics",
+      "length": "2:55",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Working For The Man",
+      "artist": "Roy Orbison",
+      "album": "Working For The Man",
+      "length": "2:26",
+      "year": 1962,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Oh, Pretty Woman",
+      "artist": "Roy Orbison",
+      "album": "Oh, Pretty Woman",
+      "length": "2:58",
+      "year": 1964,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Cherry Bomb",
+      "artist": "The Runaways",
+      "album": "The Runaways",
+      "length": "2:19",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Working Man",
+      "artist": "Rush",
+      "album": "Rush",
+      "length": "7:10",
+      "year": 1974,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Fly By Night",
+      "artist": "Rush",
+      "album": "Fly By Night",
+      "length": "3:21",
+      "year": 1975,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Bastille Day",
+      "artist": "Rush",
+      "album": "Caress Of Steel",
+      "length": "4:37",
+      "year": 1975,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "2112",
+      "artist": "Rush",
+      "album": "2112",
+      "length": "20:33",
+      "year": 1976,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "A Passage To Bangkok",
+      "artist": "Rush",
+      "album": "2112",
+      "length": "3:34",
+      "year": 1976,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Something For Nothing",
+      "artist": "Rush",
+      "album": "2112",
+      "length": "3:58",
+      "year": 1976,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Closer To The Heart",
+      "artist": "Rush",
+      "album": "A Farewell To Kings",
+      "length": "2:55",
+      "year": 1977,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Xanadu",
+      "artist": "Rush",
+      "album": "A Farewell To Kings",
+      "length": "11:04",
+      "year": 1977,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "La Villa Strangiato",
+      "artist": "Rush",
+      "album": "Hemispheres",
+      "length": "9:34",
+      "year": 1978,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Freewill",
+      "artist": "Rush",
+      "album": "Permanent Waves",
+      "length": "5:21",
+      "year": 1980,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "The Spirit Of Radio",
+      "artist": "Rush",
+      "album": "Permanent Waves",
+      "length": "4:59",
+      "year": 1980,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Limelight",
+      "artist": "Rush",
+      "album": "Moving Pictures",
+      "length": "4:21",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Red Barchetta",
+      "artist": "Rush",
+      "album": "Moving Pictures",
+      "length": "6:10",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Tom Sawyer",
+      "artist": "Rush",
+      "album": "Moving Pictures",
+      "length": "4:34",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "YYZ",
+      "artist": "Rush",
+      "album": "Moving Pictures",
+      "length": "4:26",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Countdown",
+      "artist": "Rush",
+      "album": "Signals",
+      "length": "5:51",
+      "year": 1982,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Subdivisions",
+      "artist": "Rush",
+      "album": "Signals",
+      "length": "5:34",
+      "year": 1982,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Distant Early Warning",
+      "artist": "Rush",
+      "album": "Grace Under Pressure",
+      "length": "4:58",
+      "year": 1984,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Time Stand Still",
+      "artist": "Rush",
+      "album": "Hold Your Fire",
+      "length": "5:08",
+      "year": 1987,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "On The Loose",
+      "artist": "Saga",
+      "album": "Worlds Apart",
+      "length": "4:12",
+      "year": 1981,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Chain Gang",
+      "artist": "Sam Cooke",
+      "album": "Swing Low",
+      "length": "2:36",
+      "year": 1960,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Where Have All The Good People Gone?",
+      "artist": "Sam Roberts",
+      "album": "The Inhuman Condition",
+      "length": "4:24",
+      "year": 2002,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Archangel",
+      "artist": "SAMURAI",
+      "album": "Archangel",
+      "length": "2:59",
+      "year": 2020,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "The Ballad Of Buck Ravers",
+      "artist": "SAMURAI",
+      "album": "The Ballad Of Buck Ravers",
+      "length": "4:28",
+      "year": 2020,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Black Dog",
+      "artist": "SAMURAI",
+      "album": "Black Dog",
+      "length": "4:23",
+      "year": 2020,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Chippin' In",
+      "artist": "SAMURAI",
+      "album": "Chippin' In",
+      "length": "3:34",
+      "year": 2020,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Never Fade Away",
+      "artist": "SAMURAI",
+      "album": "Never Fade Away",
+      "length": "3:10",
+      "year": 2020,
+      "artistCountry": "Sweden"
+    },
+    {
+      "title": "Oye Cómo Va",
+      "artist": "Santana",
+      "album": "Abraxas",
+      "length": "4:18",
+      "year": 1970,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "No One Like You",
+      "artist": "Scorpions",
+      "album": "Blackout",
+      "length": "3:55",
+      "year": 1982,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Rock You Like A Hurricane",
+      "artist": "Scorpions",
+      "album": "Love At First Sting",
+      "length": "4:11",
+      "year": 1984,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Remedy",
+      "artist": "Seether",
+      "album": "Karma And Effect",
+      "length": "3:27",
+      "year": 2005,
+      "artistCountry": "South Africa"
+    },
+    {
+      "title": "Anarchy In The Uk",
+      "artist": "Sex Pistols",
+      "album": "Never Mind The Bollocks, Here's The Sex Pistols",
+      "length": "3:31",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "I Don't Know",
+      "artist": "The Sheepdogs",
+      "album": "Learn & Burn",
+      "length": "3:06",
+      "year": 2010,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Feeling Good",
+      "artist": "The Sheepdogs",
+      "album": "The Sheepdogs",
+      "length": "3:10",
+      "year": 2012,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Second Chance",
+      "artist": "Shinedown",
+      "album": "The Sound Of Madness",
+      "length": "3:43",
+      "year": 2008,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Drive The Speed Limit Cause There's Drugs In The Car",
+      "artist": "Shockwire",
+      "album": "Loudness Across The Valley",
+      "length": "2:54",
+      "year": 2023,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Money City Maniacs",
+      "artist": "Sloan",
+      "album": "Navy Blues",
+      "length": "3:53",
+      "year": 1998,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Cherub Rock",
+      "artist": "Smashing Pumpkins",
+      "album": "Siamese Dream",
+      "length": "4:57",
+      "year": 1993,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Today",
+      "artist": "Smashing Pumpkins",
+      "album": "Siamese Dream",
+      "length": "3:21",
+      "year": 1993,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bad Luck",
+      "artist": "Social Distortion",
+      "album": "Somewhere Between Heaven And Hell",
+      "length": "4:25",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Tainted Love",
+      "artist": "Soft Cell",
+      "album": "Non-Stop Erotic Cabaret",
+      "length": "2:42",
+      "year": 1981,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Black Hole Sun",
+      "artist": "Soundgarden",
+      "album": "Superunknown",
+      "length": "5:20",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Spoonman",
+      "artist": "Soundgarden",
+      "album": "Superunknown",
+      "length": "4:06",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sweet City Woman",
+      "artist": "The Stampeders",
+      "album": "Against The Grain",
+      "length": "3:27",
+      "year": 1971,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "We Built This City",
+      "artist": "Starship",
+      "album": "Knee Deep In The Hoopla",
+      "length": "4:26",
+      "year": 1985,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Nothing's Gonna Stop Us Now",
+      "artist": "Starship",
+      "album": "No Protection",
+      "length": "4:30",
+      "year": 1987,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Stuck In The Middle With You",
+      "artist": "Stealers Wheel",
+      "album": "Stealers Wheel",
+      "length": "3:24",
+      "year": 1972,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Reelin' In The Years",
+      "artist": "Steely Dan",
+      "album": "Can't Buy A Thrill",
+      "length": "4:37",
+      "year": 1972,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Magic Carpet Ride",
+      "artist": "Steppenwolf",
+      "album": "The Second",
+      "length": "4:27",
+      "year": 1968,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "Born To Be Wild",
+      "artist": "Steppenwolf",
+      "album": "Steppenwolf",
+      "length": "3:29",
+      "year": 1968,
+      "artistCountry": "Canada; United States"
+    },
+    {
+      "title": "The Joker",
+      "artist": "Steve Miller Band",
+      "album": "The Joker",
+      "length": "3:37",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Rock'n Me",
+      "artist": "Steve Miller Band",
+      "album": "Fly Like An Eagle",
+      "length": "3:03",
+      "year": 1976,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Higher Love",
+      "artist": "Steve Winwood",
+      "album": "Back In The High Life",
+      "length": "5:51",
+      "year": 1986,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Edge Of Seventeen",
+      "artist": "Stevie Nicks",
+      "album": "Bella Donna",
+      "length": "5:29",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Can't Wait",
+      "artist": "Stevie Nicks",
+      "album": "Rock A Little",
+      "length": "4:35",
+      "year": 1985,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Plush",
+      "artist": "Stone Temple Pilots",
+      "album": "Core",
+      "length": "5:14",
+      "year": 1992,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Interstate Love Song",
+      "artist": "Stone Temple Pilots",
+      "album": "Purple",
+      "length": "3:09",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Rock This Town",
+      "artist": "Stray Cats",
+      "album": "Stray Cats",
+      "length": "2:39",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Renegade",
+      "artist": "Styx",
+      "album": "Pieces Of Eight",
+      "length": "4:16",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Too Much Time On My Hands",
+      "artist": "Styx",
+      "album": "Paradise Theatre",
+      "length": "4:31",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Mr. Roboto",
+      "artist": "Styx",
+      "album": "Kilroy Was Here",
+      "length": "5:30",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Give A Little Bit",
+      "artist": "Supertramp",
+      "album": "Even in the Quietest Moments...",
+      "length": "4:08",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Goodbye Stranger",
+      "artist": "Supertramp",
+      "album": "Breakfast In America",
+      "length": "5:48",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "The Logical Song",
+      "artist": "Supertramp",
+      "album": "Breakfast In America",
+      "length": "4:09",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Take The Long Way Home",
+      "artist": "Supertramp",
+      "album": "Breakfast In America",
+      "length": "5:06",
+      "year": 1979,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Eye Of The Tiger",
+      "artist": "Survivor",
+      "album": "Eye Of The Tiger",
+      "length": "4:10",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Roxy Roller",
+      "artist": "Sweeney Todd",
+      "album": "Sweeney Todd",
+      "length": "2:49",
+      "year": 1976,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Fox On The Run",
+      "artist": "Sweet",
+      "album": "Desolation Boulevard",
+      "length": "3:27",
+      "year": 1974,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Action",
+      "artist": "Sweet",
+      "album": "Strung Up",
+      "length": "3:20",
+      "year": 1975,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Chop Suey!",
+      "artist": "System Of A Down",
+      "album": "Toxicity",
+      "length": "3:30",
+      "year": 2001,
+      "artistCountry": "Armenia; United States"
+    },
+    {
+      "title": "Get It On",
+      "artist": "T. Rex",
+      "album": "Electric Warrior",
+      "length": "4:27",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Stranglehold",
+      "artist": "Ted Nugent",
+      "album": "Ted Nugent",
+      "length": "8:24",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sixteen Tons",
+      "artist": "Tennessee Ernie Ford",
+      "album": "Sixteen Tons",
+      "length": "2:35",
+      "year": 1955,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ascend",
+      "artist": "TheDooo",
+      "album": "Ascend",
+      "length": "3:00",
+      "year": 2016,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Boys Are Back In Town",
+      "artist": "Thin Lizzy",
+      "album": "Jailbreak",
+      "length": "4:29",
+      "year": 1976,
+      "artistCountry": "Ireland"
+    },
+    {
+      "title": "Jailbreak",
+      "artist": "Thin Lizzy",
+      "album": "Jailbreak",
+      "length": "4:02",
+      "year": 1976,
+      "artistCountry": "Ireland"
+    },
+    {
+      "title": "Animal I Have Become",
+      "artist": "Three Days Grace",
+      "album": "One-X",
+      "length": "3:50",
+      "year": 2006,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Riot",
+      "artist": "Three Days Grace",
+      "album": "One-X",
+      "length": "3:27",
+      "year": 2006,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "The Good Life",
+      "artist": "Three Days Grace",
+      "album": "Life Starts Now",
+      "length": "2:53",
+      "year": 2009,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Chalk Outline",
+      "artist": "Three Days Grace",
+      "album": "Transit Of Venus",
+      "length": "3:00",
+      "year": 2012,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "I Am Machine",
+      "artist": "Three Days Grace",
+      "album": "Human",
+      "length": "3:25",
+      "year": 2015,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Possum Kingdom",
+      "artist": "Toadies",
+      "album": "Rubberneck",
+      "length": "5:08",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Free Fallin'",
+      "artist": "Tom Petty",
+      "album": "Full Moon Fever",
+      "length": "4:09",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "I Won't Back Down",
+      "artist": "Tom Petty",
+      "album": "Full Moon Fever",
+      "length": "3:01",
+      "year": 1989,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "867-5309 / Jenny",
+      "artist": "Tommy Tutone",
+      "album": "Tommy Tutone 2",
+      "length": "3:48",
+      "year": 1981,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Schism",
+      "artist": "Tool",
+      "album": "Lateralus",
+      "length": "6:43",
+      "year": 2001,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hold The Line",
+      "artist": "Toto",
+      "album": "Toto",
+      "length": "3:55",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Scotland The Brave",
+      "artist": "Traditional",
+      "album": "Scotland The Brave",
+      "length": "1:36",
+      "year": 1878,
+      "artistCountry": "Scotland; United Kingdom"
+    },
+    {
+      "title": "Courage (For Hugh MacLennan)",
+      "artist": "The Tragically Hip",
+      "album": "Fully Completely",
+      "length": "4:27",
+      "year": 1992,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "End Of The Line",
+      "artist": "The Traveling Wilburys",
+      "album": "The Traveling Wilburys, Vol. 1",
+      "length": "3:27",
+      "year": 1988,
+      "artistCountry": "United Kingdom; United States"
+    },
+    {
+      "title": "Tired Of Waiting",
+      "artist": "The Trews",
+      "album": "House Of Ill Fame",
+      "length": "4:27",
+      "year": 2003,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Poor Ol' Broken Hearted Me",
+      "artist": "The Trews",
+      "album": "Den Of Thieves",
+      "length": "4:18",
+      "year": 2005,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Paranoid Freak",
+      "artist": "The Trews",
+      "album": "No Time For Later",
+      "length": "4:21",
+      "year": 2008,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Lay It On The Line",
+      "artist": "Triumph",
+      "album": "Just A Game",
+      "length": "4:05",
+      "year": 1979,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Raise A Little Hell",
+      "artist": "Trooper",
+      "album": "Thick As Thieves",
+      "length": "3:42",
+      "year": 1978,
+      "artistCountry": "Canada"
+    },
+    {
+      "title": "Happy Together",
+      "artist": "The Turtles",
+      "album": "Happy Together",
+      "length": "2:54",
+      "year": 1967,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "We're Not Gonna Take It",
+      "artist": "Twisted Sister",
+      "album": "Stay Hungry",
+      "length": "3:30",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ain't Talkin' 'Bout Love",
+      "artist": "Van Halen",
+      "album": "Van Halen",
+      "length": "3:47",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Eruption",
+      "artist": "Van Halen",
+      "album": "Van Halen",
+      "length": "1:42",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Runnin' With The Devil",
+      "artist": "Van Halen",
+      "album": "Van Halen",
+      "length": "3:36",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "You Really Got Me",
+      "artist": "Van Halen",
+      "album": "Van Halen",
+      "length": "2:38",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Dance The Night Away",
+      "artist": "Van Halen",
+      "album": "Van Halen II",
+      "length": "3:09",
+      "year": 1979,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Jump",
+      "artist": "Van Halen",
+      "album": "1984",
+      "length": "4:01",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Panama",
+      "artist": "Van Halen",
+      "album": "1984",
+      "length": "3:30",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Stayin Alive",
+      "artist": "Bee Gees",
+      "album": "Saturday Night Fever",
+      "length": "4:43",
+      "year": 1977,
+      "artistCountry": "England; United Kingdom; Australia"
+    },
+    {
+      "title": "The Heat Is On",
+      "artist": "Glenn Frey",
+      "album": "Beverly Hills Cop",
+      "length": "3:45",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Axel F",
+      "artist": "Harold Faltermeyer",
+      "album": "Beverly Hills Cop",
+      "length": "3:00",
+      "year": 1984,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Stir It Up",
+      "artist": "Patti LaBelle",
+      "album": "Beverly Hills Cop",
+      "length": "3:38",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Neutron Dance",
+      "artist": "The Pointer Sisters",
+      "album": "Beverly Hills Cop",
+      "length": "4:12",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Holding Out For A Hero",
+      "artist": "Bonnie Tyler",
+      "album": "Footloose",
+      "length": "5:50",
+      "year": 1984,
+      "artistCountry": "Wales; United Kingdom"
+    },
+    {
+      "title": "Footloose",
+      "artist": "Kenny Loggins",
+      "album": "Footloose",
+      "length": "3:55",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Savin' The Day",
+      "artist": "Alessi Brothers",
+      "album": "Ghostbusters",
+      "length": "3:24",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Cleanin' Up The Town",
+      "artist": "The Bus Boys",
+      "album": "Ghostbusters",
+      "length": "2:58",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ghostbusters",
+      "artist": "Ray Parker Jr.",
+      "album": "Ghostbusters",
+      "length": "4:05",
+      "year": 1984,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Back In Time",
+      "artist": "Huey Lewis And The News",
+      "album": "Back To The Future",
+      "length": "4:10",
+      "year": 1985,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "The Power Of Love",
+      "artist": "Huey Lewis And The News",
+      "album": "Back To The Future",
+      "length": "3:56",
+      "year": 1985,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Top Gun Anthem",
+      "artist": "Harold Faltermeyer",
+      "album": "Top Gun",
+      "length": "4:13",
+      "year": 1986,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Danger Zone",
+      "artist": "Kenny Loggins",
+      "album": "Top Gun",
+      "length": "3:32",
+      "year": 1986,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hex Girl",
+      "artist": "The Hex Girls",
+      "album": "Scooby-Doo! And The Witch's Ghost",
+      "length": "1:43",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Blow Me Away",
+      "artist": "Breaking Benjamin",
+      "album": "Halo 2",
+      "length": "3:27",
+      "year": 2004,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Halo Theme Mjolnir Mix",
+      "artist": "Martin O'Donnell & Michael Salvatori",
+      "album": "Halo 2",
+      "length": "4:11",
+      "year": 2004,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Killin' Floor",
+      "artist": "Blues Saraceno",
+      "album": "Garage Blues 2",
+      "length": "2:56",
+      "year": 2013,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Evil Ways (Justice Mix)",
+      "artist": "Blues Saraceno",
+      "album": "Dark Country",
+      "length": "3:26",
+      "year": 2015,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Bad Man",
+      "artist": "Blues Saraceno",
+      "album": "Outlaw Blues 2",
+      "length": "3:26",
+      "year": 2015,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "God Damn Better",
+      "artist": "The Dirty Diary",
+      "album": "Outlaw Blues 2",
+      "length": "3:26",
+      "year": 2015,
+      "artistCountry": "Denmark"
+    },
+    {
+      "title": "Sogno Di Volare",
+      "artist": "Christopher Tin",
+      "album": "Civilization VI",
+      "length": "3:58",
+      "year": 2016,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ride Of The Valkyries",
+      "artist": "Wagner",
+      "album": "Die Walküre",
+      "length": "5:13",
+      "year": 1870,
+      "artistCountry": "Germany"
+    },
+    {
+      "title": "Mexican Radio",
+      "artist": "Wall Of Voodoo",
+      "album": "Call Of The West",
+      "length": "4:08",
+      "year": 1982,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Low Rider",
+      "artist": "War",
+      "album": "Why Can't We Be Friends?",
+      "length": "3:10",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Cherry Pie",
+      "artist": "Warrant",
+      "album": "Cherry Pie",
+      "length": "3:21",
+      "year": 1990,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Werewolves Of London",
+      "artist": "Warren Zevon",
+      "album": "Excitable Boy",
+      "length": "3:29",
+      "year": 1978,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Buddy Holly",
+      "artist": "Weezer",
+      "album": "Weezer",
+      "length": "2:39",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Say It Ain't So",
+      "artist": "Weezer",
+      "album": "Weezer",
+      "length": "4:19",
+      "year": 1994,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Memories",
+      "artist": "Weezer",
+      "album": "Hurley",
+      "length": "3:15",
+      "year": 2010,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Back To The Shack",
+      "artist": "Weezer",
+      "album": "Everything Will Be Alright In The End",
+      "length": "3:05",
+      "year": 2014,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Everything You Know Is Wrong",
+      "artist": "\"Weird Al\" Yankovic",
+      "album": "Bad Hair Day",
+      "length": "3:47",
+      "year": 1996,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Albuquerque",
+      "artist": "\"Weird Al\" Yankovic",
+      "album": "Running With Scissors",
+      "length": "11:23",
+      "year": 1999,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Angry White Boy Polka",
+      "artist": "\"Weird Al\" Yankovic",
+      "album": "Poodle Hat",
+      "length": "5:03",
+      "year": 2003,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Ebay",
+      "artist": "\"Weird Al\" Yankovic",
+      "album": "Poodle Hat",
+      "length": "3:35",
+      "year": 2003,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Hardware Store",
+      "artist": "\"Weird Al\" Yankovic",
+      "album": "Poodle Hat",
+      "length": "3:44",
+      "year": 2003,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Seven Nation Army",
+      "artist": "The White Stripes",
+      "album": "Elephant",
+      "length": "3:51",
+      "year": 2003,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Blue Orchid",
+      "artist": "The White Stripes",
+      "album": "Get Behind Me Satan",
+      "length": "2:37",
+      "year": 2005,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Here I Go Again",
+      "artist": "Whitesnake",
+      "album": "Whitesnake",
+      "length": "4:33",
+      "year": 1987,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Pinball Wizard",
+      "artist": "The Who",
+      "album": "Tommy",
+      "length": "3:01",
+      "year": 1969,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Baba O'riley",
+      "artist": "The Who",
+      "album": "Who's Next",
+      "length": "5:08",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Won't Get Fooled Again",
+      "artist": "The Who",
+      "album": "Who's Next",
+      "length": "8:33",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Who Are You",
+      "artist": "The Who",
+      "album": "Who Are You",
+      "length": "6:16",
+      "year": 1978,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Eminence Front",
+      "artist": "The Who",
+      "album": "It's Hard",
+      "length": "5:40",
+      "year": 1982,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Woman",
+      "artist": "Wolfmother",
+      "album": "Wolfmother",
+      "length": "2:56",
+      "year": 2005,
+      "artistCountry": "Australia"
+    },
+    {
+      "title": "Los Angeles",
+      "artist": "X",
+      "album": "Los Angeles",
+      "length": "2:24",
+      "year": 1980,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Roundabout",
+      "artist": "Yes",
+      "album": "Fragile",
+      "length": "8:36",
+      "year": 1971,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "Owner Of A Lonely Heart",
+      "artist": "Yes",
+      "album": "90125",
+      "length": "4:31",
+      "year": 1983,
+      "artistCountry": "England; United Kingdom"
+    },
+    {
+      "title": "La Grange",
+      "artist": "ZZ Top",
+      "album": "Tres Hombres",
+      "length": "3:54",
+      "year": 1973,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Tush",
+      "artist": "ZZ Top",
+      "album": "Fandango!",
+      "length": "2:17",
+      "year": 1975,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Gimme All Your Lovin'",
+      "artist": "ZZ Top",
+      "album": "Eliminator",
+      "length": "4:00",
+      "year": 1983,
+      "artistCountry": "United States"
+    },
+    {
+      "title": "Sharp Dressed Man",
+      "artist": "ZZ Top",
+      "album": "Eliminator",
+      "length": "4:14",
+      "year": 1983,
+      "artistCountry": "United States"
+    }
+  ]
+}

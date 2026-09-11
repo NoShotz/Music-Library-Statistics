@@ -455,7 +455,7 @@ function ppChange(curPct, prevPct){
   if(prevPct==null || curPct==null) return {label:'—', cls:''};
   const diff = Math.round((curPct-prevPct)*10)/10;
   const sign = diff>0 ? '+' : '';
-  return {label: sign+diff+'pp', cls: diff>0?'up':(diff<0?'down':'')};
+  return {label: sign+diff+'%', cls: diff>0?'up':(diff<0?'down':'')};
 }
 
 function pctChange(curVal, prevVal){

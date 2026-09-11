@@ -308,6 +308,14 @@
       <div class="chart-box"><canvas id="yearChart"></canvas></div>
     </div>
 
+    <div class="card" id="canChartCard" style="display:none;">
+      <h3>Canadian content, year over year</h3>
+      <p class="desc">Share of scrobbles by Canadian artists.</p>
+      <div class="chart-box"><canvas id="canChart"></canvas></div>
+    </div>
+
+    <div class="callout" id="canCallout" style="display:none;"></div>
+
     <div class="card" id="countryChartCard" style="display:none;">
       <h3>Where your music comes from</h3>
       <p class="desc">Scrobbles by artist's country of origin, all-time.</p>
@@ -452,6 +460,7 @@
       <div class="callout pending" id="reportCountryPending" style="display:none;">
         No <code>library_data.json</code> found, so the artist map is hidden.
       </div>
+      <div class="callout" id="reportCanCallout" style="display:none;"></div>
 
       <div class="card" id="reportDecadeCard" style="display:none;">
         <h3>Music by decade</h3>

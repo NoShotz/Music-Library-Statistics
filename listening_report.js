@@ -298,6 +298,38 @@ function primaryCountry(countryStr){
   return countryStr.split(';')[0].trim();
 }
 
+// Canadian-content stats for a set of scrobbles -- lifetime %, match rate, etc.
+function canadianStatsFor(scrobbles){
+  if(!COUNTRY_BY_ARTIST) return null;
+  let matched=0, canCount=0;
+  scrobbles.forEach(r=>{
+    const country = COUNTRY_BY_ARTIST[r.na];
+    if(country===undefined) return;
+    matched++;
+    if(/canada/i.test(country)) canCount++;
+  });
+  return {
+    matched, total: scrobbles.length,
+    matchRate: scrobbles.length ? matched/scrobbles.length*100 : 0,
+    pct: matched ? Math.round(canCount/matched*1000)/10 : null
+  };
+}
+
+// Canadian-content % by year, for the year-over-year trend chart on the Overview tab
+function canadianYearlyFor(scrobbles){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const yearTotal={}, yearCan={};
+  scrobbles.forEach(r=>{
+    const country = COUNTRY_BY_ARTIST[r.na];
+    if(country===undefined) return;
+    yearTotal[r.year] = (yearTotal[r.year]||0)+1;
+    if(/canada/i.test(country)) yearCan[r.year] = (yearCan[r.year]||0)+1;
+  });
+  return Object.keys(yearTotal).map(Number).sort((a,b)=>a-b).map(y=>({
+    year:y, pct: Math.round((yearCan[y]||0)/yearTotal[y]*1000)/10
+  }));
+}
+
 function countryRowsFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
   const totals = {}, byArtist = {};
@@ -317,21 +349,19 @@ function countryRowsFor(scrobbles){
 
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
-  const counts = {}, albumsByDecade = {};
+  const counts = {}, artistsByDecade = {};
   scrobbles.forEach(r=>{
     const meta = TRACK_META[r.na+'|||'+r.nt];
     if(meta && meta.year){
       const dec = Math.floor(meta.year/10)*10;
       counts[dec] = (counts[dec]||0)+1;
-      const aKey = r.artist+'|||'+r.album;
-      albumsByDecade[dec] = albumsByDecade[dec] || {};
-      albumsByDecade[dec][aKey] = (albumsByDecade[dec][aKey]||0)+1;
+      artistsByDecade[dec] = artistsByDecade[dec] || {};
+      artistsByDecade[dec][r.artist] = (artistsByDecade[dec][r.artist]||0)+1;
     }
   });
   return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>{
-    const top = Object.entries(albumsByDecade[dec]).sort((a,b)=>b[1]-a[1])[0];
-    const [artist,album] = top[0].split('|||');
-    return {decade:dec, count:counts[dec], topArtist:artist, topAlbum:album, topCount:top[1]};
+    const top = Object.entries(artistsByDecade[dec]).sort((a,b)=>b[1]-a[1])[0];
+    return {decade:dec, count:counts[dec], topArtist:top[0], topCount:top[1]};
   });
 }
 
@@ -382,6 +412,7 @@ function computeStats(scrobbles, periodType, periodKey){
     newTracks: computeNew(scrobbles,'track',periodType,periodKey),
     firstScrobble: scrobbles.length ? scrobbles[0] : null,
     countryRows: countryRowsFor(scrobbles),
+    canadian: canadianStatsFor(scrobbles),
     decades: decadeRowsFor(scrobbles)
   };
 }
@@ -404,6 +435,14 @@ function subPeriodBreakdown(type, curScrobbles, curKey, prevScrobbles, prevKey){
   }
   const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   return {labels, cur: weekdayPattern(curScrobbles), prev: weekdayPattern(prevScrobbles)};
+}
+
+// percentage-point difference between two already-percentage values (e.g. 32% -> 38% is "+6.0pp")
+function ppChange(curPct, prevPct){
+  if(prevPct==null || curPct==null) return {label:'—', cls:''};
+  const diff = Math.round((curPct-prevPct)*10)/10;
+  const sign = diff>0 ? '+' : '';
+  return {label: sign+diff+'pp', cls: diff>0?'up':(diff<0?'down':'')};
 }
 
 function pctChange(curVal, prevVal){
@@ -451,12 +490,24 @@ function renderOverview(){
   const countryRows = countryRowsFor(s);
   const decade = TRACK_META ? decadeRowsFor(s).filter(d=>d.count>5) : null;
 
+  let canData = null;
+  if(COUNTRY_BY_ARTIST){
+    const canLifetime = canadianStatsFor(s);
+    const cutoff30 = lastMs - 30*86400000;
+    const canRecent = canadianStatsFor(s.filter(r=>r.date>=cutoff30));
+    const yearlyCanadian = canadianYearlyFor(s);
+    canData = {
+      lifetimePct: canLifetime.pct, matchRate: canLifetime.matchRate,
+      recentPct: canRecent.pct, yearlyCanadian
+    };
+  }
+
   paintOverview({
     total_scrobbles:n, unique_artists:uniqueArtists, first_date: ymd(new Date(firstMs)),
     last_date: ymd(new Date(lastMs)), span_days: spanDays, active_days: activeDays,
     longest_streak: longestStreak, yearly, top_artists: topArtists, top_tracks: topTracks,
     top_albums: topAlbums, hour_of_day: hourOfDay, day_of_week: dayOfWeek, discovery,
-    country_rows: countryRows, total_hours: totalHours, decade
+    country_rows: countryRows, total_hours: totalHours, decade, can: canData
   });
 }
 
@@ -493,6 +544,10 @@ function paintOverview(DATA){
     [DATA.active_days, 'active listening days'],
     [DATA.longest_streak + 'd', 'longest streak'],
   ];
+  if(DATA.can){
+    stats.push([DATA.can.lifetimePct!=null ? DATA.can.lifetimePct+'%' : '—', 'lifetime Canadian']);
+    stats.push([DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—', 'last 30 days Canadian']);
+  }
   if(topCountry){
     const pct = Math.round(topCountry.count/DATA.total_scrobbles*1000)/10;
     stats.push([topCountry.country, 'top artist country (' + pct + '%)']);
@@ -516,6 +571,25 @@ function paintOverview(DATA){
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.y.toLocaleString()+' scrobbles' } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'}, ticks:{ callback: v => v>=1000? (v/1000)+'k': v } } } }
   });
+
+  // Canadian content, year over year
+  if(DATA.can && DATA.can.yearlyCanadian && DATA.can.yearlyCanadian.length){
+    document.getElementById('canChartCard').style.display = 'block';
+    new Chart(document.getElementById('canChart'), {
+      type:'line',
+      data:{ labels: DATA.can.yearlyCanadian.map(d=>d.year),
+        datasets:[
+          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: '#c0392b', backgroundColor:'rgba(192,57,43,0.12)', fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: '#c0392b' },
+          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:'#5a6a5a', borderDash:[4,4], pointRadius:0, borderWidth:1 }
+        ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.datasetIndex===0 ? c.parsed.y+'% Canadian' : '35% target' } } },
+        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
+    });
+    const co = document.getElementById('canCallout');
+    co.style.display = 'block';
+    co.innerHTML = `Lifetime average sits at <b>${DATA.can.lifetimePct}%</b> Canadian (matched ${DATA.can.matchRate.toFixed(1)}% of scrobbles to a known artist country). Last 30 days: <b>${DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—'}</b>.`;
+  }
 
   // Top countries -- replaces the old Canada-only chart
   if(DATA.country_rows && DATA.country_rows.length){
@@ -696,6 +770,10 @@ function renderReport(){
     [fmtNum(uniqueAlbumsCur), 'albums', albCmp],
     [fmtNum(uniqueTracksCur), 'tracks', trkCmp],
   ];
+  if(cur.canadian && cur.canadian.pct!=null){
+    const canCmp = ppChange(cur.canadian.pct, prev.canadian && prev.canadian.pct);
+    statCards.push([cur.canadian.pct+'%', 'Canadian', canCmp]);
+  }
   document.getElementById('reportStatGrid').innerHTML = statCards.map(s=>`
     <div class="stat-card"><div class="stat-val">${s[0]}<span class="cmp ${s[2].cls}">${s[2].label}</span></div><div class="stat-lbl">${s[1]} · vs. ${periodLabel(type,prevKey)}</div></div>
   `).join('');
@@ -788,6 +866,16 @@ function renderReport(){
     document.getElementById('reportCountryPending').style.display = TRACK_META ? 'none' : 'block';
   }
 
+  // ---- Canadian content, this period vs. previous ----
+  if(cur.canadian && cur.canadian.pct!=null){
+    const co = document.getElementById('reportCanCallout');
+    co.style.display = 'block';
+    const prevBit = (prev.canadian && prev.canadian.pct!=null) ? ` Previous period: <b>${prev.canadian.pct}%</b>.` : '';
+    co.innerHTML = `<b>${cur.canadian.pct}%</b> Canadian this period (matched ${cur.canadian.matchRate.toFixed(1)}% of scrobbles to a known artist country).${prevBit}`;
+  } else {
+    document.getElementById('reportCanCallout').style.display = 'none';
+  }
+
   // ---- decade breakdown ----
   if(cur.decades && cur.decades.length){
     document.getElementById('reportDecadeCard').style.display = 'block';
@@ -804,8 +892,8 @@ function renderReport(){
       <li>
         <span class="rank-num">${d.decade}s</span>
         <div class="rank-main">
-          <div class="rank-title">${d.topAlbum}</div>
-          <div class="rank-sub">${d.topArtist}</div>
+          <div class="rank-title">${d.topArtist}</div>
+          <div class="rank-sub">top artist</div>
         </div>
         <span class="rank-count">${fmtNum(d.count)}</span>
       </li>`).join('');

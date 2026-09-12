@@ -755,14 +755,24 @@ function initTabs(){
       document.getElementById('tab-overview').style.display = tab==='overview' ? 'block' : 'none';
       document.getElementById('tab-report').style.display = tab==='report' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
-      // jsVectorMap sizes itself from the container at creation time and (unlike
-      // Chart.js) doesn't auto-recalculate once a hidden container becomes visible,
-      // so nudge it to re-measure whenever its tab is switched into view.
-      const refKey = tab==='overview' ? 'overview' : 'report';
-      if(MAP_REFS[refKey]) MAP_REFS[refKey].updateSize();
+
+      if(tab==='report'){
+        // The Report tab (and its map) is first built at boot while this tab is
+        // still display:none, so jsVectorMap measures a zero-height container
+        // and renders cut off. updateSize() alone doesn't fully recover from
+        // that bad initial measurement -- a full re-render (which recreates the
+        // map from scratch against the now-visible container) does, and it's
+        // exactly what already happens whenever the period selector changes,
+        // which is why switching year/month/week "fixes" it. So just do the
+        // same thing when the tab itself is switched into view.
+        renderReport();
+      } else if(MAP_REFS['overview']){
+        MAP_REFS['overview'].updateSize();
+      }
     });
   });
 }
+
 
 // ============================================================
 // REPORT TAB

@@ -111,7 +111,7 @@ function fmtDateNice(dateStr){
 }
 function fmtHour(h){
   const hh = (h%12===0?12:h%12);
-  return hh+':00'+(h<12?'am':'pm');
+  return hh+':00'+(h<12?'AM':'PM');
 }
 function fmtDuration(totalSeconds){
   if(totalSeconds==null) return '—';
@@ -654,10 +654,10 @@ function annularSectorPath(cx,cy,rInner,rOuter,a0,a1){
   return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rOuter} ${rOuter} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} `+
          `L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${rInner} ${rInner} 0 0 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
 }
-// compact "12A".."11A","12P".."11P" labels -- all 24 hours, AM/PM instead of 0-23
+// compact "12AM".."11AM","12PM".."11PM" labels -- all 24 hours, AM/PM instead of 0-23
 function clockLabel(h){
   const hh = (h%12===0?12:h%12);
-  return hh + (h<12?'A':'P');
+  return hh + (h<12?'AM':'PM');
 }
 
 function renderListeningClock(containerId, hourCounts){

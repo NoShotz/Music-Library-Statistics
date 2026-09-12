@@ -111,7 +111,7 @@ function fmtDateNice(dateStr){
 }
 function fmtHour(h){
   const hh = (h%12===0?12:h%12);
-  return hh+':00'+(h<12?'AM':'PM');
+  return hh+':00'+(h<12?'am':'pm');
 }
 function fmtDuration(totalSeconds){
   if(totalSeconds==null) return '—';
@@ -654,18 +654,18 @@ function annularSectorPath(cx,cy,rInner,rOuter,a0,a1){
   return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rOuter} ${rOuter} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} `+
          `L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${rInner} ${rInner} 0 0 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
 }
-// compact "12AM".."11AM","12PM".."11PM" labels -- all 24 hours, AM/PM instead of 0-23
+// full "12 AM".."11 PM" labels -- all 24 hours, AM/PM instead of 0-23
 function clockLabel(h){
   const hh = (h%12===0?12:h%12);
-  return hh + (h<12?'AM':'PM');
+  return hh + ' ' + (h<12?'AM':'PM');
 }
 
-function renderListeningClock(containerId, hourCounts){
+function renderListeningClock(containerId, statElId, hourCounts){
   const el = document.getElementById(containerId);
   if(!el) return;
 
   const size = 320, cx = size/2, cy = size/2;
-  const rInner = 34, rOuterMax = 118, labelR = 136;
+  const rInner = 34, rOuterMax = 118, labelR = 140;
   const gapDeg = 1.6;
   const max = Math.max(1, ...hourCounts);
 
@@ -694,7 +694,7 @@ function renderListeningClock(containerId, hourCounts){
     bar.addEventListener('mouseenter', evt=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
-      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${fmtHour(h)}</div>`+
+      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
       tt.style.display = 'block';
       positionHeatmapTooltip(tt, evt);
@@ -702,6 +702,16 @@ function renderListeningClock(containerId, hourCounts){
     bar.addEventListener('mousemove', evt => positionHeatmapTooltip(getHeatmapTooltip(), evt));
     bar.addEventListener('mouseleave', () => { getHeatmapTooltip().style.display = 'none'; });
   });
+
+  const statEl = document.getElementById(statElId);
+  if(statEl){
+    const best = busiestHour(hourCounts);
+    statEl.innerHTML = best.count>0
+      ? `<div class="stat-lbl">busiest hour</div>`+
+        `<div class="stat-val">${clockLabel(best.hour)}</div>`+
+        `<div class="stat-lbl">${fmtNum(best.count)} scrobble${best.count===1?'':'s'}</div>`
+      : `<div class="stat-lbl">No scrobbles in this period.</div>`;
+  }
 }
 
 
@@ -892,7 +902,7 @@ function paintOverview(DATA){
   renderList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist);
   renderList('albumList', DATA.top_albums, d=>d.album, d=>d.artist);
 
-  renderListeningClock('hourChart', DATA.hour_of_day.map(d=>d.count));
+  renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
 
   new Chart(document.getElementById('dowChart'), {
     type:'bar',
@@ -1198,7 +1208,7 @@ function renderReport(){
   });
 
   // ---- listening clock (cur only) ----
-  renderListeningClock('reportHourChart', cur.hourArr);
+  renderListeningClock('reportHourChart', 'reportHourChartBusiest', cur.hourArr);
 
   // ---- artist map (country breakdown) ----
   if(cur.countryRows && cur.countryRows.length){

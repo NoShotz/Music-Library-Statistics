@@ -197,9 +197,13 @@
   .heatmap-cell.empty{background:transparent;cursor:default;}
   .map-box .jvm-region{cursor:pointer;}
   .clock-svg{overflow:visible;}
-  .clock-label{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--muted-2);}
+  .clock-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:var(--muted-2);}
   .clock-bar{cursor:pointer;transition:filter 0.1s;}
   .clock-bar:hover{filter:brightness(1.2);}
+  .clock-row{display:flex;align-items:center;gap:16px;}
+  .clock-row .chart-box{flex:1;min-width:0;}
+  .clock-busiest{flex:0 0 118px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .clock-busiest .stat-val{font-size:30px;}
   .jvm-tooltip{
     background:var(--surface-2) !important;
     border:1px solid var(--hair) !important;
@@ -384,7 +388,10 @@
       <div class="card">
         <h3>Listening clock</h3>
         <p class="desc">Local time (ET). When the needle drops.</p>
-        <div class="chart-box"><div id="hourChart" style="width:100%;height:100%;"></div></div>
+        <div class="clock-row">
+          <div class="chart-box"><div id="hourChart" style="width:100%;height:100%;"></div></div>
+          <div class="clock-busiest" id="hourChartBusiest"></div>
+        </div>
       </div>
     </div>
 
@@ -502,7 +509,10 @@
         <div class="card">
           <h3>Listening clock</h3>
           <p class="desc">Local time (ET), scrobbles by hour.</p>
-          <div class="chart-box"><div id="reportHourChart" style="width:100%;height:100%;"></div></div>
+          <div class="clock-row">
+            <div class="chart-box"><div id="reportHourChart" style="width:100%;height:100%;"></div></div>
+            <div class="clock-busiest" id="reportHourChartBusiest"></div>
+          </div>
         </div>
       </div>
 

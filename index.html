@@ -173,8 +173,11 @@
   .chart-box{position:relative;height:280px;}
   .chart-box.tall{height:340px;}
   .map-box{position:relative;height:380px;}
-  .heatmap-box{width:100%;overflow-x:auto;overflow-y:hidden;height:280px;}
-  .heatmap{display:flex;flex-direction:column;gap:3px;}
+  .heatmap-box{
+    width:100%;height:280px;overflow-x:auto;overflow-y:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .heatmap{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
   .heatmap-row-label{
     flex:0 0 52px;width:52px;

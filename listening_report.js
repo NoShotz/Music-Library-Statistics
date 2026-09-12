@@ -588,16 +588,13 @@ function positionHeatmapTooltip(tt, evt){
 // grid (12 rows) and month grid (5-6 rows) end up the same overall height even
 // though their row counts differ -- this means cell size itself must differ
 // between the two (month cells are necessarily bigger squares than year cells).
-// Total px height that each heatmap's data rows should add up to, so the year
-// grid (12 rows) and month grid (5-6 rows) end up the same overall height even
-// though their row counts differ -- this means cell size itself must differ
-// between the two (month cells are necessarily bigger squares than year cells).
-// The outer .heatmap-box is a fixed 280px (see CSS) regardless of which heatmap
-// is rendered into it, so the *container* is always identical between tabs;
-// this budget (data rows + gap + the 16px label row) is sized to fit inside it.
-const HEATMAP_TARGET_HEIGHT = 260;
-const HEATMAP_GAP = 3;
+// The .heatmap-box container is a fixed 280px tall (see CSS) and centers its
+// content on both axes, so this picks the largest square cell size that fits
+// the grid within the container's *actual measured width* as well as its
+// height, then lets the flexbox centering place any leftover space evenly.
+const HEATMAP_ROW_LABEL_WIDTH = 52;
 const HEATMAP_LABEL_ROW_HEIGHT = 16;
+const HEATMAP_GAP = 3;
 
 function renderHeatmap(containerId, heat){
   const el = document.getElementById(containerId);
@@ -606,7 +603,13 @@ function renderHeatmap(containerId, heat){
   const max = allValues.length ? Math.max(...allValues) : 0;
 
   const rows = heat.rowLabels.length;
-  const cell = Math.max(8, Math.floor((HEATMAP_TARGET_HEIGHT - HEATMAP_GAP*(rows-1)) / rows));
+  const cols = heat.colLabels.length;
+  const availW = el.clientWidth || 520;
+  const availH = el.clientHeight || 280;
+
+  const maxCellByHeight = Math.floor((availH - HEATMAP_LABEL_ROW_HEIGHT - HEATMAP_GAP*rows) / rows);
+  const maxCellByWidth  = Math.floor((availW - HEATMAP_ROW_LABEL_WIDTH - HEATMAP_GAP*cols) / cols);
+  const cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
 
   const colLabelsHtml = `<div class="heatmap-row col-label-row"><div class="heatmap-row-label"></div>` +
     heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;

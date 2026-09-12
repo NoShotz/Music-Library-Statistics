@@ -584,13 +584,31 @@ function positionHeatmapTooltip(tt, evt){
   tt.style.top = (evt.clientY + pad) + 'px';
 }
 
+// Total px height that each heatmap's data rows should add up to, so the year
+// grid (12 rows) and month grid (5-6 rows) end up the same overall height even
+// though their row counts differ -- this means cell size itself must differ
+// between the two (month cells are necessarily bigger squares than year cells).
+// Total px height that each heatmap's data rows should add up to, so the year
+// grid (12 rows) and month grid (5-6 rows) end up the same overall height even
+// though their row counts differ -- this means cell size itself must differ
+// between the two (month cells are necessarily bigger squares than year cells).
+// The outer .heatmap-box is a fixed 280px (see CSS) regardless of which heatmap
+// is rendered into it, so the *container* is always identical between tabs;
+// this budget (data rows + gap + the 16px label row) is sized to fit inside it.
+const HEATMAP_TARGET_HEIGHT = 260;
+const HEATMAP_GAP = 3;
+const HEATMAP_LABEL_ROW_HEIGHT = 16;
+
 function renderHeatmap(containerId, heat){
   const el = document.getElementById(containerId);
   if(!el) return;
   const allValues = heat.matrix.flat().filter(v=>v!=null && v>0);
   const max = allValues.length ? Math.max(...allValues) : 0;
 
-  const colLabelsHtml = `<div class="heatmap-row"><div class="heatmap-row-label"></div>` +
+  const rows = heat.rowLabels.length;
+  const cell = Math.max(8, Math.floor((HEATMAP_TARGET_HEIGHT - HEATMAP_GAP*(rows-1)) / rows));
+
+  const colLabelsHtml = `<div class="heatmap-row col-label-row"><div class="heatmap-row-label"></div>` +
     heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;
 
   const rowsHtml = heat.rowLabels.map((rl,ri)=>{
@@ -605,7 +623,7 @@ function renderHeatmap(containerId, heat){
   }).join('');
 
   // day/weekday labels render along the bottom, under the data rows
-  el.innerHTML = `<div class="heatmap">${rowsHtml}${colLabelsHtml}</div>`;
+  el.innerHTML = `<div class="heatmap" style="--cell:${cell}px;">${rowsHtml}${colLabelsHtml}</div>`;
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
     cell.addEventListener('mouseenter', evt=>{

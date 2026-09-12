@@ -173,10 +173,9 @@
   .chart-box{position:relative;height:280px;}
   .chart-box.tall{height:340px;}
   .map-box{position:relative;height:380px;}
-  .heatmap-box{width:100%;overflow-x:auto;}
-  .heatmap{display:flex;flex-direction:column;gap:3px;min-width:520px;height:280px;}
+  .heatmap-box{width:100%;overflow-x:auto;overflow-y:hidden;height:280px;}
+  .heatmap{display:flex;flex-direction:column;gap:3px;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
-  .heatmap-row.data-row{flex:1;min-height:0;align-items:stretch;}
   .heatmap-row-label{
     flex:0 0 52px;width:52px;
     font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
@@ -184,11 +183,12 @@
     display:flex;align-items:center;justify-content:flex-end;
   }
   .heatmap-col-label{
-    flex:1;min-width:0;text-align:center;
+    flex:0 0 var(--cell);width:var(--cell);text-align:center;
     font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted-2);
   }
+  .heatmap-row.col-label-row{height:16px;flex:0 0 16px;}
   .heatmap-cell{
-    flex:1;min-width:0;border-radius:2px;
+    flex:0 0 var(--cell);width:var(--cell);height:var(--cell);border-radius:2px;
     background:#241d16;cursor:pointer;
   }
   .heatmap-cell.empty{background:transparent;cursor:default;}

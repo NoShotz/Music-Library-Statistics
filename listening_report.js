@@ -13,6 +13,15 @@ const MAP_REFS = {};       // holds jsVectorMap instances so we can destroy/recr
 
 const STATE = { reportType: 'year', reportKey: null };
 
+// Sets .textContent on an element if (and only if) it actually exists in the
+// current HTML. Optional page elements -- like the description paragraphs --
+// get trimmed sometimes; a missing one should never throw and take down the
+// rest of a render function with it.
+function setText(id, text){
+  const el = document.getElementById(id);
+  if(el) el.textContent = text;
+}
+
 async function boot(){
   // 1. Load the raw, unmodified Last.fm export -- required
   let raw;
@@ -1198,7 +1207,7 @@ function renderReport(){
     subCard.style.display = '';
     document.getElementById('subPeriodTitle').textContent =
       type==='year' ? 'Scrobbles by day of year' : 'Scrobbles by day of month';
-    document.getElementById('subPeriodDesc').textContent = periodLabel(type,key);
+    setText('subPeriodDesc', periodLabel(type,key));
     const heat = type==='year' ? buildYearHeatmap(Number(key), curScrobbles) : buildMonthHeatmap(key, curScrobbles);
     renderHeatmap('subPeriodHeatmap', heat);
   }
@@ -1237,15 +1246,15 @@ function renderReport(){
   renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.');
   renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.');
 
-  document.getElementById('reportNewArtistsDesc').textContent =
+  setText('reportNewArtistsDesc',
     `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +
-    (cur.discoveries.artists.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
-  document.getElementById('reportNewTracksDesc').textContent =
+    (cur.discoveries.artists.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : ''));
+  setText('reportNewTracksDesc',
     `${fmtNum(cur.newTracks.newCount)} new track${cur.newTracks.newCount===1?'':'s'} this period` +
-    (cur.discoveries.tracks.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
-  document.getElementById('reportNewAlbumsDesc').textContent =
+    (cur.discoveries.tracks.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : ''));
+  setText('reportNewAlbumsDesc',
     `${fmtNum(cur.newAlbums.newCount)} new album${cur.newAlbums.newCount===1?'':'s'} this period` +
-    (cur.discoveries.albums.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : '');
+    (cur.discoveries.albums.length>DISCOVERY_LIMIT ? ` · showing top ${DISCOVERY_LIMIT} by plays` : ''));
 
   const first = cur.firstScrobble;
   document.getElementById('firstTrackCallout').innerHTML = first

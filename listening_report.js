@@ -745,6 +745,16 @@ function pctChange(curVal, prevVal){
   const sign = p>0 ? '+' : '';
   return {label: sign+p+'%', cls: p>0?'up':(p<0?'down':'')};
 }
+// Same up/down badge as pctChange, but shows the raw difference instead of a
+// percentage -- used for small counts (streak days, busiest-day scrobbles)
+// where a percentage swing is noisier than just "how many more/fewer".
+function absChange(curVal, prevVal){
+  if(prevVal==null) return {label:'—', cls:''};
+  if(prevVal===0) return curVal>0 ? {label:'new', cls:'up'} : {label:'—', cls:''};
+  const d = curVal - prevVal;
+  const sign = d>0 ? '+' : '';
+  return {label: sign+d, cls: d>0?'up':(d<0?'down':'')};
+}
 
 // ============================================================
 // OVERVIEW TAB
@@ -1286,11 +1296,29 @@ function renderReport(){
   // ---- quick facts ----
   const hoursCmp = (cur.totalSeconds!=null && prev.totalSeconds!=null) ? pctChange(cur.totalSeconds, prev.totalSeconds) : null;
   const avgPerDay = Math.round(cur.n/periodDayCount(type,key)*10)/10;
+  const prevAvgPerDay = Math.round(prev.n/periodDayCount(type,prevKey)*10)/10;
+  const avgCmp = pctChange(avgPerDay, prevAvgPerDay);
+  const streakCmp = absChange(cur.longestStreak, prev.longestStreak);
+  const busiestDayCmp = cur.busiestDay ? absChange(cur.busiestDay.count, prev.busiestDay ? prev.busiestDay.count : null) : null;
+  const prevLabel = periodLabel(type, prevKey);
+
   const facts = [
-    [fmtDuration(cur.totalSeconds), 'listening time' + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : '')],
-    [avgPerDay, 'avg scrobbles / day'],
-    [cur.longestStreak + 'd', 'longest streak in this period'],
-    [cur.busiestDay ? fmtNum(cur.busiestDay.count) : '—', 'scrobbles in most active day'],
+    [
+      fmtDuration(cur.totalSeconds) + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : ''),
+      `listening time<br>vs ${fmtDuration(prev.totalSeconds)} (${prevLabel})`
+    ],
+    [
+      avgPerDay + ` <span class="cmp ${avgCmp.cls}">${avgCmp.label}</span>`,
+      `avg scrobbles / day<br>vs ${prevAvgPerDay} (${prevLabel})`
+    ],
+    [
+      cur.longestStreak + 'd' + ` <span class="cmp ${streakCmp.cls}">${streakCmp.label}</span>`,
+      `longest streak in this period<br>vs ${prev.longestStreak}d (${prevLabel})`
+    ],
+    [
+      (cur.busiestDay ? fmtNum(cur.busiestDay.count) : '—') + (busiestDayCmp ? ` <span class="cmp ${busiestDayCmp.cls}">${busiestDayCmp.label}</span>` : ''),
+      `scrobbles in most active day<br>vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
+    ],
   ];
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>
     `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`

@@ -567,6 +567,23 @@ function heatmapColor(t){
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
+// Shared tooltip element for heatmap cells, styled to match the country map's tooltip.
+let HEATMAP_TOOLTIP_EL = null;
+function getHeatmapTooltip(){
+  if(!HEATMAP_TOOLTIP_EL){
+    HEATMAP_TOOLTIP_EL = document.createElement('div');
+    HEATMAP_TOOLTIP_EL.className = 'jvm-tooltip';
+    Object.assign(HEATMAP_TOOLTIP_EL.style, { position:'fixed', pointerEvents:'none', zIndex:'9999', display:'none' });
+    document.body.appendChild(HEATMAP_TOOLTIP_EL);
+  }
+  return HEATMAP_TOOLTIP_EL;
+}
+function positionHeatmapTooltip(tt, evt){
+  const pad = 14;
+  tt.style.left = (evt.clientX + pad) + 'px';
+  tt.style.top = (evt.clientY + pad) + 'px';
+}
+
 function renderHeatmap(containerId, heat){
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -581,14 +598,27 @@ function renderHeatmap(containerId, heat){
       if(v==null) return `<div class="heatmap-cell empty"></div>`;
       const t = max>0 ? v/max : 0;
       const bg = v===0 ? 'transparent' : heatmapColor(t);
-      const meta = heat.cellMeta[ri][ci];
-      const title = meta ? `${meta}: ${fmtNum(v)} scrobble${v===1?'':'s'}` : '';
-      return `<div class="heatmap-cell" style="background:${bg};" title="${title}"></div>`;
+      const date = heat.cellMeta[ri][ci] || '';
+      return `<div class="heatmap-cell" style="background:${bg};" data-date="${date}" data-count="${v}"></div>`;
     }).join('');
-    return `<div class="heatmap-row"><div class="heatmap-row-label">${rl}</div>${cells}</div>`;
+    return `<div class="heatmap-row data-row"><div class="heatmap-row-label">${rl}</div>${cells}</div>`;
   }).join('');
 
-  el.innerHTML = `<div class="heatmap">${colLabelsHtml}${rowsHtml}</div>`;
+  // day/weekday labels render along the bottom, under the data rows
+  el.innerHTML = `<div class="heatmap">${rowsHtml}${colLabelsHtml}</div>`;
+
+  el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
+    cell.addEventListener('mouseenter', evt=>{
+      const tt = getHeatmapTooltip();
+      const count = Number(cell.dataset.count);
+      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
+        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
+      tt.style.display = 'block';
+      positionHeatmapTooltip(tt, evt);
+    });
+    cell.addEventListener('mousemove', evt => positionHeatmapTooltip(getHeatmapTooltip(), evt));
+    cell.addEventListener('mouseleave', () => { getHeatmapTooltip().style.display = 'none'; });
+  });
 }
 
 

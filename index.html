@@ -174,22 +174,24 @@
   .chart-box.tall{height:340px;}
   .map-box{position:relative;height:380px;}
   .heatmap-box{width:100%;overflow-x:auto;}
-  .heatmap{display:flex;flex-direction:column;gap:3px;min-width:520px;}
+  .heatmap{display:flex;flex-direction:column;gap:3px;min-width:520px;height:280px;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
+  .heatmap-row.data-row{flex:1;min-height:0;align-items:stretch;}
   .heatmap-row-label{
     flex:0 0 52px;width:52px;
     font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
     text-align:right;padding-right:8px;white-space:nowrap;
+    display:flex;align-items:center;justify-content:flex-end;
   }
   .heatmap-col-label{
     flex:1;min-width:0;text-align:center;
     font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted-2);
   }
   .heatmap-cell{
-    flex:1;min-width:0;aspect-ratio:1;border-radius:2px;
-    background:#241d16;
+    flex:1;min-width:0;border-radius:2px;
+    background:#241d16;cursor:pointer;
   }
-  .heatmap-cell.empty{background:transparent;}
+  .heatmap-cell.empty{background:transparent;cursor:default;}
   .map-box .jvm-region{cursor:pointer;}
   .jvm-tooltip{
     background:var(--surface-2) !important;

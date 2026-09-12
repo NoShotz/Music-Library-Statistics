@@ -642,6 +642,68 @@ function renderHeatmap(containerId, heat){
   });
 }
 
+// ---------- listening clock (radial 24-hour bar chart) ----------
+// angleDeg: 0 = 12 o'clock (top), increases clockwise, matching a real clock face.
+function polarPoint(cx,cy,r,angleDeg){
+  const rad = angleDeg * Math.PI/180;
+  return { x: cx + r*Math.sin(rad), y: cy - r*Math.cos(rad) };
+}
+function annularSectorPath(cx,cy,rInner,rOuter,a0,a1){
+  const p1 = polarPoint(cx,cy,rOuter,a0), p2 = polarPoint(cx,cy,rOuter,a1);
+  const p3 = polarPoint(cx,cy,rInner,a1), p4 = polarPoint(cx,cy,rInner,a0);
+  return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${rOuter} ${rOuter} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} `+
+         `L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${rInner} ${rInner} 0 0 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
+}
+// compact "12A".."11A","12P".."11P" labels -- all 24 hours, AM/PM instead of 0-23
+function clockLabel(h){
+  const hh = (h%12===0?12:h%12);
+  return hh + (h<12?'A':'P');
+}
+
+function renderListeningClock(containerId, hourCounts){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+
+  const size = 320, cx = size/2, cy = size/2;
+  const rInner = 34, rOuterMax = 118, labelR = 136;
+  const gapDeg = 1.6;
+  const max = Math.max(1, ...hourCounts);
+
+  let bars = '', labels = '';
+  for(let h=0; h<24; h++){
+    const center = h*15;
+    const v = hourCounts[h] || 0;
+    const rOuter = rInner + (v/max) * (rOuterMax - rInner);
+    const fill = v>0 ? heatmapColor(v/max) : '#241d16';
+    const path = annularSectorPath(cx,cy, rInner, Math.max(rInner+2, rOuter), center-7.5+gapDeg/2, center+7.5-gapDeg/2);
+    bars += `<path class="clock-bar" d="${path}" fill="${fill}" data-hour="${h}" data-count="${v}"></path>`;
+
+    const lp = polarPoint(cx,cy,labelR,center);
+    let anchor = 'middle';
+    if(center>10 && center<170) anchor = 'start';
+    else if(center>190 && center<350) anchor = 'end';
+    labels += `<text x="${lp.x.toFixed(1)}" y="${lp.y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" class="clock-label">${clockLabel(h)}</text>`;
+  }
+
+  el.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" class="clock-svg">`+
+    `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="#241d16" stroke-width="1"></circle>`+
+    `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="#241d16" stroke-width="1" stroke-dasharray="2,3"></circle>`+
+    bars + labels + `</svg>`;
+
+  el.querySelectorAll('.clock-bar').forEach(bar=>{
+    bar.addEventListener('mouseenter', evt=>{
+      const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
+      const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
+      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${fmtHour(h)}</div>`+
+        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
+      tt.style.display = 'block';
+      positionHeatmapTooltip(tt, evt);
+    });
+    bar.addEventListener('mousemove', evt => positionHeatmapTooltip(getHeatmapTooltip(), evt));
+    bar.addEventListener('mouseleave', () => { getHeatmapTooltip().style.display = 'none'; });
+  });
+}
+
 
 
 // percentage-point difference between two already-percentage values (e.g. 32% -> 38% is "+6.0pp")
@@ -732,7 +794,6 @@ function paintOverview(DATA){
   const GOLD = '#d6a24c';
   const GOLD_DIM = 'rgba(214,162,76,0.35)';
   const TEAL = '#5a9a94';
-  const TEAL_DIM = 'rgba(90,154,148,0.35)';
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
   const years = (DATA.span_days/365.25).toFixed(1);
@@ -831,13 +892,7 @@ function paintOverview(DATA){
   renderList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist);
   renderList('albumList', DATA.top_albums, d=>d.album, d=>d.artist);
 
-  new Chart(document.getElementById('hourChart'), {
-    type:'bar',
-    data:{ labels: DATA.hour_of_day.map(d=> (d.hour%12===0?12:d.hour%12) + (d.hour<12?'AM':'PM')),
-      datasets:[{ data: DATA.hour_of_day.map(d=>d.count), backgroundColor: TEAL_DIM, borderRadius:2 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:8 } }, y:{ grid:{color:'#241d16'} } } }
-  });
+  renderListeningClock('hourChart', DATA.hour_of_day.map(d=>d.count));
 
   new Chart(document.getElementById('dowChart'), {
     type:'bar',
@@ -1143,14 +1198,7 @@ function renderReport(){
   });
 
   // ---- listening clock (cur only) ----
-  destroyChart('hour');
-  CHART_REFS.hour = new Chart(document.getElementById('reportHourChart'), {
-    type:'bar',
-    data:{ labels: cur.hourArr.map((_,h)=> (h%12===0?12:h%12) + (h<12?'AM':'PM')),
-      datasets:[{ data: cur.hourArr, backgroundColor:'rgba(90,154,148,0.35)', borderRadius:2 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:8 } }, y:{ grid:{color:'#241d16'} } } }
-  });
+  renderListeningClock('reportHourChart', cur.hourArr);
 
   // ---- artist map (country breakdown) ----
   if(cur.countryRows && cur.countryRows.length){

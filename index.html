@@ -196,6 +196,10 @@
   }
   .heatmap-cell.empty{background:transparent;cursor:default;}
   .map-box .jvm-region{cursor:pointer;}
+  .clock-svg{overflow:visible;}
+  .clock-label{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--muted-2);}
+  .clock-bar{cursor:pointer;transition:filter 0.1s;}
+  .clock-bar:hover{filter:brightness(1.2);}
   .jvm-tooltip{
     background:var(--surface-2) !important;
     border:1px solid var(--hair) !important;
@@ -380,7 +384,7 @@
       <div class="card">
         <h3>Listening clock</h3>
         <p class="desc">Local time (ET). When the needle drops.</p>
-        <div class="chart-box"><canvas id="hourChart"></canvas></div>
+        <div class="chart-box"><div id="hourChart" style="width:100%;height:100%;"></div></div>
       </div>
     </div>
 
@@ -498,7 +502,7 @@
         <div class="card">
           <h3>Listening clock</h3>
           <p class="desc">Local time (ET), scrobbles by hour.</p>
-          <div class="chart-box"><canvas id="reportHourChart"></canvas></div>
+          <div class="chart-box"><div id="reportHourChart" style="width:100%;height:100%;"></div></div>
         </div>
       </div>
 

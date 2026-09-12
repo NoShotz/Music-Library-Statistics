@@ -561,6 +561,10 @@ function renderOverview(){
   s.forEach(r=>{ artistCounts[r.artist] = (artistCounts[r.artist]||0)+1; });
   const uniqueArtists = Object.keys(artistCounts).length;
 
+  const albumKeys = new Set(), trackKeys = new Set();
+  s.forEach(r=>{ albumKeys.add(r.artist+'|||'+r.album); trackKeys.add(r.artist+'|||'+r.track); });
+  const uniqueAlbums = albumKeys.size, uniqueTracks = trackKeys.size;
+
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
   const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
   const topAlbums = topN(s, r=>r.artist+'|||'+r.album, 5, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; });
@@ -597,7 +601,8 @@ function renderOverview(){
   }
 
   paintOverview({
-    total_scrobbles:n, unique_artists:uniqueArtists, first_date: ymd(new Date(firstMs)),
+    total_scrobbles:n, unique_artists:uniqueArtists, unique_albums:uniqueAlbums, unique_tracks:uniqueTracks,
+    first_date: ymd(new Date(firstMs)),
     last_date: ymd(new Date(lastMs)), span_days: spanDays, active_days: activeDays,
     longest_streak: longestStreak, yearly, top_artists: topArtists, top_tracks: topTracks,
     top_albums: topAlbums, hour_of_day: hourOfDay, day_of_week: dayOfWeek, discovery,
@@ -630,24 +635,17 @@ function paintOverview(DATA){
     if(heroEyebrow) heroEyebrow.textContent = 'scrobbles logged';
   }
 
-  const topCountry = DATA.country_rows && DATA.country_rows.length ? DATA.country_rows[0] : null;
   const stats = [
-    [fmtNum(DATA.total_scrobbles), 'total scrobbles'],
-    [DATA.unique_artists, 'unique artists'],
-    [DATA.active_days, 'active listening days'],
-    [DATA.longest_streak + 'd', 'longest streak'],
+    [fmtNum(DATA.total_scrobbles), 'scrobbles'],
+    [fmtNum(DATA.unique_artists), 'artists'],
+    [fmtNum(DATA.unique_albums), 'albums'],
+    [fmtNum(DATA.unique_tracks), 'tracks'],
   ];
-  if(DATA.can){
-    stats.push([DATA.can.lifetimePct!=null ? DATA.can.lifetimePct+'%' : '—', 'lifetime Canadian']);
-    stats.push([DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—', 'last 30 days Canadian']);
-  }
-  if(topCountry){
-    const pct = Math.round(topCountry.count/DATA.total_scrobbles*1000)/10;
-    stats.push([topCountry.country, 'top artist country (' + pct + '%)']);
-    stats.push([DATA.country_rows.length, 'countries represented']);
+  if(DATA.can && DATA.can.lifetimePct!=null){
+    stats.push([DATA.can.lifetimePct+'%', 'Canadian']);
   }
   document.getElementById('statGrid').innerHTML = stats.map(s =>
-    `<div class="stat-card"><div class="stat-val">${s[0]}</div><div class="stat-lbl">${s[1]}</div></div>`
+    `<div class="stat-card"><div class="stat-val">${s[0]}</div><div class="stat-lbl">${s[1]} · all time</div></div>`
   ).join('');
 
   document.getElementById('factStreak').textContent = DATA.longest_streak;

@@ -511,25 +511,87 @@ function computeStats(scrobbles, periodType, periodKey){
   };
 }
 
-function subPeriodBreakdown(type, curScrobbles, curKey, prevScrobbles, prevKey){
-  if(type==='year'){
-    const labels=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const cur=Array(12).fill(0), prev=Array(12).fill(0);
-    curScrobbles.forEach(r=>{ cur[Number(r.monthKey.split('-')[1])-1]++; });
-    prevScrobbles.forEach(r=>{ prev[Number(r.monthKey.split('-')[1])-1]++; });
-    return {labels, cur, prev};
+// ---------- heatmap data builders (replace the old sub-period bar chart) ----------
+function buildYearHeatmap(year, scrobbles){
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const matrix = [], cellMeta = [];
+  for(let m=1;m<=12;m++){
+    const dim = new Date(Date.UTC(year,m,0)).getUTCDate(); // days in this month
+    const row = [], metaRow = [];
+    for(let d=1; d<=31; d++){
+      if(d<=dim){
+        row.push(0);
+        metaRow.push(fmtDateNice(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')));
+      } else {
+        row.push(null); // e.g. Feb 30th -- not a real day, render as blank
+        metaRow.push(null);
+      }
+    }
+    matrix.push(row); cellMeta.push(metaRow);
   }
-  if(type==='month'){
-    const days = periodDayCount('month', curKey);
-    const cur = Array(days).fill(0), prev = Array(days).fill(0);
-    curScrobbles.forEach(r=>{ const d=Number(r.dateStr.split('-')[2]); if(d-1<days) cur[d-1]++; });
-    prevScrobbles.forEach(r=>{ const d=Number(r.dateStr.split('-')[2]); if(d-1<days) prev[d-1]++; });
-    const labels = Array.from({length:days},(_,i)=>String(i+1));
-    return {labels, cur, prev};
-  }
-  const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  return {labels, cur: weekdayPattern(curScrobbles), prev: weekdayPattern(prevScrobbles)};
+  scrobbles.forEach(r=>{
+    const m = Number(r.monthKey.split('-')[1]);
+    const d = Number(r.dateStr.split('-')[2]);
+    matrix[m-1][d-1]++;
+  });
+  return { rowLabels: monthNames, colLabels: Array.from({length:31},(_,i)=>String(i+1)), matrix, cellMeta };
 }
+
+function buildMonthHeatmap(monthKey, scrobbles){
+  const [y,m] = monthKey.split('-').map(Number);
+  const dim = new Date(Date.UTC(y,m,0)).getUTCDate();
+  const firstOffset = mondayIndex(new Date(Date.UTC(y,m-1,1)).getUTCDay()); // 0=Mon..6=Sun
+  const weeks = Math.ceil((firstOffset+dim)/7);
+  const matrix = Array.from({length:weeks},()=>Array(7).fill(null));
+  const cellMeta = Array.from({length:weeks},()=>Array(7).fill(null));
+  for(let d=1; d<=dim; d++){
+    const cellIndex = firstOffset + d - 1;
+    const row = Math.floor(cellIndex/7), col = cellIndex%7;
+    matrix[row][col] = 0;
+    cellMeta[row][col] = fmtDateNice(y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+  }
+  scrobbles.forEach(r=>{
+    const d = Number(r.dateStr.split('-')[2]);
+    const cellIndex = firstOffset + d - 1;
+    const row = Math.floor(cellIndex/7), col = cellIndex%7;
+    matrix[row][col]++;
+  });
+  const rowLabels = Array.from({length:weeks},(_,i)=>'Week '+(i+1));
+  return { rowLabels, colLabels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], matrix, cellMeta };
+}
+
+const HEATMAP_LOW = [0x24,0x1d,0x16];   // near the card background -- "0 scrobbles"
+const HEATMAP_HIGH = [0xd6,0xa2,0x4c];  // gold -- matches the rest of the site's high-value color
+function heatmapColor(t){
+  const c = HEATMAP_LOW.map((lo,i)=>Math.round(lo + (HEATMAP_HIGH[i]-lo)*t));
+  return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+function renderHeatmap(containerId, heat){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const allValues = heat.matrix.flat().filter(v=>v!=null && v>0);
+  const max = allValues.length ? Math.max(...allValues) : 0;
+
+  const colLabelsHtml = `<div class="heatmap-row"><div class="heatmap-row-label"></div>` +
+    heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;
+
+  const rowsHtml = heat.rowLabels.map((rl,ri)=>{
+    const cells = heat.matrix[ri].map((v,ci)=>{
+      if(v==null) return `<div class="heatmap-cell empty"></div>`;
+      const t = max>0 ? v/max : 0;
+      const bg = v===0 ? 'transparent' : heatmapColor(t);
+      const meta = heat.cellMeta[ri][ci];
+      const title = meta ? `${meta}: ${fmtNum(v)} scrobble${v===1?'':'s'}` : '';
+      return `<div class="heatmap-cell" style="background:${bg};" title="${title}"></div>`;
+    }).join('');
+    return `<div class="heatmap-row"><div class="heatmap-row-label">${rl}</div>${cells}</div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="heatmap">${colLabelsHtml}${rowsHtml}</div>`;
+}
+
+
 
 // percentage-point difference between two already-percentage values (e.g. 32% -> 38% is "+6.0pp")
 function ppChange(curPct, prevPct){
@@ -953,23 +1015,18 @@ function renderReport(){
     <div class="stat-card"><div class="stat-val">${s[0]}<span class="cmp ${s[2].cls}">${s[2].label}</span></div><div class="stat-lbl">${s[1]} · vs. ${periodLabel(type,prevKey)}</div></div>
   `).join('');
 
-  // ---- sub-period chart ----
-  const sub = subPeriodBreakdown(type, curScrobbles, key, prevScrobbles, prevKey);
-  document.getElementById('subPeriodTitle').textContent =
-    type==='year' ? 'Scrobbles per month' : type==='month' ? 'Scrobbles per day' : 'Scrobbles per day';
-  document.getElementById('subPeriodDesc').textContent =
-    periodLabel(type,key) + ' vs. ' + periodLabel(type,prevKey);
-  destroyChart('sub');
-  CHART_REFS.sub = new Chart(document.getElementById('subPeriodChart'), {
-    type:'bar',
-    data:{ labels: sub.labels, datasets:[
-      { label: periodLabel(type,key), data: sub.cur, backgroundColor:'#d6a24c', borderRadius:2, barPercentage:0.7 },
-      { label: periodLabel(type,prevKey), data: sub.prev, backgroundColor:'rgba(122,108,92,0.35)', borderRadius:2, barPercentage:0.7 }
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{mode:'index', intersect:false} },
-      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit: type==='month'?15:12 } }, y:{ grid:{color:'#241d16'} } } }
-  });
+  // ---- sub-period heatmap (year: months x days-of-month; month: weeks x days-of-week) ----
+  const subCard = document.getElementById('subPeriodCard');
+  if(type==='week'){
+    subCard.style.display = 'none';
+  } else {
+    subCard.style.display = '';
+    document.getElementById('subPeriodTitle').textContent =
+      type==='year' ? 'Scrobbles by day of year' : 'Scrobbles by day of month';
+    document.getElementById('subPeriodDesc').textContent = periodLabel(type,key);
+    const heat = type==='year' ? buildYearHeatmap(Number(key), curScrobbles) : buildMonthHeatmap(key, curScrobbles);
+    renderHeatmap('subPeriodHeatmap', heat);
+  }
 
   // ---- top lists + new stats ----
   function renderRankedList(elId, items, mainFn, subFn, emptyMsg){

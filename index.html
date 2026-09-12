@@ -334,13 +334,12 @@
         <ol class="ranked" id="trackList"></ol>
       </div>
     </div>
-<!--
+
     <div class="card">
       <h3>New artists discovered per year</h3>
       <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
       <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
     </div>
--->
 
     <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Charts</p>
 
@@ -363,10 +362,17 @@
       </div>
     </div>
 
-    <div class="card" id="decadeChartCard" style="display:none;">
-      <h3>Music by decade</h3>
-      <p class="desc">What era the music you played this period comes from.</p>
-      <div class="chart-box"><canvas id="decadeChart"></canvas></div>
+    <div class="two-col">
+      <div class="card" id="countryMapCard" style="display:none;">
+        <h3>Where your music comes from</h3>
+        <p class="desc">Scrobbles by artist's country of origin, all-time. Hover a country for details.</p>
+        <div class="map-box" id="countryMap"></div>
+      </div>
+      <div class="card" id="decadeChartCard" style="display:none;">
+        <h3>Music by decade</h3>
+        <p class="desc">What era the music you played this period comes from.</p>
+        <div class="chart-box" style="height:380px;"><canvas id="decadeChart"></canvas></div>
+      </div>
     </div>
 
       <div class="card" id="canChartCard" style="display:none;">
@@ -376,12 +382,6 @@
     </div>
 
     <div class="callout" id="canCallout" style="display:none;"></div>
-
-    <div class="card" id="countryMapCard" style="display:none;">
-      <h3>Where your music comes from</h3>
-      <p class="desc">Scrobbles by artist's country of origin, all-time. Hover a country for details.</p>
-      <div class="map-box" id="countryMap"></div>
-    </div>
 
     <p class="side-title" style="margin-top:24px;margin-bottom:24px;">Quick facts</p>
     
@@ -480,18 +480,20 @@
         </div>
       </div>
 
-      <div class="card" id="reportDecadeCard" style="display:none;">
-        <h3>Music by decade</h3>
-        <p class="desc">What era the music you played this period comes from.</p>
-        <div class="chart-box"><canvas id="reportDecadeChart"></canvas></div>
+      <div class="two-col">
+        <div class="card" id="reportCountryCard" style="display:none;">
+          <h3>Artist map</h3>
+          <p class="desc">Scrobbles by artist country, this period. Hover a country for details.</p>
+          <div class="map-box" id="reportCountryMap"></div>
+        </div>
+        <div class="card" id="reportDecadeCard" style="display:none;">
+          <h3>Music by decade</h3>
+          <p class="desc">What era the music you played this period comes from.</p>
+          <div class="chart-box" style="height:380px;"><canvas id="reportDecadeChart"></canvas></div>
+        </div>
       </div>
 
       <div class="callout" id="reportCanCallout" style="display:none;"></div>
-      <div class="card" id="reportCountryCard" style="display:none;">
-        <h3>Artist map</h3>
-        <p class="desc">Scrobbles by artist country, this period. Hover a country for details.</p>
-        <div class="map-box" id="reportCountryMap"></div>
-      </div>
       <div class="callout pending" id="reportCountryPending" style="display:none;">
         No <code>library_data.json</code> found, so the artist map is hidden.
       </div>

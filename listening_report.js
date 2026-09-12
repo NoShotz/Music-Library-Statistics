@@ -284,14 +284,15 @@ function busiestWeekday(weekdayArr){
 }
 const WEEKDAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-// Shared "title + smaller subtitle, both gold" side panel used next to the
-// listening clock and weekly-scrobbles charts (busiest hour / busiest day).
-function renderChartSideStat(elId, title, sub){
+// Shared side panel used next to the listening clock and weekly-scrobbles
+// charts: stacked "label caption above bold value" groups (e.g. "Busiest hour"
+// / "11 PM", then "Scrobbles in busiest hour" / "99").
+function renderChartSideStat(elId, groups){
   const el = document.getElementById(elId);
   if(!el) return;
-  el.innerHTML = title!=null
-    ? `<div class="cs-title">${title}</div><div class="cs-sub">${sub}</div>`
-    : `<div class="stat-lbl">No scrobbles in this period.</div>`;
+  el.innerHTML = (groups && groups.length)
+    ? groups.map(g => `<div class="cs-group"><div class="cs-label">${g.label}</div><div class="cs-value">${g.value}</div></div>`).join('')
+    : `<div class="cs-label">No scrobbles in this period.</div>`;
 }
 
 function averageKnownLength(){
@@ -722,9 +723,10 @@ function renderListeningClock(containerId, statElId, hourCounts){
   });
 
   const best = busiestHour(hourCounts);
-  renderChartSideStat(statElId,
-    best.count>0 ? clockLabel(best.hour) : null,
-    best.count>0 ? `${fmtNum(best.count)} scrobble${best.count===1?'':'s'}` : '');
+  renderChartSideStat(statElId, best.count>0 ? [
+    {label:'Busiest hour', value:clockLabel(best.hour)},
+    {label:'Scrobbles in busiest hour', value:fmtNum(best.count)}
+  ] : null);
 }
 
 
@@ -926,9 +928,10 @@ function paintOverview(DATA){
   });
   {
     const bestDay = busiestWeekday(DATA.day_of_week.map(d=>d.count));
-    renderChartSideStat('dowChartBusiest',
-      bestDay.count>0 ? WEEKDAY_FULL[bestDay.day] : null,
-      bestDay.count>0 ? `${fmtNum(bestDay.count)} scrobble${bestDay.count===1?'':'s'}` : '');
+    renderChartSideStat('dowChartBusiest', bestDay.count>0 ? [
+      {label:'Busiest day', value:WEEKDAY_FULL[bestDay.day]},
+      {label:'Scrobbles in busiest day', value:fmtNum(bestDay.count)}
+    ] : null);
   }
 
   new Chart(document.getElementById('discoveryChart'), {
@@ -1227,9 +1230,10 @@ function renderReport(){
   });
   {
     const bestDay = busiestWeekday(cur.weekday);
-    renderChartSideStat('reportDowChartBusiest',
-      bestDay.count>0 ? WEEKDAY_FULL[bestDay.day] : null,
-      bestDay.count>0 ? `${fmtNum(bestDay.count)} scrobble${bestDay.count===1?'':'s'}` : '');
+    renderChartSideStat('reportDowChartBusiest', bestDay.count>0 ? [
+      {label:'Busiest day', value:WEEKDAY_FULL[bestDay.day]},
+      {label:'Scrobbles in busiest day', value:fmtNum(bestDay.count)}
+    ] : null);
   }
 
   // ---- listening clock (cur only) ----

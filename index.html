@@ -365,7 +365,6 @@
 
     <div class="card">
       <h3>New artists discovered per year</h3>
-      <p class="desc">First-ever scrobble of an artist, by year — a rough discovery curve.</p>
       <div class="chart-box"><canvas id="discoveryChart"></canvas></div>
     </div>
 
@@ -373,14 +372,12 @@
 
     <div class="card">
       <h3>Scrobbles per year</h3>
-      <p class="desc">Volume of tracked listening, year over year.</p>
       <div class="chart-box"><canvas id="yearChart"></canvas></div>
     </div>
 
     <div class="two-col">
       <div class="card">
         <h3>Weekly scrobbles</h3>
-        <p class="desc">Which days you listen most.</p>
         <div class="clock-row">
           <div class="chart-box"><canvas id="dowChart"></canvas></div>
           <div class="chart-side-stat" id="dowChartBusiest"></div>
@@ -388,7 +385,6 @@
       </div>
       <div class="card">
         <h3>Listening clock</h3>
-        <p class="desc">Local time (ET). When the needle drops.</p>
         <div class="clock-row">
           <div class="chart-box"><div id="hourChart" style="width:100%;height:100%;"></div></div>
           <div class="chart-side-stat" id="hourChartBusiest"></div>
@@ -399,19 +395,16 @@
     <div class="two-col">
       <div class="card" id="countryMapCard" style="display:none;">
         <h3>Where your music comes from</h3>
-        <p class="desc">Scrobbles by artist's country of origin, all-time. Hover a country for details.</p>
         <div class="map-box" id="countryMap"></div>
       </div>
       <div class="card" id="decadeChartCard" style="display:none;">
         <h3>Music by decade</h3>
-        <p class="desc">What era the music you played this period comes from.</p>
         <div class="chart-box" style="height:380px;"><canvas id="decadeChart"></canvas></div>
       </div>
     </div>
 
       <div class="card" id="canChartCard" style="display:none;">
       <h3>Canadian content, year over year</h3>
-      <p class="desc">Share of scrobbles by Canadian artists.</p>
       <div class="chart-box"><canvas id="canChart"></canvas></div>
     </div>
 
@@ -473,17 +466,14 @@
       <div class="three-col">
         <div class="card">
           <h3>New artists</h3>
-          <p class="desc" id="reportNewArtistsDesc"></p>
           <ol class="ranked" id="reportNewArtistList"></ol>
         </div>
         <div class="card">
           <h3>New albums</h3>
-          <p class="desc" id="reportNewAlbumsDesc"></p>
           <ol class="ranked" id="reportNewAlbumList"></ol>
         </div>
         <div class="card">
           <h3>New tracks</h3>
-          <p class="desc" id="reportNewTracksDesc"></p>
           <ol class="ranked" id="reportNewTrackList"></ol>
         </div>
       </div>
@@ -492,14 +482,12 @@
 
       <div class="card" id="subPeriodCard" style="margin-top:20px;">
         <h3 id="subPeriodTitle">Scrobbles</h3>
-        <p class="desc" id="subPeriodDesc"></p>
         <div class="heatmap-box" id="subPeriodHeatmap"></div>
       </div>
 
       <div class="two-col">
         <div class="card">
           <h3>Weekly scrobbles</h3>
-          <p class="desc">This period vs. the previous one.</p>
           <div class="clock-row">
             <div class="chart-box"><canvas id="reportDowChart"></canvas></div>
             <div class="chart-side-stat" id="reportDowChartBusiest"></div>
@@ -507,7 +495,6 @@
         </div>
         <div class="card">
           <h3>Listening clock</h3>
-          <p class="desc">Local time (ET), scrobbles by hour.</p>
           <div class="clock-row">
             <div class="chart-box"><div id="reportHourChart" style="width:100%;height:100%;"></div></div>
             <div class="chart-side-stat" id="reportHourChartBusiest"></div>
@@ -518,12 +505,10 @@
       <div class="two-col">
         <div class="card" id="reportCountryCard" style="display:none;">
           <h3>Artist map</h3>
-          <p class="desc">Scrobbles by artist country, this period. Hover a country for details.</p>
           <div class="map-box" id="reportCountryMap"></div>
         </div>
         <div class="card" id="reportDecadeCard" style="display:none;">
           <h3>Music by decade</h3>
-          <p class="desc">What era the music you played this period comes from.</p>
           <div class="chart-box" style="height:380px;"><canvas id="reportDecadeChart"></canvas></div>
         </div>
       </div>

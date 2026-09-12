@@ -125,6 +125,25 @@ function fmtDuration(totalSeconds){
   parts.push(mins+'m');
   return parts.join(' ');
 }
+// word-form duration for the quick-facts cards, e.g. "1 day, 6 hours"
+function fmtDurationWords(totalSeconds){
+  if(totalSeconds==null) return '—';
+  const totalMin = Math.round(totalSeconds/60);
+  const days = Math.floor(totalMin/1440);
+  const hours = Math.floor((totalMin%1440)/60);
+  const mins = totalMin%60;
+  const parts = [];
+  if(days) parts.push(days+' day'+(days===1?'':'s'));
+  if(hours) parts.push(hours+' hour'+(hours===1?'':'s'));
+  if(!days && !hours) parts.push(mins+' minute'+(mins===1?'':'s'));
+  return parts.join(', ');
+}
+// compact "10 Aug" for the busiest-day quick fact
+function fmtDayMonth(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr+'T00:00:00Z');
+  return d.getUTCDate() + ' ' + d.toLocaleDateString('en-US',{month:'short'});
+}
 function isLeapYear(y){ return (y%4===0 && y%100!==0) || y%400===0; }
 function mondayOf(dateStr){
   const d = new Date(dateStr+'T00:00:00Z');
@@ -862,10 +881,10 @@ function paintOverview(DATA){
 
   const avgPerDayAll = Math.round(DATA.total_scrobbles/DATA.span_days*10)/10;
   const factsAll = [
-    [fmtDuration(DATA.total_seconds), 'listening time'],
-    [avgPerDayAll, 'avg scrobbles / day'],
-    [DATA.longest_streak + 'd', 'longest streak'],
-    [DATA.busiest_day ? fmtNum(DATA.busiest_day.count) : '—', 'scrobbles in most active day']
+    [fmtDurationWords(DATA.total_seconds), 'Listening time'],
+    [avgPerDayAll + ' /day', 'Average scrobbles'],
+    [DATA.longest_streak + ' day' + (DATA.longest_streak===1?'':'s') + ' in a row', 'Longest streak'],
+    [DATA.busiest_day ? fmtNum(DATA.busiest_day.count) + ' ' + fmtDayMonth(DATA.busiest_day.date) : '—', 'Scrobbles in most active day']
   ];
   document.getElementById('factGrid').innerHTML = factsAll.map(f=>
     `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
@@ -1304,20 +1323,20 @@ function renderReport(){
 
   const facts = [
     [
-      fmtDuration(cur.totalSeconds) + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : ''),
-      `listening time<br>vs ${fmtDuration(prev.totalSeconds)} (${prevLabel})`
+      fmtDurationWords(cur.totalSeconds) + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : ''),
+      `Listening time<br>vs ${fmtDurationWords(prev.totalSeconds)} (${prevLabel})`
     ],
     [
-      avgPerDay + ` <span class="cmp ${avgCmp.cls}">${avgCmp.label}</span>`,
-      `avg scrobbles / day<br>vs ${prevAvgPerDay} (${prevLabel})`
+      avgPerDay + ' /day' + ` <span class="cmp ${avgCmp.cls}">${avgCmp.label}</span>`,
+      `Average scrobbles<br>vs ${prevAvgPerDay} (${prevLabel})`
     ],
     [
-      cur.longestStreak + 'd' + ` <span class="cmp ${streakCmp.cls}">${streakCmp.label}</span>`,
-      `longest streak in this period<br>vs ${prev.longestStreak}d (${prevLabel})`
+      cur.longestStreak + ' day' + (cur.longestStreak===1?'':'s') + ' in a row' + ` <span class="cmp ${streakCmp.cls}">${streakCmp.label}</span>`,
+      `Longest streak<br>vs ${prev.longestStreak} (${prevLabel})`
     ],
     [
-      (cur.busiestDay ? fmtNum(cur.busiestDay.count) : '—') + (busiestDayCmp ? ` <span class="cmp ${busiestDayCmp.cls}">${busiestDayCmp.label}</span>` : ''),
-      `scrobbles in most active day<br>vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
+      (cur.busiestDay ? fmtNum(cur.busiestDay.count) + ' ' + fmtDayMonth(cur.busiestDay.date) : '—') + (busiestDayCmp ? ` <span class="cmp ${busiestDayCmp.cls}">${busiestDayCmp.label}</span>` : ''),
+      `Scrobbles in most active day<br>vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
     ],
   ];
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>

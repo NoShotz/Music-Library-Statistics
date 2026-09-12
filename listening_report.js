@@ -784,9 +784,11 @@ function renderOverview(){
 
   const {activeDays, longestStreak} = streakStats(s);
 
-  const totalHours = TRACK_META ? Math.round(totalSecondsFor(s)/3600*10)/10 : null;
+  const totalSeconds = TRACK_META ? totalSecondsFor(s) : null;
+  const totalHours = TRACK_META ? Math.round(totalSeconds/3600*10)/10 : null;
   const countryRows = countryRowsFor(s);
   const decade = TRACK_META ? decadeRowsFor(s).filter(d=>d.count>5) : null;
+  const busiestDayAllTime = busiestDay(s);
 
   let canData = null;
   if(COUNTRY_BY_ARTIST){
@@ -806,7 +808,8 @@ function renderOverview(){
     last_date: ymd(new Date(lastMs)), span_days: spanDays, active_days: activeDays,
     longest_streak: longestStreak, yearly, top_artists: topArtists, top_tracks: topTracks,
     top_albums: topAlbums, hour_of_day: hourOfDay, day_of_week: dayOfWeek, discovery,
-    country_rows: countryRows, total_hours: totalHours, decade, can: canData
+    country_rows: countryRows, total_hours: totalHours, total_seconds: totalSeconds,
+    busiest_day: busiestDayAllTime, decade, can: canData
   });
 }
 
@@ -847,11 +850,16 @@ function paintOverview(DATA){
     `<div class="stat-card"><div class="stat-val">${s[0]}</div><div class="stat-lbl">${s[1]} · all time</div></div>`
   ).join('');
 
-  document.getElementById('factStreak').textContent = DATA.longest_streak;
-  document.getElementById('factArtists').textContent = DATA.unique_artists;
-  document.getElementById('factActive').textContent = Math.round(DATA.active_days/DATA.span_days*100) + '%';
-  const top10sum = DATA.top_artists.slice(0,10).reduce((a,b)=>a+b.count,0);
-  document.getElementById('factTop10').textContent = Math.round(top10sum/DATA.total_scrobbles*100) + '%';
+  const avgPerDayAll = Math.round(DATA.total_scrobbles/DATA.span_days*10)/10;
+  const factsAll = [
+    [fmtDuration(DATA.total_seconds), 'listening time'],
+    [avgPerDayAll, 'avg scrobbles / day'],
+    [DATA.longest_streak + 'd', 'longest streak'],
+    [DATA.busiest_day ? fmtNum(DATA.busiest_day.count) : '—', 'scrobbles in most active day']
+  ];
+  document.getElementById('factGrid').innerHTML = factsAll.map(f=>
+    `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
+  ).join('');
 
   new Chart(document.getElementById('yearChart'), {
     type:'bar',
@@ -1282,8 +1290,7 @@ function renderReport(){
     [fmtDuration(cur.totalSeconds), 'listening time' + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : '')],
     [avgPerDay, 'avg scrobbles / day'],
     [cur.longestStreak + 'd', 'longest streak in this period'],
-    [cur.busiestDay ? fmtDateNice(cur.busiestDay.date) : '—', 'busiest day' + (cur.busiestDay?` (${cur.busiestDay.count} scrobbles)`:'')],
-    [cur.busiestHour ? fmtHour(cur.busiestHour.hour) : '—', 'busiest hour' + (cur.busiestHour?` (${cur.busiestHour.count} scrobbles)`:'')],
+    [cur.busiestDay ? fmtNum(cur.busiestDay.count) : '—', 'scrobbles in most active day'],
   ];
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>
     `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`

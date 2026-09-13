@@ -708,8 +708,11 @@ function renderHeatmap(containerId, heat, opts){
     // let the container scroll in whichever direction(s) the content exceeds.
     cell = HEATMAP_FIXED_CELL;
   } else {
-    const maxCellByHeight = Math.floor((availH - HEATMAP_LABEL_ROW_HEIGHT - HEATMAP_GAP*rows) / rows);
-    cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
+    // Same fixed cell size as the Overview tab's years-heatmap, so squares
+    // read as the same size everywhere on the site. This means the month
+    // view (5-6 rows) and year view (12 rows) no longer land on the same
+    // *total height* -- each just centers within the fixed-height box instead.
+    cell = HEATMAP_FIXED_CELL;
   }
 
   const rowLabelCls = opts.scrollXY ? ' sticky-left' : '';

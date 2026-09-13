@@ -192,6 +192,15 @@
   .heatmap-row.col-label-row.sticky-top{
     position:sticky;top:0;background:var(--surface);z-index:2;
   }
+  .heatmap-row.col-label-row.sticky-bottom{
+    position:sticky;bottom:0;background:var(--surface);z-index:2;
+  }
+  .heatmap-row-label.sticky-left{
+    position:sticky;left:0;background:var(--surface);z-index:1;
+  }
+  .heatmap-row.col-label-row.sticky-bottom .heatmap-row-label.sticky-left{
+    z-index:3; /* the corner cell sits above both the pinned row and pinned column */
+  }
   .heatmap{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
   .heatmap-row-label{

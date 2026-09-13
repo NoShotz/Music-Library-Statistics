@@ -712,7 +712,10 @@ function renderHeatmap(containerId, heat, opts){
     cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
   }
 
-  const colLabelsHtml = `<div class="heatmap-row col-label-row${opts.scrollY ? ' sticky-top' : ''}"><div class="heatmap-row-label"></div>` +
+  const rowLabelCls = opts.scrollXY ? ' sticky-left' : '';
+  const colLabelRowCls = opts.scrollY ? ' sticky-top' : (opts.scrollXY ? ' sticky-bottom' : '');
+
+  const colLabelsHtml = `<div class="heatmap-row col-label-row${colLabelRowCls}"><div class="heatmap-row-label${rowLabelCls}"></div>` +
     heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;
 
   const rowsHtml = heat.rowLabels.map((rl,ri)=>{
@@ -723,7 +726,7 @@ function renderHeatmap(containerId, heat, opts){
       const date = heat.cellMeta[ri][ci] || '';
       return `<div class="heatmap-cell" style="background:${bg};" data-date="${date}" data-count="${v}"></div>`;
     }).join('');
-    return `<div class="heatmap-row data-row"><div class="heatmap-row-label">${rl}</div>${cells}</div>`;
+    return `<div class="heatmap-row data-row"><div class="heatmap-row-label${rowLabelCls}">${rl}</div>${cells}</div>`;
   }).join('');
 
   // Normally the day/weekday labels sit below the data rows. But once a

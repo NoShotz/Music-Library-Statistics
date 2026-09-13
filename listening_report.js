@@ -1130,7 +1130,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
         tooltip:{ callbacks:{ label: ctx => fmtNum(ctx.parsed.y) + ' scrobble' + (ctx.parsed.y===1?'':'s') } }
       },
       scales:{
-        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:16 } },
+        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
         y:{ grid:{color:'#241d16'}, beginAtZero:true, ticks:{ precision:0 } }
       }
     }

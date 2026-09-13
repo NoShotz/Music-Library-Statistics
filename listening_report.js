@@ -584,29 +584,6 @@ function buildYearHeatmap(year, scrobbles){
   return { rowLabels: monthNames, colLabels: Array.from({length:31},(_,i)=>String(i+1)), matrix, cellMeta };
 }
 
-function buildMonthHeatmap(monthKey, scrobbles){
-  const [y,m] = monthKey.split('-').map(Number);
-  const dim = new Date(Date.UTC(y,m,0)).getUTCDate();
-  const firstOffset = mondayIndex(new Date(Date.UTC(y,m-1,1)).getUTCDay()); // 0=Mon..6=Sun
-  const weeks = Math.ceil((firstOffset+dim)/7);
-  const matrix = Array.from({length:weeks},()=>Array(7).fill(null));
-  const cellMeta = Array.from({length:weeks},()=>Array(7).fill(null));
-  for(let d=1; d<=dim; d++){
-    const cellIndex = firstOffset + d - 1;
-    const row = Math.floor(cellIndex/7), col = cellIndex%7;
-    matrix[row][col] = 0;
-    cellMeta[row][col] = fmtDateNice(y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
-  }
-  scrobbles.forEach(r=>{
-    const d = Number(r.dateStr.split('-')[2]);
-    const cellIndex = firstOffset + d - 1;
-    const row = Math.floor(cellIndex/7), col = cellIndex%7;
-    matrix[row][col]++;
-  });
-  const rowLabels = Array.from({length:weeks},(_,i)=>'Week '+(i+1));
-  return { rowLabels, colLabels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], matrix, cellMeta };
-}
-
 function buildYearsHeatmap(scrobbles){
   const years = [...new Set(scrobbles.map(r=>r.year))].sort((a,b)=>a-b);
   const yearIndex = new Map(years.map((y,i)=>[y,i]));
@@ -1118,6 +1095,48 @@ function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
 }
 
+// Bar chart alternative to the heatmap for a single month's daily scrobbles --
+// a month only has ~28-31 days, so a heatmap grid (5-6 short rows) leaves a lot
+// of the fixed-height container empty; a bar chart fills the same space better.
+function renderMonthBarChart(containerId, monthKey, scrobbles){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  destroyChart('subPeriod');
+  el.innerHTML = '<div class="chart-box" style="width:100%;height:100%;"><canvas id="subPeriodBarChart"></canvas></div>';
+
+  const [y,m] = monthKey.split('-').map(Number);
+  const dim = new Date(Date.UTC(y,m,0)).getUTCDate();
+  const counts = Array(dim).fill(0);
+  scrobbles.forEach(r=>{
+    const d = Number(r.dateStr.split('-')[2]);
+    counts[d-1]++;
+  });
+  const max = Math.max(1, ...counts);
+
+  CHART_REFS.subPeriod = new Chart(document.getElementById('subPeriodBarChart'), {
+    type:'bar',
+    data:{
+      labels: counts.map((_,i)=>String(i+1)),
+      datasets:[{
+        data: counts,
+        backgroundColor: counts.map(v => v>0 ? heatmapColor(v/max) : '#241d16'),
+        borderRadius:2, barPercentage:0.75, categoryPercentage:0.9
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{ callbacks:{ label: ctx => fmtNum(ctx.parsed.y) + ' scrobble' + (ctx.parsed.y===1?'':'s') } }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:16 } },
+        y:{ grid:{color:'#241d16'}, beginAtZero:true, ticks:{ precision:0 } }
+      }
+    }
+  });
+}
+
 // ---- manual color scale (see renderCountryMap comment for why this is
 // computed by hand instead of handed to jsvectormap's built-in scale/
 // normalizeFunction) ----
@@ -1251,17 +1270,22 @@ function renderReport(){
     <div class="stat-card"><div class="stat-val">${s[0]}<span class="cmp ${s[2].cls}">${s[2].label}</span></div><div class="stat-lbl">${s[1]} · vs. ${periodLabel(type,prevKey)}</div></div>
   `).join('');
 
-  // ---- sub-period heatmap (year: months x days-of-month; month: weeks x days-of-week) ----
+  // ---- sub-period view (year: days-of-year heatmap; month: daily bar chart) ----
   const subCard = document.getElementById('subPeriodCard');
   if(type==='week'){
     subCard.style.display = 'none';
+    destroyChart('subPeriod');
+  } else if(type==='year'){
+    subCard.style.display = '';
+    destroyChart('subPeriod');
+    document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of year';
+    setText('subPeriodDesc', periodLabel(type,key));
+    renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles));
   } else {
     subCard.style.display = '';
-    document.getElementById('subPeriodTitle').textContent =
-      type==='year' ? 'Scrobbles by day of year' : 'Scrobbles by day of month';
+    document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of month';
     setText('subPeriodDesc', periodLabel(type,key));
-    const heat = type==='year' ? buildYearHeatmap(Number(key), curScrobbles) : buildMonthHeatmap(key, curScrobbles);
-    renderHeatmap('subPeriodHeatmap', heat);
+    renderMonthBarChart('subPeriodHeatmap', key, curScrobbles);
   }
 
   // ---- top lists + new stats ----

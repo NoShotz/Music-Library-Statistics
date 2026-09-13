@@ -680,7 +680,7 @@ function renderHeatmap(containerId, heat, opts){
     cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
   }
 
-  const colLabelsHtml = `<div class="heatmap-row col-label-row"><div class="heatmap-row-label"></div>` +
+  const colLabelsHtml = `<div class="heatmap-row col-label-row${opts.scrollY ? ' sticky-top' : ''}"><div class="heatmap-row-label"></div>` +
     heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;
 
   const rowsHtml = heat.rowLabels.map((rl,ri)=>{
@@ -694,8 +694,14 @@ function renderHeatmap(containerId, heat, opts){
     return `<div class="heatmap-row data-row"><div class="heatmap-row-label">${rl}</div>${cells}</div>`;
   }).join('');
 
-  // day/weekday labels render along the bottom, under the data rows
-  el.innerHTML = `<div class="heatmap" style="--cell:${cell}px;">${rowsHtml}${colLabelsHtml}</div>`;
+  // Normally the day/weekday labels sit below the data rows. But once a
+  // heatmap scrolls (the years view), a label row that only appears at the
+  // very bottom is useless while scrolling through the middle of it -- so
+  // put it first and pin it to the top of the scroll area instead.
+  el.innerHTML = opts.scrollY
+    ? `<div class="heatmap" style="--cell:${cell}px;">${colLabelsHtml}${rowsHtml}</div>`
+    : `<div class="heatmap" style="--cell:${cell}px;">${rowsHtml}${colLabelsHtml}</div>`;
+
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
     cell.addEventListener('mouseenter', evt=>{

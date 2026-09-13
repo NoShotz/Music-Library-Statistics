@@ -182,10 +182,16 @@
   }
   .heatmap-box.scroll::-webkit-scrollbar{width:8px;}
   .heatmap-box.scroll::-webkit-scrollbar-track{background:transparent;}
+  .heatmap-box.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
+  .heatmap-box.scroll-xy{
+    justify-content:flex-start;align-items:flex-start;overflow-y:auto;
+  }
+  .heatmap-box.scroll-xy::-webkit-scrollbar{width:8px;height:8px;}
+  .heatmap-box.scroll-xy::-webkit-scrollbar-track{background:transparent;}
+  .heatmap-box.scroll-xy::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
   .heatmap-row.col-label-row.sticky-top{
     position:sticky;top:0;background:var(--surface);z-index:2;
   }
-  .heatmap-box.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
   .heatmap{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
   .heatmap-row-label{
@@ -381,7 +387,7 @@
 
     <div class="card">
       <h3>Scrobbles per year</h3>
-      <div class="heatmap-box scroll" id="yearsHeatmap"></div>
+      <div class="heatmap-box scroll-xy" id="yearsHeatmap"></div>
     </div>
 
     <div class="two-col">

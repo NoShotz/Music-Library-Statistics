@@ -611,12 +611,37 @@ function buildYearsHeatmap(scrobbles){
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const years = [...new Set(scrobbles.map(r=>r.year))].sort((a,b)=>a-b);
   const yearIndex = new Map(years.map((y,i)=>[y,i]));
-  const matrix = years.map(()=>Array(12).fill(0));
-  const cellMeta = years.map(y=>monthNames.map(mn=>mn+' '+y));
-  scrobbles.forEach(r=>{
-    matrix[yearIndex.get(r.year)][Number(r.monthKey.split('-')[1])-1]++;
+  const COLS = 366; // fixed width so every year lines up; non-leap years leave the last column blank
+
+  const matrix = years.map(()=>Array(COLS).fill(null));
+  const cellMeta = years.map(()=>Array(COLS).fill(null));
+  years.forEach((y,ri)=>{
+    const isLeap = (y%4===0 && y%100!==0) || y%400===0;
+    const daysInYear = isLeap ? 366 : 365;
+    for(let d=0; d<daysInYear; d++){
+      const dt = new Date(Date.UTC(y,0,1) + d*86400000);
+      matrix[ri][d] = 0;
+      cellMeta[ri][d] = fmtDateNice(dt.toISOString().slice(0,10));
+    }
   });
-  return { rowLabels: years.map(String), colLabels: monthNames, matrix, cellMeta };
+
+  scrobbles.forEach(r=>{
+    const ri = yearIndex.get(r.year);
+    const jan1 = Date.UTC(r.year,0,1);
+    const dayIdx = Math.round((new Date(r.dateStr+'T00:00:00Z') - jan1) / 86400000);
+    matrix[ri][dayIdx]++;
+  });
+
+  // sparse month-start labels, positioned via a leap-year reference so they land
+  // within a day of correct for every row regardless of that year's own leap status
+  const colLabels = Array(COLS).fill('');
+  const jan1Leap = Date.UTC(2024,0,1);
+  monthNames.forEach((mn,mi)=>{
+    const idx = Math.round((Date.UTC(2024,mi,1) - jan1Leap) / 86400000);
+    colLabels[idx] = mn;
+  });
+
+  return { rowLabels: years.map(String), colLabels, matrix, cellMeta };
 }
 
 const HEATMAP_LOW = [0x24,0x1d,0x16];   // near the card background -- "0 scrobbles"
@@ -654,6 +679,7 @@ function positionHeatmapTooltip(tt, evt){
 const HEATMAP_ROW_LABEL_WIDTH = 52;
 const HEATMAP_LABEL_ROW_HEIGHT = 16;
 const HEATMAP_GAP = 3;
+const HEATMAP_FIXED_CELL = 16; // used when both axes scroll (years x days) -- see scrollXY
 
 function renderHeatmap(containerId, heat, opts){
   opts = opts || {};
@@ -675,6 +701,12 @@ function renderHeatmap(containerId, heat, opts){
     // size regardless of how many there are) and let the container scroll
     // vertically instead once content overflows it.
     cell = Math.max(8, Math.min(28, maxCellByWidth));
+  } else if(opts.scrollXY){
+    // Both axes can now overflow (day-columns horizontally, year-rows
+    // vertically as more years accumulate), so there's no longer a dimension
+    // left to size cells "to fit" -- use a fixed, comfortable cell size and
+    // let the container scroll in whichever direction(s) the content exceeds.
+    cell = HEATMAP_FIXED_CELL;
   } else {
     const maxCellByHeight = Math.floor((availH - HEATMAP_LABEL_ROW_HEIGHT - HEATMAP_GAP*rows) / rows);
     cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
@@ -927,7 +959,7 @@ function paintOverview(DATA){
     `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
   ).join('');
 
-  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollY:true});
+  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true});
 
   // Canadian content, year over year
   if(DATA.can && DATA.can.yearlyCanadian && DATA.can.yearlyCanadian.length){

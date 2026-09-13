@@ -608,7 +608,6 @@ function buildMonthHeatmap(monthKey, scrobbles){
 }
 
 function buildYearsHeatmap(scrobbles){
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const years = [...new Set(scrobbles.map(r=>r.year))].sort((a,b)=>a-b);
   const yearIndex = new Map(years.map((y,i)=>[y,i]));
   const COLS = 366; // fixed width so every year lines up; non-leap years leave the last column blank
@@ -632,14 +631,8 @@ function buildYearsHeatmap(scrobbles){
     matrix[ri][dayIdx]++;
   });
 
-  // sparse month-start labels, positioned via a leap-year reference so they land
-  // within a day of correct for every row regardless of that year's own leap status
-  const colLabels = Array(COLS).fill('');
-  const jan1Leap = Date.UTC(2024,0,1);
-  monthNames.forEach((mn,mi)=>{
-    const idx = Math.round((Date.UTC(2024,mi,1) - jan1Leap) / 86400000);
-    colLabels[idx] = mn;
-  });
+  // per-column day-of-year label (1..366)
+  const colLabels = Array.from({length: COLS}, (_,d) => String(d+1));
 
   return { rowLabels: years.map(String), colLabels, matrix, cellMeta };
 }

@@ -921,7 +921,7 @@ function paintOverview(DATA){
     stats.push([DATA.can.lifetimePct+'%', 'Canadian']);
   }
   document.getElementById('statGrid').innerHTML = stats.map(s =>
-    `<div class="stat-card"><div class="stat-val">${s[0]}</div><div class="stat-lbl">${s[1]} · all time</div></div>`
+    `<div class="stat-card"><h3 class="stat-title">${s[1]}</h3><div class="stat-val">${s[0]}</div><div class="stat-lbl">all time</div></div>`
   ).join('');
 
   const avgPerDayAll = Math.round(DATA.total_scrobbles/DATA.span_days*10)/10;
@@ -932,7 +932,7 @@ function paintOverview(DATA){
     [DATA.busiest_day ? fmtNum(DATA.busiest_day.count) + ' ' + fmtDayMonth(DATA.busiest_day.date) : '—', 'Scrobbles in most active day']
   ];
   document.getElementById('factGrid').innerHTML = factsAll.map(f=>
-    `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
+    `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div></div>`
   ).join('');
 
   renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true});
@@ -1267,7 +1267,7 @@ function renderReport(){
     statCards.push([cur.canadian.pct+'%', 'Canadian', canCmp]);
   }
   document.getElementById('reportStatGrid').innerHTML = statCards.map(s=>`
-    <div class="stat-card"><div class="stat-val">${s[0]}<span class="cmp ${s[2].cls}">${s[2].label}</span></div><div class="stat-lbl">${s[1]} · vs. ${periodLabel(type,prevKey)}</div></div>
+    <div class="stat-card"><h3 class="stat-title">${s[1]}</h3><div class="stat-val">${s[0]}<span class="cmp ${s[2].cls}">${s[2].label}</span></div><div class="stat-lbl">vs. ${periodLabel(type,prevKey)}</div></div>
   `).join('');
 
   // ---- sub-period view (year: days-of-year heatmap; month: daily bar chart) ----
@@ -1409,23 +1409,27 @@ function renderReport(){
   const facts = [
     [
       fmtDurationWords(cur.totalSeconds) + (hoursCmp ? ` <span class="cmp ${hoursCmp.cls}">${hoursCmp.label}</span>` : ''),
-      `Listening time<br>vs ${fmtDurationWords(prev.totalSeconds)} (${prevLabel})`
+      'Listening time',
+      `vs ${fmtDurationWords(prev.totalSeconds)} (${prevLabel})`
     ],
     [
       avgPerDay + ' /day' + ` <span class="cmp ${avgCmp.cls}">${avgCmp.label}</span>`,
-      `Average scrobbles<br>vs ${prevAvgPerDay} (${prevLabel})`
+      'Average scrobbles',
+      `vs ${prevAvgPerDay} (${prevLabel})`
     ],
     [
       cur.longestStreak + ' day' + (cur.longestStreak===1?'':'s') + ' in a row' + ` <span class="cmp ${streakCmp.cls}">${streakCmp.label}</span>`,
-      `Longest streak<br>vs ${prev.longestStreak} (${prevLabel})`
+      'Longest streak',
+      `vs ${prev.longestStreak} (${prevLabel})`
     ],
     [
       (cur.busiestDay ? fmtNum(cur.busiestDay.count) + ' ' + fmtDayMonth(cur.busiestDay.date) : '—') + (busiestDayCmp ? ` <span class="cmp ${busiestDayCmp.cls}">${busiestDayCmp.label}</span>` : ''),
-      `Scrobbles in most active day<br>vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
+      'Scrobbles in most active day',
+      `vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
     ],
   ];
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>
-    `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
+    `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[2]}</div></div>`
   ).join('');
 }
 

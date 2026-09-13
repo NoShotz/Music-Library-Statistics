@@ -177,6 +177,12 @@
     width:100%;height:280px;overflow-x:auto;overflow-y:hidden;
     display:flex;align-items:center;justify-content:center;
   }
+  .heatmap-box.scroll{
+    align-items:flex-start;overflow-y:auto;
+  }
+  .heatmap-box.scroll::-webkit-scrollbar{width:8px;}
+  .heatmap-box.scroll::-webkit-scrollbar-track{background:transparent;}
+  .heatmap-box.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
   .heatmap{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
   .heatmap-row{display:flex;align-items:center;gap:3px;}
   .heatmap-row-label{
@@ -372,7 +378,7 @@
 
     <div class="card">
       <h3>Scrobbles per year</h3>
-      <div class="chart-box"><canvas id="yearChart"></canvas></div>
+      <div class="heatmap-box scroll" id="yearsHeatmap"></div>
     </div>
 
     <div class="two-col">

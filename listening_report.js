@@ -607,6 +607,18 @@ function buildMonthHeatmap(monthKey, scrobbles){
   return { rowLabels, colLabels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], matrix, cellMeta };
 }
 
+function buildYearsHeatmap(scrobbles){
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const years = [...new Set(scrobbles.map(r=>r.year))].sort((a,b)=>a-b);
+  const yearIndex = new Map(years.map((y,i)=>[y,i]));
+  const matrix = years.map(()=>Array(12).fill(0));
+  const cellMeta = years.map(y=>monthNames.map(mn=>mn+' '+y));
+  scrobbles.forEach(r=>{
+    matrix[yearIndex.get(r.year)][Number(r.monthKey.split('-')[1])-1]++;
+  });
+  return { rowLabels: years.map(String), colLabels: monthNames, matrix, cellMeta };
+}
+
 const HEATMAP_LOW = [0x24,0x1d,0x16];   // near the card background -- "0 scrobbles"
 const HEATMAP_HIGH = [0xd6,0xa2,0x4c];  // gold -- matches the rest of the site's high-value color
 function heatmapColor(t){
@@ -643,7 +655,8 @@ const HEATMAP_ROW_LABEL_WIDTH = 52;
 const HEATMAP_LABEL_ROW_HEIGHT = 16;
 const HEATMAP_GAP = 3;
 
-function renderHeatmap(containerId, heat){
+function renderHeatmap(containerId, heat, opts){
+  opts = opts || {};
   const el = document.getElementById(containerId);
   if(!el) return;
   const allValues = heat.matrix.flat().filter(v=>v!=null && v>0);
@@ -654,9 +667,18 @@ function renderHeatmap(containerId, heat){
   const availW = el.clientWidth || 520;
   const availH = el.clientHeight || 280;
 
-  const maxCellByHeight = Math.floor((availH - HEATMAP_LABEL_ROW_HEIGHT - HEATMAP_GAP*rows) / rows);
-  const maxCellByWidth  = Math.floor((availW - HEATMAP_ROW_LABEL_WIDTH - HEATMAP_GAP*cols) / cols);
-  const cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
+  const maxCellByWidth = Math.floor((availW - HEATMAP_ROW_LABEL_WIDTH - HEATMAP_GAP*cols) / cols);
+  let cell;
+  if(opts.scrollY){
+    // Don't shrink cells to force everything into the visible height -- size
+    // purely off the available width (so rows stay a comfortable, consistent
+    // size regardless of how many there are) and let the container scroll
+    // vertically instead once content overflows it.
+    cell = Math.max(8, Math.min(28, maxCellByWidth));
+  } else {
+    const maxCellByHeight = Math.floor((availH - HEATMAP_LABEL_ROW_HEIGHT - HEATMAP_GAP*rows) / rows);
+    cell = Math.max(8, Math.min(maxCellByHeight, maxCellByWidth));
+  }
 
   const colLabelsHtml = `<div class="heatmap-row col-label-row"><div class="heatmap-row-label"></div>` +
     heat.colLabels.map(c=>`<div class="heatmap-col-label">${c}</div>`).join('') + `</div>`;
@@ -899,14 +921,7 @@ function paintOverview(DATA){
     `<div class="fact"><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[1]}</div></div>`
   ).join('');
 
-  new Chart(document.getElementById('yearChart'), {
-    type:'bar',
-    data:{ labels: DATA.yearly.map(d=>d.year),
-      datasets:[{ data: DATA.yearly.map(d=>d.count), backgroundColor: GOLD_DIM, borderRadius:2, barPercentage:0.7 }] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.y.toLocaleString()+' scrobbles' } } },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'}, ticks:{ callback: v => v>=1000? (v/1000)+'k': v } } } }
-  });
+  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollY:true});
 
   // Canadian content, year over year
   if(DATA.can && DATA.can.yearlyCanadian && DATA.can.yearlyCanadian.length){

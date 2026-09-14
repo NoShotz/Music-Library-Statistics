@@ -262,6 +262,10 @@
               "title": "Savin' The Day",
               "length": "3:24"
             }
+          ],
+          "otherArtists": [
+            "Ray Parker Jr.",
+            "The Bus Boys"
           ]
         }
       ]
@@ -800,6 +804,9 @@
               "title": "Bad Man",
               "length": "3:26"
             }
+          ],
+          "otherArtists": [
+            "The Dirty Diary"
           ]
         }
       ]
@@ -906,6 +913,9 @@
               "title": "Holding Out For A Hero",
               "length": "5:50"
             }
+          ],
+          "otherArtists": [
+            "Kenny Loggins"
           ]
         }
       ]
@@ -962,6 +972,9 @@
               "title": "Blow Me Away",
               "length": "3:27"
             }
+          ],
+          "otherArtists": [
+            "Martin O'Donnell & Michael Salvatori"
           ]
         }
       ]
@@ -2152,6 +2165,11 @@
               "title": "The Heat Is On",
               "length": "3:45"
             }
+          ],
+          "otherArtists": [
+            "Harold Faltermeyer",
+            "Patti LaBelle",
+            "The Pointer Sisters"
           ]
         }
       ]
@@ -2334,6 +2352,11 @@
               "title": "Axel F",
               "length": "3:00"
             }
+          ],
+          "otherArtists": [
+            "Glenn Frey",
+            "Patti LaBelle",
+            "The Pointer Sisters"
           ]
         },
         {
@@ -2344,6 +2367,9 @@
               "title": "Top Gun Anthem",
               "length": "4:13"
             }
+          ],
+          "otherArtists": [
+            "Kenny Loggins"
           ]
         }
       ]
@@ -2874,6 +2900,9 @@
               "title": "Footloose",
               "length": "3:55"
             }
+          ],
+          "otherArtists": [
+            "Bonnie Tyler"
           ]
         },
         {
@@ -2884,6 +2913,9 @@
               "title": "Danger Zone",
               "length": "3:32"
             }
+          ],
+          "otherArtists": [
+            "Harold Faltermeyer"
           ]
         }
       ]
@@ -3368,6 +3400,9 @@
               "title": "Halo Theme Mjolnir Mix",
               "length": "4:11"
             }
+          ],
+          "otherArtists": [
+            "Breaking Benjamin"
           ]
         }
       ]
@@ -4000,6 +4035,11 @@
               "title": "Stir It Up",
               "length": "3:38"
             }
+          ],
+          "otherArtists": [
+            "Glenn Frey",
+            "Harold Faltermeyer",
+            "The Pointer Sisters"
           ]
         }
       ]
@@ -4510,6 +4550,10 @@
               "title": "Ghostbusters",
               "length": "4:05"
             }
+          ],
+          "otherArtists": [
+            "Alessi Brothers",
+            "The Bus Boys"
           ]
         }
       ]
@@ -5768,6 +5812,10 @@
               "title": "Cleanin' Up The Town",
               "length": "2:58"
             }
+          ],
+          "otherArtists": [
+            "Alessi Brothers",
+            "Ray Parker Jr."
           ]
         }
       ]
@@ -5874,6 +5922,9 @@
               "title": "God Damn Better",
               "length": "3:26"
             }
+          ],
+          "otherArtists": [
+            "Blues Saraceno"
           ]
         }
       ]
@@ -6100,6 +6151,11 @@
               "title": "Neutron Dance",
               "length": "4:12"
             }
+          ],
+          "otherArtists": [
+            "Glenn Frey",
+            "Harold Faltermeyer",
+            "Patti LaBelle"
           ]
         }
       ]
@@ -6320,7 +6376,7 @@
       "artist": "The Tragically Hip",
       "artistCountry": "Canada",
       "albums": [
-          {
+        {
           "album": "Up To Here",
           "year": 1989,
           "tracks": [

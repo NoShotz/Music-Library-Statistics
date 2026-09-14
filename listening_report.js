@@ -5,6 +5,7 @@ let ENRICHED = null;       // scrobbles + derived local-date fields, sorted asce
 let LIBRARY = null;        // null until library_data.json loads successfully
 let COUNTRY_BY_ARTIST = null;   // normArtist -> country string ("England; United Kingdom")
 let TRACK_META = null;          // "normArtist|||normTrack" -> {year, length_sec, album}
+let ALBUM_RELATED = null;       // "normArtist|||normAlbum" -> sorted unique normArtists sharing the album (self + otherArtists)
 let GLOBAL_FIRST = null;   // {firstArtist, firstAlbum, firstTrack} -> earliest ENRICHED record
 let PERIOD_INDEXES = null; // {year:[...], month:[...], week:[...]} continuous, ascending
 
@@ -63,18 +64,43 @@ async function boot(){
 function buildLibraryLookups(){
   COUNTRY_BY_ARTIST = {};
   TRACK_META = {};
+  ALBUM_RELATED = {};
   if(!LIBRARY || !Array.isArray(LIBRARY.artists)) return;
+
+  // First pass: build TRACK_META and collect raw otherArtists relationships
+  const relatedRaw = {}; // normArtist|||normAlbum -> Set of normArtists
   LIBRARY.artists.forEach(a=>{
-    COUNTRY_BY_ARTIST[normArtist(a.artist)] = a.artistCountry;
+    const na = normArtist(a.artist);
+    COUNTRY_BY_ARTIST[na] = a.artistCountry;
     (a.albums||[]).forEach(al=>{
+      const nal = normAlbum(al.album);
+      const baseKey = na + '|||' + nal;
+      if(!relatedRaw[baseKey]) relatedRaw[baseKey] = new Set();
+      relatedRaw[baseKey].add(na);
+      (al.otherArtists||[]).forEach(other=>{
+        relatedRaw[baseKey].add(normArtist(other));
+      });
       (al.tracks||[]).forEach(t=>{
-        const key = normArtist(a.artist) + '|||' + normTrack(t.title);
+        const key = na + '|||' + normTrack(t.title);
         TRACK_META[key] = {
           year: al.year,
           length_sec: parseLength(t.length),
           album: al.album
         };
       });
+    });
+  });
+
+  // Second pass: make the related sets symmetric and sorted so every participant
+  // of a soundtrack ends up with the same canonical key.
+  Object.keys(relatedRaw).forEach(baseKey=>{
+    const artists = Array.from(relatedRaw[baseKey]).sort();
+    if(artists.length < 2) return; // ordinary album, leave as-is
+    // Propagate the full set under every participant's base key
+    artists.forEach(na=>{
+      const nal = baseKey.split('|||')[1];
+      const k = na + '|||' + nal;
+      ALBUM_RELATED[k] = artists;
     });
   });
 }
@@ -104,6 +130,19 @@ function normTrack(s){
 }
 function normAlbum(s){
   return normTrack(s);
+}
+
+// Canonical album identity for aggregation.
+// Ordinary albums: "normArtist|||normAlbum"
+// Soundtrack / multi-artist albums (via otherArtists): "artist1|artist2|...|||normAlbum"
+// so all contributing artists collapse to one album entity.
+function albumKey(r){
+  const base = r.na + '|||' + r.nal;
+  const related = ALBUM_RELATED && ALBUM_RELATED[base];
+  if(related && related.length > 1){
+    return related.join('|') + '|||' + r.nal;
+  }
+  return base;
 }
 
 function localDate(ms){
@@ -184,8 +223,8 @@ function buildGlobalFirstSeen(enriched){
   const firstArtist={}, firstAlbum={}, firstTrack={};
   enriched.forEach(r=>{
     if(!(r.artist in firstArtist)) firstArtist[r.artist]=r;
-    // Normalized key so casing variants (e.g. "Back to the Future" / "Back To The Future") collapse
-    const aKey = r.na + '|||' + r.nal;
+    // albumKey collapses casing variants and multi-artist soundtracks
+    const aKey = albumKey(r);
     if(!(aKey in firstAlbum)) firstAlbum[aKey]=r;
     const tKey = r.artist+'|||'+r.track;
     if(!(tKey in firstTrack)) firstTrack[tKey]=r;
@@ -494,7 +533,7 @@ function computeNew(scrobbles, type, periodType, periodKey){
                   : type==='album'  ? GLOBAL_FIRST.firstAlbum
                   : GLOBAL_FIRST.firstTrack;
   const keyFn = type==='artist' ? r=>r.artist
-              : type==='album'  ? r=>r.na+'|||'+r.nal
+              : type==='album'  ? r=>albumKey(r)
               : r=>r.artist+'|||'+r.track;
   const fieldName = periodType==='year' ? 'year' : periodType==='month' ? 'monthKey' : 'weekStart';
   const matchVal = periodType==='year' ? Number(periodKey) : periodKey;
@@ -553,11 +592,11 @@ function computeStats(scrobbles, periodType, periodKey){
     busiestHour: busiestHour(hourArr),
     totalSeconds: totalSecondsFor(scrobbles),
     topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
-    topAlbums: topN(scrobbles, r=>r.na+'|||'+r.nal, 5, (k,c)=>{
+    topAlbums: topN(scrobbles, r=>albumKey(r), 5, (k,c)=>{
       const first = GLOBAL_FIRST.firstAlbum[k];
       return {
         artist: first ? first.artist : k.split('|||')[0],
-        album:  first ? first.album  : k.split('|||')[1],
+        album:  first ? first.album  : k.split('|||').pop(),
         count: c
       };
     }),
@@ -853,16 +892,16 @@ function renderOverview(){
   const uniqueArtists = Object.keys(artistCounts).length;
 
   const albumKeys = new Set(), trackKeys = new Set();
-  s.forEach(r=>{ albumKeys.add(r.na+'|||'+r.nal); trackKeys.add(r.artist+'|||'+r.track); });
+  s.forEach(r=>{ albumKeys.add(albumKey(r)); trackKeys.add(r.artist+'|||'+r.track); });
   const uniqueAlbums = albumKeys.size, uniqueTracks = trackKeys.size;
 
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
   const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
-  const topAlbums = topN(s, r=>r.na+'|||'+r.nal, 5, (k,c)=>{
+  const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
     const first = GLOBAL_FIRST.firstAlbum[k];
     return {
       artist: first ? first.artist : k.split('|||')[0],
-      album:  first ? first.album  : k.split('|||')[1],
+      album:  first ? first.album  : k.split('|||').pop(),
       count: c
     };
   });

@@ -1,0 +1,45 @@
+name: Update Last.fm History
+
+on:
+  schedule:
+    # Run once per day at 04:00 UTC.
+    - cron: "0 4 * * *"
+
+  # Allow manually triggering the Action from GitHub.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-lastfm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Fetch Last.fm history
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_USERNAME: ${{ vars.LASTFM_USERNAME }}
+        run: python scripts/fetch_lastfm.py
+
+      - name: Commit updated Last.fm data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add lastfm_data.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update Last.fm listening history"
+            git push
+          fi

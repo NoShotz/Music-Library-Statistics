@@ -928,14 +928,17 @@ function paintOverview(DATA){
   const factsAll = [
     [fmtDurationWords(DATA.total_seconds), 'Listening time'],
     [avgPerDayAll + ' /day', 'Average scrobbles'],
-    [DATA.longest_streak + ' day' + (DATA.longest_streak===1?'':'s') + ' in a row', 'Longest streak'],
-    [DATA.busiest_day ? fmtNum(DATA.busiest_day.count) + ' ' + fmtDayMonth(DATA.busiest_day.date) : '—', 'Scrobbles in most active day']
+    [DATA.longest_streak + ' day' + (DATA.longest_streak===1?'':'s') + ' in a row', 'Longest streak']
   ];
   document.getElementById('factGrid').innerHTML = factsAll.map(f=>
     `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div></div>`
   ).join('');
 
   renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true});
+  renderChartSideStat('yearsHeatmapBusiest', DATA.busiest_day ? [
+    {label:'Busiest day', value:fmtDateNice(DATA.busiest_day.date)},
+    {label:'Scrobbles on busiest day', value:fmtNum(DATA.busiest_day.count)}
+  ] : null);
 
   // Canadian content, year over year
   if(DATA.can && DATA.can.yearlyCanadian && DATA.can.yearlyCanadian.length){
@@ -1281,11 +1284,19 @@ function renderReport(){
     document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of year';
     setText('subPeriodDesc', periodLabel(type,key));
     renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles));
+    renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [
+      {label:'Busiest day', value:fmtDayMonth(cur.busiestDay.date)},
+      {label:'Scrobbles on busiest day', value:fmtNum(cur.busiestDay.count)}
+    ] : null);
   } else {
     subCard.style.display = '';
     document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of month';
     setText('subPeriodDesc', periodLabel(type,key));
     renderMonthBarChart('subPeriodHeatmap', key, curScrobbles);
+    renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [
+      {label:'Busiest day', value:fmtDayMonth(cur.busiestDay.date)},
+      {label:'Scrobbles on busiest day', value:fmtNum(cur.busiestDay.count)}
+    ] : null);
   }
 
   // ---- top lists + new stats ----
@@ -1403,7 +1414,6 @@ function renderReport(){
   const prevAvgPerDay = Math.round(prev.n/periodDayCount(type,prevKey)*10)/10;
   const avgCmp = pctChange(avgPerDay, prevAvgPerDay);
   const streakCmp = absChange(cur.longestStreak, prev.longestStreak);
-  const busiestDayCmp = cur.busiestDay ? absChange(cur.busiestDay.count, prev.busiestDay ? prev.busiestDay.count : null) : null;
   const prevLabel = periodLabel(type, prevKey);
 
   const facts = [
@@ -1421,11 +1431,6 @@ function renderReport(){
       cur.longestStreak + ' day' + (cur.longestStreak===1?'':'s') + ' in a row' + ` <span class="cmp ${streakCmp.cls}">${streakCmp.label}</span>`,
       'Longest streak',
       `vs ${prev.longestStreak} (${prevLabel})`
-    ],
-    [
-      (cur.busiestDay ? fmtNum(cur.busiestDay.count) + ' ' + fmtDayMonth(cur.busiestDay.date) : '—') + (busiestDayCmp ? ` <span class="cmp ${busiestDayCmp.cls}">${busiestDayCmp.label}</span>` : ''),
-      'Scrobbles in most active day',
-      `vs ${prev.busiestDay ? fmtNum(prev.busiestDay.count) : '—'} (${prevLabel})`
     ],
   ];
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>

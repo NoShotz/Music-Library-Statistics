@@ -1286,7 +1286,7 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     backgroundColor: 'transparent',
     zoomButtons: false,
     zoomOnScroll: false,
-    showTooltip: true,
+    showTooltip: false, // replaced by our own shared tooltip (see bindMapTooltips) so it matches every other tooltip on the site
     regionStyle: {
       initial: { fill:'#332a1f', fillOpacity:1, stroke:'#15110d', strokeWidth:0.6 },
       hover: { fillOpacity:1, cursor:'pointer' }
@@ -1298,17 +1298,32 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
         scale
       }]
     },
-    onRegionTooltipShow(event, tooltip, code){
-      const m = meta[code];
-      if(!m) return; // no scrobbles matched to this country -- fall back to default tooltip
+    onLoaded(){ bindMapTooltips(containerId, meta, totalScrobbles); }
+  });
+  bindMapTooltips(containerId, meta, totalScrobbles); // belt-and-suspenders, in case onLoaded already fired
+}
+
+// Wires up our shared .chart-tooltip (same fade/anchor/caret behavior as the
+// heatmap and clock) on the map's region paths, instead of jsvectormap's own
+// built-in tooltip (disabled via showTooltip:false above).
+function bindMapTooltips(containerId, meta, totalScrobbles){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.querySelectorAll('path[data-code]').forEach(path=>{
+    if(path.dataset.tooltipBound) return; // avoid double-binding if called more than once
+    path.dataset.tooltipBound = '1';
+    path.addEventListener('mouseenter', ()=>{
+      const m = meta[path.getAttribute('data-code')];
+      if(!m) return; // no scrobbles matched to this country
+      const tt = getHeatmapTooltip();
       const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
-      tooltip.text(
-        `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
+      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
         `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
-        `<div style="opacity:0.75;">top artist: ${m.topArtist}</div>`,
-        true
-      );
-    }
+        `<div style="opacity:0.75;">top artist: ${m.topArtist}</div>`;
+      positionTooltipAtElement(tt, path);
+      showTooltip(tt);
+    });
+    path.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
   });
 }
 

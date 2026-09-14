@@ -3829,8 +3829,18 @@
     },
     {
       "artist": "Nickelback",
-      "artistCountry": "Canada; United States",
+      "artistCountry": "Canada",
       "albums": [
+        {
+          "album": "Silver Side Up",
+          "year": 2001,
+          "tracks": [
+            {
+              "title": "How You Remind Me",
+              "length": "3:43"
+            }
+          ]
+        },
         {
           "album": "Dark Horse",
           "year": 2008,
@@ -6616,6 +6626,16 @@
       "artist": "Three Days Grace",
       "artistCountry": "Canada",
       "albums": [
+        {
+          "album": "Three Days Grace",
+          "year": 2003,
+          "tracks": [
+            {
+              "title": "I Hate Everything About You",
+              "length": "3:51"
+            }
+          ]
+        },
         {
           "album": "One-X",
           "year": 2006,

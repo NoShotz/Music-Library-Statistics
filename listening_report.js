@@ -696,12 +696,21 @@ function getHeatmapTooltip(){
   }
   return HEATMAP_TOOLTIP_EL;
 }
+// Anchors the tooltip centered above the hovered element's own rect. Good fit
+// for simple, geographically-whole shapes (heatmap cells, clock wedges) where
+// centering over the element reads better than wherever the cursor happened
+// to enter it.
+function positionTooltipAtElement(tt, targetEl){
+  const r = targetEl.getBoundingClientRect();
+  const gap = 10;
+  tt.style.left = (r.left + r.width/2) + 'px';
+  tt.style.top = (r.top - gap) + 'px';
+}
 // Anchors the tooltip above the point where the cursor entered the hovered
-// shape, fixed for the duration of that hover (no mouse-follow jitter). Using
-// the entry point rather than the element's full getBoundingClientRect() also
-// sidesteps a real bug for geographically split shapes (e.g. the US path
-// includes Alaska/Hawaii/territories) -- a bounding-box center can land
-// somewhere on the map totally unrelated to the visible landmass being hovered.
+// shape instead -- needed specifically for the map, where a country's path
+// can include disconnected sub-shapes (e.g. the US includes Alaska/Hawaii/
+// territories), so its getBoundingClientRect() center can land somewhere on
+// the map totally unrelated to the visible landmass actually being hovered.
 function positionTooltipAtPoint(tt, x, y){
   const gap = 14;
   tt.style.left = x + 'px';
@@ -784,12 +793,12 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
-    cell.addEventListener('mouseenter', evt=>{
+    cell.addEventListener('mouseenter', ()=>{
       const tt = getHeatmapTooltip();
       const count = Number(cell.dataset.count);
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
+      positionTooltipAtElement(tt, cell);
       showTooltip(tt);
     });
     cell.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
@@ -845,12 +854,12 @@ function renderListeningClock(containerId, statElId, hourCounts){
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    bar.addEventListener('mouseenter', evt=>{
+    bar.addEventListener('mouseenter', ()=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
+      positionTooltipAtElement(tt, bar);
       showTooltip(tt);
     });
     bar.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));

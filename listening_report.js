@@ -854,12 +854,15 @@ function renderListeningClock(containerId, statElId, hourCounts){
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    bar.addEventListener('mouseenter', ()=>{
+    bar.addEventListener('mouseenter', evt=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      positionTooltipAtElement(tt, bar);
+      // Wedges are angled paths -- their axis-aligned bounding box can extend
+      // well past the visible shape (worse near diagonal hours), so anchor to
+      // the actual cursor entry point instead, same as the map does.
+      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
     bar.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));

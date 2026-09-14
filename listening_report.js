@@ -893,6 +893,21 @@ function paintOverview(DATA){
   Chart.defaults.font.size = 11.5;
   Chart.defaults.borderColor = '#3a2f24';
 
+  // Match Chart.js's built-in tooltips to the look of our custom hover tooltips
+  // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
+  // than leaving Chart.js's generic black default -- same colors, font, corner
+  // radius and padding, and no color-swatch box since ours don't have one either.
+  Chart.defaults.plugins.tooltip.backgroundColor = '#292019'; // var(--surface-2)
+  Chart.defaults.plugins.tooltip.titleColor = '#f2e8d8';      // var(--text)
+  Chart.defaults.plugins.tooltip.bodyColor = '#f2e8d8';       // var(--text)
+  Chart.defaults.plugins.tooltip.borderColor = '#3a2f24';     // var(--hair)
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.cornerRadius = 6;
+  Chart.defaults.plugins.tooltip.padding = {top:8, bottom:8, left:12, right:12};
+  Chart.defaults.plugins.tooltip.titleFont = {family:"'Work Sans', sans-serif", size:13, weight:'600'};
+  Chart.defaults.plugins.tooltip.bodyFont = {family:"'Work Sans', sans-serif", size:13, weight:'400'};
+  Chart.defaults.plugins.tooltip.displayColors = false;
+
   const GOLD = '#d6a24c';
   const GOLD_DIM = 'rgba(214,162,76,0.35)';
   const TEAL = '#5a9a94';

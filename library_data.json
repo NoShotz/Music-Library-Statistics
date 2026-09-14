@@ -5998,22 +5998,16 @@
       "artistCountry": "Canada",
       "albums": [
         {
-          "album": "Canned Wheat",
-          "year": 1969,
-          "tracks": [
-            {
-              "title": "No Time",
-              "length": "3:47"
-            }
-          ]
-        },
-        {
           "album": "American Woman",
           "year": 1970,
           "tracks": [
             {
               "title": "American Woman",
               "length": "3:53"
+            },
+            {
+              "title": "No Time",
+              "length": "3:47"
             }
           ]
         },

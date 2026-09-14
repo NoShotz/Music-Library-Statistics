@@ -6320,6 +6320,16 @@
       "artist": "The Tragically Hip",
       "artistCountry": "Canada",
       "albums": [
+          {
+          "album": "Up To Here",
+          "year": 1989,
+          "tracks": [
+            {
+              "title": "Blow At High Dough",
+              "length": "4:37"
+            }
+          ]
+        },
         {
           "album": "Fully Completely",
           "year": 1992,
@@ -6327,6 +6337,30 @@
             {
               "title": "Courage (For Hugh MacLennan)",
               "length": "4:27"
+            }
+          ]
+        },
+        {
+          "album": "Trouble At The Henhouse",
+          "year": 1996,
+          "tracks": [
+            {
+              "title": "Ahead By A Century",
+              "length": "3:43"
+            }
+          ]
+        },
+        {
+          "album": "Phantom Power",
+          "year": 1998,
+          "tracks": [
+            {
+              "title": "Bobcaygeon",
+              "length": "4:55"
+            },
+            {
+              "title": "Poets",
+              "length": "3:59"
             }
           ]
         }

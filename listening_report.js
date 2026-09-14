@@ -281,7 +281,11 @@ function periodLabel(type, key){
   if(type==='week'){
     const start = new Date(key+'T00:00:00Z');
     const end = new Date(start.getTime()+6*86400000);
-    const fmt = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'},{timeZone:'UTC'});
+    const fmt = d => d.toLocaleDateString('en-US',{
+      month:'short',
+      day:'numeric',
+      timeZone:'UTC'
+    });
     return fmt(start)+' – '+fmt(end)+', '+end.getUTCFullYear();
   }
 }

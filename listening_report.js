@@ -696,13 +696,16 @@ function getHeatmapTooltip(){
   }
   return HEATMAP_TOOLTIP_EL;
 }
-// Anchors the tooltip centered above the hovered element's own rect (not the
-// mouse position), so it stays put as the cursor moves around within a cell/bar.
-function positionTooltipAtElement(tt, targetEl){
-  const r = targetEl.getBoundingClientRect();
-  const gap = 10;
-  tt.style.left = (r.left + r.width/2) + 'px';
-  tt.style.top = (r.top - gap) + 'px';
+// Anchors the tooltip above the point where the cursor entered the hovered
+// shape, fixed for the duration of that hover (no mouse-follow jitter). Using
+// the entry point rather than the element's full getBoundingClientRect() also
+// sidesteps a real bug for geographically split shapes (e.g. the US path
+// includes Alaska/Hawaii/territories) -- a bounding-box center can land
+// somewhere on the map totally unrelated to the visible landmass being hovered.
+function positionTooltipAtPoint(tt, x, y){
+  const gap = 14;
+  tt.style.left = x + 'px';
+  tt.style.top = (y - gap) + 'px';
 }
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
@@ -781,12 +784,12 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
-    cell.addEventListener('mouseenter', ()=>{
+    cell.addEventListener('mouseenter', evt=>{
       const tt = getHeatmapTooltip();
       const count = Number(cell.dataset.count);
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      positionTooltipAtElement(tt, cell);
+      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
     cell.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
@@ -842,12 +845,12 @@ function renderListeningClock(containerId, statElId, hourCounts){
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    bar.addEventListener('mouseenter', ()=>{
+    bar.addEventListener('mouseenter', evt=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      positionTooltipAtElement(tt, bar);
+      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
     bar.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
@@ -1312,7 +1315,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
   el.querySelectorAll('path[data-code]').forEach(path=>{
     if(path.dataset.tooltipBound) return; // avoid double-binding if called more than once
     path.dataset.tooltipBound = '1';
-    path.addEventListener('mouseenter', ()=>{
+    path.addEventListener('mouseenter', evt=>{
       const m = meta[path.getAttribute('data-code')];
       if(!m) return; // no scrobbles matched to this country
       const tt = getHeatmapTooltip();
@@ -1320,7 +1323,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
         `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
         `<div style="opacity:0.75;">top artist: ${m.topArtist}</div>`;
-      positionTooltipAtElement(tt, path);
+      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
     path.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));

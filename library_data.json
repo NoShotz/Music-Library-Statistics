@@ -5127,6 +5127,22 @@
       ]
     },
     {
+      "artist": "Simple Plan",
+      "artistCountry": "Canada",
+      "albums": [
+        {
+          "album": "What's New Scooby-Doo?",
+          "year": 2002,
+          "tracks": [
+            {
+              "title": "What's New Scooby-Doo?",
+              "length": "1:08"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "Sloan",
       "artistCountry": "Canada",
       "albums": [

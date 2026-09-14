@@ -145,6 +145,20 @@ function albumKey(r){
   return base;
 }
 
+// Display name for an album key produced by albumKey().
+// Multi-artist (soundtrack) keys contain '|' in the artist portion → "Various Artists".
+// Ordinary keys fall back to the first-seen record's original casing.
+function albumDisplay(key){
+  const first = GLOBAL_FIRST && GLOBAL_FIRST.firstAlbum[key];
+  const parts = key.split('|||');
+  const artistPart = parts[0] || '';
+  const isVarious = artistPart.includes('|');
+  return {
+    artist: isVarious ? 'Various Artists' : (first ? first.artist : artistPart),
+    album:  first ? first.album : (parts[parts.length-1] || '')
+  };
+}
+
 function localDate(ms){
   return new Date(ms + LOCAL_UTC_OFFSET_HOURS*3600*1000);
 }
@@ -564,13 +578,8 @@ function discoveryRows(newResult, type){
   return newResult.newItems.map(it=>{
     if(type==='artist') return {artist:it.key, count:it.count};
     if(type==='album'){
-      // key is normalized; prefer the original casing stored on the first-seen record
-      const first = GLOBAL_FIRST.firstAlbum[it.key];
-      return {
-        artist: first ? first.artist : it.key.split('|||')[0],
-        album:  first ? first.album  : it.key.split('|||')[1],
-        count: it.count
-      };
+      const d = albumDisplay(it.key);
+      return { artist: d.artist, album: d.album, count: it.count };
     }
     const [artist, rest] = it.key.split('|||');
     return {artist, track:rest, count:it.count};
@@ -593,12 +602,8 @@ function computeStats(scrobbles, periodType, periodKey){
     totalSeconds: totalSecondsFor(scrobbles),
     topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
     topAlbums: topN(scrobbles, r=>albumKey(r), 5, (k,c)=>{
-      const first = GLOBAL_FIRST.firstAlbum[k];
-      return {
-        artist: first ? first.artist : k.split('|||')[0],
-        album:  first ? first.album  : k.split('|||').pop(),
-        count: c
-      };
+      const d = albumDisplay(k);
+      return { artist: d.artist, album: d.album, count: c };
     }),
     topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; }),
     newArtists, newAlbums, newTracks,
@@ -898,12 +903,8 @@ function renderOverview(){
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
   const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
   const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
-    const first = GLOBAL_FIRST.firstAlbum[k];
-    return {
-      artist: first ? first.artist : k.split('|||')[0],
-      album:  first ? first.album  : k.split('|||').pop(),
-      count: c
-    };
+    const d = albumDisplay(k);
+    return { artist: d.artist, album: d.album, count: c };
   });
 
   const yearCounts = {};

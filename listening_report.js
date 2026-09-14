@@ -184,7 +184,8 @@ function buildGlobalFirstSeen(enriched){
   const firstArtist={}, firstAlbum={}, firstTrack={};
   enriched.forEach(r=>{
     if(!(r.artist in firstArtist)) firstArtist[r.artist]=r;
-    const aKey = r.artist+'|||'+r.album;
+    // Normalized key so casing variants (e.g. "Back to the Future" / "Back To The Future") collapse
+    const aKey = r.na + '|||' + r.nal;
     if(!(aKey in firstAlbum)) firstAlbum[aKey]=r;
     const tKey = r.artist+'|||'+r.track;
     if(!(tKey in firstTrack)) firstTrack[tKey]=r;
@@ -493,7 +494,7 @@ function computeNew(scrobbles, type, periodType, periodKey){
                   : type==='album'  ? GLOBAL_FIRST.firstAlbum
                   : GLOBAL_FIRST.firstTrack;
   const keyFn = type==='artist' ? r=>r.artist
-              : type==='album'  ? r=>r.artist+'|||'+r.album
+              : type==='album'  ? r=>r.na+'|||'+r.nal
               : r=>r.artist+'|||'+r.track;
   const fieldName = periodType==='year' ? 'year' : periodType==='month' ? 'monthKey' : 'weekStart';
   const matchVal = periodType==='year' ? Number(periodKey) : periodKey;
@@ -523,8 +524,17 @@ function computeNew(scrobbles, type, periodType, periodKey){
 function discoveryRows(newResult, type){
   return newResult.newItems.map(it=>{
     if(type==='artist') return {artist:it.key, count:it.count};
+    if(type==='album'){
+      // key is normalized; prefer the original casing stored on the first-seen record
+      const first = GLOBAL_FIRST.firstAlbum[it.key];
+      return {
+        artist: first ? first.artist : it.key.split('|||')[0],
+        album:  first ? first.album  : it.key.split('|||')[1],
+        count: it.count
+      };
+    }
     const [artist, rest] = it.key.split('|||');
-    return type==='album' ? {artist, album:rest, count:it.count} : {artist, track:rest, count:it.count};
+    return {artist, track:rest, count:it.count};
   });
 }
 
@@ -543,7 +553,14 @@ function computeStats(scrobbles, periodType, periodKey){
     busiestHour: busiestHour(hourArr),
     totalSeconds: totalSecondsFor(scrobbles),
     topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
-    topAlbums: topN(scrobbles, r=>r.artist+'|||'+r.album, 5, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; }),
+    topAlbums: topN(scrobbles, r=>r.na+'|||'+r.nal, 5, (k,c)=>{
+      const first = GLOBAL_FIRST.firstAlbum[k];
+      return {
+        artist: first ? first.artist : k.split('|||')[0],
+        album:  first ? first.album  : k.split('|||')[1],
+        count: c
+      };
+    }),
     topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; }),
     newArtists, newAlbums, newTracks,
     discoveries: {
@@ -836,12 +853,19 @@ function renderOverview(){
   const uniqueArtists = Object.keys(artistCounts).length;
 
   const albumKeys = new Set(), trackKeys = new Set();
-  s.forEach(r=>{ albumKeys.add(r.artist+'|||'+r.album); trackKeys.add(r.artist+'|||'+r.track); });
+  s.forEach(r=>{ albumKeys.add(r.na+'|||'+r.nal); trackKeys.add(r.artist+'|||'+r.track); });
   const uniqueAlbums = albumKeys.size, uniqueTracks = trackKeys.size;
 
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
   const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
-  const topAlbums = topN(s, r=>r.artist+'|||'+r.album, 5, (k,c)=>{ const [artist,album]=k.split('|||'); return {artist,album,count:c}; });
+  const topAlbums = topN(s, r=>r.na+'|||'+r.nal, 5, (k,c)=>{
+    const first = GLOBAL_FIRST.firstAlbum[k];
+    return {
+      artist: first ? first.artist : k.split('|||')[0],
+      album:  first ? first.album  : k.split('|||')[1],
+      count: c
+    };
+  });
 
   const yearCounts = {};
   s.forEach(r=>{ yearCounts[r.year] = (yearCounts[r.year]||0)+1; });

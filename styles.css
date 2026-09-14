@@ -241,6 +241,33 @@
     box-shadow:0 8px 24px rgba(0,0,0,0.45) !important;
     opacity:1 !important;
   }
+  /* Our own heatmap/clock tooltip -- kept separate from .jvm-tooltip (used by
+     the country map's own tooltip, positioned by that library itself) so we
+     can safely add a repositioning transform without touching that one. */
+  .chart-tooltip{
+    background:var(--surface-2);
+    border:1px solid var(--hair);
+    color:var(--text);
+    font-family:'Work Sans',sans-serif;
+    font-size:13px;
+    line-height:1.5;
+    padding:8px 12px;
+    border-radius:6px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
+    transform:translate(-50%,-100%);
+    opacity:0;
+    transition:opacity 0.15s ease;
+  }
+  .chart-tooltip.chart-tooltip-visible{ opacity:1; }
+  .chart-tooltip::after{
+    content:'';
+    position:absolute;
+    left:50%;bottom:-6px;
+    transform:translateX(-50%);
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:6px solid var(--surface-2);
+  }
   .two-col{
     display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }

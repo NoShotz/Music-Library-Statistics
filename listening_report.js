@@ -682,22 +682,30 @@ function heatmapColor(t){
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
-// Shared tooltip element for heatmap cells, styled to match the country map's tooltip.
+// Shared tooltip element reused by heatmap cells and the listening clock,
+// styled to match the country map's tooltip (and now Chart.js's, via the
+// shared .jvm-tooltip class). Positions itself above the hovered element
+// (not the cursor) and fades in/out, matching Chart.js's native tooltip feel.
 let HEATMAP_TOOLTIP_EL = null;
 function getHeatmapTooltip(){
   if(!HEATMAP_TOOLTIP_EL){
     HEATMAP_TOOLTIP_EL = document.createElement('div');
-    HEATMAP_TOOLTIP_EL.className = 'jvm-tooltip';
-    Object.assign(HEATMAP_TOOLTIP_EL.style, { position:'fixed', pointerEvents:'none', zIndex:'9999', display:'none' });
+    HEATMAP_TOOLTIP_EL.className = 'chart-tooltip';
+    Object.assign(HEATMAP_TOOLTIP_EL.style, { position:'fixed', pointerEvents:'none', zIndex:'9999' });
     document.body.appendChild(HEATMAP_TOOLTIP_EL);
   }
   return HEATMAP_TOOLTIP_EL;
 }
-function positionHeatmapTooltip(tt, evt){
-  const pad = 14;
-  tt.style.left = (evt.clientX + pad) + 'px';
-  tt.style.top = (evt.clientY + pad) + 'px';
+// Anchors the tooltip centered above the hovered element's own rect (not the
+// mouse position), so it stays put as the cursor moves around within a cell/bar.
+function positionTooltipAtElement(tt, targetEl){
+  const r = targetEl.getBoundingClientRect();
+  const gap = 10;
+  tt.style.left = (r.left + r.width/2) + 'px';
+  tt.style.top = (r.top - gap) + 'px';
 }
+function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
+function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
 // Total px height that each heatmap's data rows should add up to, so the year
 // grid (12 rows) and month grid (5-6 rows) end up the same overall height even
@@ -773,16 +781,15 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
-    cell.addEventListener('mouseenter', evt=>{
+    cell.addEventListener('mouseenter', ()=>{
       const tt = getHeatmapTooltip();
       const count = Number(cell.dataset.count);
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      tt.style.display = 'block';
-      positionHeatmapTooltip(tt, evt);
+      positionTooltipAtElement(tt, cell);
+      showTooltip(tt);
     });
-    cell.addEventListener('mousemove', evt => positionHeatmapTooltip(getHeatmapTooltip(), evt));
-    cell.addEventListener('mouseleave', () => { getHeatmapTooltip().style.display = 'none'; });
+    cell.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
   });
 }
 
@@ -835,16 +842,15 @@ function renderListeningClock(containerId, statElId, hourCounts){
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    bar.addEventListener('mouseenter', evt=>{
+    bar.addEventListener('mouseenter', ()=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
         `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
-      tt.style.display = 'block';
-      positionHeatmapTooltip(tt, evt);
+      positionTooltipAtElement(tt, bar);
+      showTooltip(tt);
     });
-    bar.addEventListener('mousemove', evt => positionHeatmapTooltip(getHeatmapTooltip(), evt));
-    bar.addEventListener('mouseleave', () => { getHeatmapTooltip().style.display = 'none'; });
+    bar.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
   });
 
   const best = busiestHour(hourCounts);

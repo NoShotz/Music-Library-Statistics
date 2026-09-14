@@ -799,6 +799,22 @@
       ]
     },
     {
+      "artist": "Blue Swede",
+      "artistCountry": "Sweden",
+      "albums": [
+        {
+          "album": "Hooked On A Feeling",
+          "year": 1974,
+          "tracks": [
+            {
+              "title": "Hooked On A Feeling",
+              "length": "2:53"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "Blues Saraceno",
       "artistCountry": "United States",
       "albums": [

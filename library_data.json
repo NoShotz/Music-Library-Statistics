@@ -353,6 +353,22 @@
       ]
     },
     {
+      "artist": "America",
+      "artistCountry": "United States; England; United Kingdom",
+      "albums": [
+        {
+          "album": "America",
+          "year": 1972,
+          "tracks": [
+            {
+              "title": "A Horse With No Name",
+              "length": "4:15"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "April Wine",
       "artistCountry": "Canada",
       "albums": [

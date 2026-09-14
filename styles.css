@@ -259,6 +259,18 @@
     transition:opacity 0.15s ease;
   }
   .chart-tooltip.chart-tooltip-visible{ opacity:1; }
+  /* Caret: two stacked triangles (border-colored one behind, fill-colored one
+     in front, 1px smaller on each side) so the caret gets a clean outline
+     matching the box's own border, instead of a bare/disconnected wedge. */
+  .chart-tooltip::before{
+    content:'';
+    position:absolute;
+    left:50%;bottom:-7px;
+    transform:translateX(-50%);
+    border-left:7px solid transparent;
+    border-right:7px solid transparent;
+    border-top:7px solid var(--hair);
+  }
   .chart-tooltip::after{
     content:'';
     position:absolute;

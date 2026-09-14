@@ -2,9 +2,9 @@ name: Update Last.fm History
 
 on:
   schedule:
-    # Run once per day at 04:00 UTC.
-    - cron: "0 4 * * *"
-
+    # Run once per day
+    - cron: "0 6 * * *"
+      timezone: "America/Toronto"
   # Allow manually triggering the Action from GitHub.
   workflow_dispatch:
 

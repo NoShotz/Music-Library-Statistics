@@ -623,6 +623,16 @@
       "artistCountry": "United States",
       "albums": [
         {
+          "album": "Piano Man",
+          "year": 1973,
+          "tracks": [
+            {
+              "title": "Piano Man",
+              "length": "5:39"
+            }
+          ]
+        },
+        {
           "album": "Glass Houses",
           "year": 1980,
           "tracks": [

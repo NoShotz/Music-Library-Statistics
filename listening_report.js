@@ -171,7 +171,7 @@ function fmtNum(n){ return n.toLocaleString(); }
 function fmtDateNice(dateStr){
   if(!dateStr) return '—';
   const d = new Date(dateStr+'T00:00:00Z');
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric', timeZone:'UTC'});
 }
 // Full local date+time for a scrobble's raw epoch-ms timestamp, e.g. "Aug 19, 2026, 3:45 PM".
 // Follows the same convention as the rest of the file: localDate() shifts the

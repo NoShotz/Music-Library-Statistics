@@ -59,6 +59,8 @@ async function boot(){
   initTabs();
   initReportControls();
   renderReport();
+  initLibraryTab();
+  renderLibraryTab();
 }
 
 function buildLibraryLookups(){
@@ -1134,6 +1136,7 @@ function initTabs(){
       const tab = btn.dataset.tab;
       document.getElementById('tab-overview').style.display = tab==='overview' ? 'block' : 'none';
       document.getElementById('tab-report').style.display = tab==='report' ? 'block' : 'none';
+      document.getElementById('tab-library').style.display = tab==='library' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
       if(tab==='report'){
@@ -1555,6 +1558,118 @@ function renderReport(){
   document.getElementById('reportFactGrid').innerHTML = facts.map(f=>
     `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div><div class="fact-lbl">${f[2]}</div></div>`
   ).join('');
+}
+
+// ============================================================
+// LIBRARY TAB
+// ============================================================
+// Full (not top-5) artist/album/track lists, click-through filtered:
+// artist -> its albums -> a specific album's tracks. Filtering re-derives
+// from the raw scrobbles each time (rather than filtering the pre-aggregated
+// rows) so it stays correct for soundtrack/various-artists albums, where an
+// artist's own scrobbles can belong to an album credited to "Various Artists".
+const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null };
+
+function initLibraryTab(){
+  document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      // Switching sub-tabs directly (as opposed to drilling down via a row
+      // click, which sets subTab itself) always resets any active filter --
+      // a filter is only meaningful as a scoped view reached by clicking through.
+      LIBRARY_STATE.subTab = btn.dataset.subtab;
+      LIBRARY_STATE.filterArtist = null;
+      LIBRARY_STATE.filterAlbumKey = null;
+      LIBRARY_STATE.filterAlbumLabel = null;
+      renderLibraryTab();
+    });
+  });
+}
+
+function clearLibraryFilter(){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  renderLibraryTab();
+}
+
+function renderLibraryTab(){
+  document.querySelectorAll('#librarySubNav .seg-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.subtab===LIBRARY_STATE.subTab);
+  });
+
+  const notice = document.getElementById('libraryFilterNotice');
+  const titleEl = document.getElementById('libraryListTitle');
+  const listEl = document.getElementById('libraryList');
+
+  let scope = ENRICHED;
+  if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
+    const na = normArtist(LIBRARY_STATE.filterArtist);
+    scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
+    titleEl.textContent = 'Albums by ' + LIBRARY_STATE.filterArtist;
+    notice.style.display = 'block';
+    notice.innerHTML = `Showing albums by <b>${LIBRARY_STATE.filterArtist}</b> &nbsp;·&nbsp; click to clear`;
+    notice.onclick = clearLibraryFilter;
+  } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
+    scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
+    titleEl.textContent = 'Tracks on ' + LIBRARY_STATE.filterAlbumLabel;
+    notice.style.display = 'block';
+    notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
+    notice.onclick = clearLibraryFilter;
+  } else {
+    notice.style.display = 'none';
+    notice.onclick = null;
+    titleEl.textContent = LIBRARY_STATE.subTab==='artists' ? 'All artists'
+                         : LIBRARY_STATE.subTab==='albums' ? 'All albums' : 'All tracks';
+  }
+
+  if(LIBRARY_STATE.subTab==='artists'){
+    const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:k, count:c}));
+    listEl.innerHTML = rows.map((it,i)=>`
+      <li class="lib-row" data-idx="${i}">
+        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+        <div class="rank-main"><div class="rank-title">${it.artist}</div><div class="rank-sub">&nbsp;</div></div>
+        <span class="rank-count">${fmtNum(it.count)}</span>
+      </li>`).join('');
+    listEl.querySelectorAll('.lib-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const it = rows[Number(row.dataset.idx)];
+        LIBRARY_STATE.filterArtist = it.artist;
+        LIBRARY_STATE.subTab = 'albums';
+        renderLibraryTab();
+      });
+    });
+  } else if(LIBRARY_STATE.subTab==='albums'){
+    const rows = topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
+      const d = albumDisplay(k);
+      return { artist: d.artist, album: d.album, key: k, count: c };
+    });
+    listEl.innerHTML = rows.map((it,i)=>`
+      <li class="lib-row" data-idx="${i}">
+        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+        <div class="rank-main"><div class="rank-title">${it.album}</div><div class="rank-sub">${it.artist}</div></div>
+        <span class="rank-count">${fmtNum(it.count)}</span>
+      </li>`).join('');
+    listEl.querySelectorAll('.lib-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const it = rows[Number(row.dataset.idx)];
+        LIBRARY_STATE.filterAlbumKey = it.key;
+        LIBRARY_STATE.filterAlbumLabel = it.album;
+        LIBRARY_STATE.subTab = 'tracks';
+        renderLibraryTab();
+      });
+    });
+  } else {
+    const rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
+      const [artist,track] = k.split('|||');
+      return { artist, track, count: c };
+    });
+    listEl.innerHTML = rows.map((it,i)=>`
+      <li>
+        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+        <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
+        <span class="rank-count">${fmtNum(it.count)}</span>
+      </li>`).join('');
+  }
 }
 
 boot();

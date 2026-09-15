@@ -347,14 +347,14 @@
     display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
     margin:28px 0 24px;
   }
-  .seg{ display:inline-flex; border:1px solid var(--hair); }
+  .seg{ display:inline-flex;gap:8px; }
   .seg-btn{
     background:var(--surface); color:var(--muted); border:none;
     padding:9px 18px; font-family:'JetBrains Mono',monospace; font-size:12px;
-    letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
+    letter-spacing:.05em; text-transform:uppercase; cursor:pointer;border:1px solid var(--hair);
   }
   .seg-btn + .seg-btn{ border-left:1px solid var(--hair); }
-  .seg-btn.active{ background:var(--surface-2); color:var(--gold); }
+  .seg-btn.active{ background:var(--surface-2);border-color:var(--gold-dim);color:var(--gold); }
   .period-nav{ display:flex; align-items:center; gap:10px; }
   .nav-arrow{
     background:var(--surface); border:1px solid var(--hair); color:var(--text);

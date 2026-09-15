@@ -1611,7 +1611,7 @@ function renderLibraryTab(){
     notice.onclick = clearLibraryFilter;
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
     scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
-    titleEl.textContent = 'tracks;
+    titleEl.textContent = 'tracks';
     notice.style.display = 'block';
     notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;

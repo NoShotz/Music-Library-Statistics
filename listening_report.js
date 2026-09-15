@@ -1644,45 +1644,53 @@ function paginateLibraryRows(rows){
   return { pageRows: rows.slice(start, start+LIBRARY_PAGE_SIZE), start };
 }
 
+// Renders the stat card(s) above the list: item count always, plus a second
+// "scrobbles" card showing the total plays behind everything currently visible
+// whenever a filter is active (that total is exactly scope.length, since scope
+// is already the raw scrobbles narrowed to the filter -- no separate sum needed).
+function renderLibraryStatGrid(itemLabel, itemCount, scrobbleTotal){
+  const cards = [[fmtNum(itemCount), itemLabel]];
+  if(scrobbleTotal != null) cards.push([fmtNum(scrobbleTotal), 'scrobbles']);
+  document.getElementById('libraryStatGrid').innerHTML = cards.map(c=>
+    `<div class="stat-card"><h3 class="stat-title">${c[1]}</h3><div class="stat-val">${c[0]}</div></div>`
+  ).join('');
+}
+
 function renderLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.subtab===LIBRARY_STATE.subTab);
   });
 
   const notice = document.getElementById('libraryFilterNotice');
-  const titleEl = document.getElementById('libraryListTitle');
   const listEl = document.getElementById('libraryList');
 
-  let scope = ENRICHED;
+  let scope = ENRICHED, filtered = false;
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
-    titleEl.textContent = 'albums';
+    filtered = true;
     notice.style.display = 'block';
     notice.innerHTML = `Showing albums by <b>${LIBRARY_STATE.filterArtist}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
     scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
-    titleEl.textContent = 'tracks';
+    filtered = true;
     notice.style.display = 'block';
     notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
     scope = ENRICHED.filter(r=>(r.artist+'|||'+r.track)===LIBRARY_STATE.filterTrackKey);
-    titleEl.textContent = 'scrobbles';
     notice.style.display = 'block';
     notice.innerHTML = `Showing scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';
     notice.onclick = null;
-    titleEl.textContent = LIBRARY_STATE.subTab==='artists' ? 'artists'
-                         : LIBRARY_STATE.subTab==='albums' ? 'albums'
-                         : LIBRARY_STATE.subTab==='tracks' ? 'tracks' : 'scrobbles';
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
     const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:k, count:c}));
+    renderLibraryStatGrid('artists', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
@@ -1704,6 +1712,7 @@ function renderLibraryTab(){
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     });
+    renderLibraryStatGrid('albums', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
@@ -1726,6 +1735,7 @@ function renderLibraryTab(){
       const [artist,track] = k.split('|||');
       return { artist, track, count: c };
     });
+    renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
@@ -1746,7 +1756,9 @@ function renderLibraryTab(){
   } else {
     // scrobbles -- individual play events, latest first, not aggregated (no
     // further drill-down; each row is already the most granular unit there is).
+    // No second stat card here: item count and scrobble total are the same number.
     const rows = scope.slice().sort((a,b)=>b.date-a.date);
+    renderLibraryStatGrid('scrobbles', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li>

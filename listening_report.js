@@ -1605,21 +1605,21 @@ function renderLibraryTab(){
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
-    titleEl.textContent = 'Albums by ' + LIBRARY_STATE.filterArtist;
+    titleEl.textContent = 'albums;
     notice.style.display = 'block';
     notice.innerHTML = `Showing albums by <b>${LIBRARY_STATE.filterArtist}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
     scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
-    titleEl.textContent = 'Tracks on ' + LIBRARY_STATE.filterAlbumLabel;
+    titleEl.textContent = 'tracks;
     notice.style.display = 'block';
     notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';
     notice.onclick = null;
-    titleEl.textContent = LIBRARY_STATE.subTab==='artists' ? 'All artists'
-                         : LIBRARY_STATE.subTab==='albums' ? 'All albums' : 'All tracks';
+    titleEl.textContent = LIBRARY_STATE.subTab==='artists' ? 'artists'
+                         : LIBRARY_STATE.subTab==='albums' ? 'albums' : 'tracks';
   }
 
   if(LIBRARY_STATE.subTab==='artists'){

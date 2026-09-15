@@ -173,6 +173,19 @@ function fmtDateNice(dateStr){
   const d = new Date(dateStr+'T00:00:00Z');
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
+// Full local date+time for a scrobble's raw epoch-ms timestamp, e.g. "Aug 19, 2026, 3:45 PM".
+// Follows the same convention as the rest of the file: localDate() shifts the
+// Date's internal value by LOCAL_UTC_OFFSET_HOURS, then UTC getters read it back
+// out as if they were local getters (avoids the runtime's own system timezone).
+function fmtDateTime(ms){
+  const ld = localDate(ms);
+  const dateStr = ld.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
+  const hh = ld.getUTCHours();
+  const mm = String(ld.getUTCMinutes()).padStart(2,'0');
+  const hh12 = (hh%12===0?12:hh%12);
+  const ampm = hh<12 ? 'AM' : 'PM';
+  return `${dateStr}, ${hh12}:${mm} ${ampm}`;
+}
 function fmtHour(h){
   const hh = (h%12===0?12:h%12);
   return hh+':00'+(h<12?'am':'pm');
@@ -1569,7 +1582,7 @@ function renderReport(){
 // rows) so it stays correct for soundtrack/various-artists albums, where an
 // artist's own scrobbles can belong to an album credited to "Various Artists".
 const LIBRARY_PAGE_SIZE = 50;
-const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, page: 0 };
+const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, page: 0 };
 
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
@@ -1581,6 +1594,8 @@ function initLibraryTab(){
       LIBRARY_STATE.filterArtist = null;
       LIBRARY_STATE.filterAlbumKey = null;
       LIBRARY_STATE.filterAlbumLabel = null;
+      LIBRARY_STATE.filterTrackKey = null;
+      LIBRARY_STATE.filterTrackLabel = null;
       LIBRARY_STATE.page = 0;
       renderLibraryTab();
     });
@@ -1591,6 +1606,8 @@ function clearLibraryFilter(){
   LIBRARY_STATE.filterArtist = null;
   LIBRARY_STATE.filterAlbumKey = null;
   LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.page = 0;
   renderLibraryTab();
 }
@@ -1650,11 +1667,18 @@ function renderLibraryTab(){
     notice.style.display = 'block';
     notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
+  } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
+    scope = ENRICHED.filter(r=>(r.artist+'|||'+r.track)===LIBRARY_STATE.filterTrackKey);
+    titleEl.textContent = 'scrobbles';
+    notice.style.display = 'block';
+    notice.innerHTML = `Showing scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b> &nbsp;·&nbsp; click to clear`;
+    notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';
     notice.onclick = null;
     titleEl.textContent = LIBRARY_STATE.subTab==='artists' ? 'artists'
-                         : LIBRARY_STATE.subTab==='albums' ? 'albums' : 'tracks';
+                         : LIBRARY_STATE.subTab==='albums' ? 'albums'
+                         : LIBRARY_STATE.subTab==='tracks' ? 'tracks' : 'scrobbles';
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
@@ -1697,17 +1721,38 @@ function renderLibraryTab(){
         renderLibraryTab();
       });
     });
-  } else {
+  } else if(LIBRARY_STATE.subTab==='tracks'){
     const rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
       const [artist,track] = k.split('|||');
       return { artist, track, count: c };
     });
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
-      <li>
+      <li class="lib-row" data-idx="${start+i}">
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
+      </li>`).join('');
+    listEl.querySelectorAll('.lib-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const it = rows[Number(row.dataset.idx)];
+        LIBRARY_STATE.filterTrackKey = it.artist+'|||'+it.track;
+        LIBRARY_STATE.filterTrackLabel = it.track;
+        LIBRARY_STATE.subTab = 'scrobbles';
+        LIBRARY_STATE.page = 0;
+        renderLibraryTab();
+      });
+    });
+  } else {
+    // scrobbles -- individual play events, latest first, not aggregated (no
+    // further drill-down; each row is already the most granular unit there is).
+    const rows = scope.slice().sort((a,b)=>b.date-a.date);
+    const {pageRows, start} = paginateLibraryRows(rows);
+    listEl.innerHTML = pageRows.map((it,i)=>`
+      <li>
+        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
+        <span class="rank-count">${fmtDateTime(it.date)}</span>
       </li>`).join('');
   }
 }

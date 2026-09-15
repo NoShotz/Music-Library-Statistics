@@ -1568,7 +1568,8 @@ function renderReport(){
 // from the raw scrobbles each time (rather than filtering the pre-aggregated
 // rows) so it stays correct for soundtrack/various-artists albums, where an
 // artist's own scrobbles can belong to an album credited to "Various Artists".
-const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null };
+const LIBRARY_PAGE_SIZE = 50;
+const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, page: 0 };
 
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
@@ -1580,6 +1581,7 @@ function initLibraryTab(){
       LIBRARY_STATE.filterArtist = null;
       LIBRARY_STATE.filterAlbumKey = null;
       LIBRARY_STATE.filterAlbumLabel = null;
+      LIBRARY_STATE.page = 0;
       renderLibraryTab();
     });
   });
@@ -1589,7 +1591,40 @@ function clearLibraryFilter(){
   LIBRARY_STATE.filterArtist = null;
   LIBRARY_STATE.filterAlbumKey = null;
   LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.page = 0;
   renderLibraryTab();
+}
+
+// Renders the pager controls (reusing the same .nav-arrow buttons the Report
+// tab's period navigator uses) and returns just this page's slice of rows,
+// clamping LIBRARY_STATE.page in case the underlying list got shorter (e.g.
+// switching sub-tabs while on page 4 of a list that only has 2 pages).
+function paginateLibraryRows(rows){
+  const totalPages = Math.max(1, Math.ceil(rows.length / LIBRARY_PAGE_SIZE));
+  if(LIBRARY_STATE.page > totalPages-1) LIBRARY_STATE.page = totalPages-1;
+  if(LIBRARY_STATE.page < 0) LIBRARY_STATE.page = 0;
+
+  const pagerEl = document.getElementById('libraryPagination');
+  if(rows.length <= LIBRARY_PAGE_SIZE){
+    pagerEl.style.display = 'none';
+  } else {
+    pagerEl.style.display = 'flex';
+    const page = LIBRARY_STATE.page;
+    pagerEl.innerHTML = `
+      <button class="nav-arrow" id="libPagePrev" ${page<=0?'disabled':''}>‹</button>
+      <span class="lib-page-info">Page ${page+1} of ${totalPages} &nbsp;(${fmtNum(rows.length)} total)</span>
+      <button class="nav-arrow" id="libPageNext" ${page>=totalPages-1?'disabled':''}>›</button>
+    `;
+    document.getElementById('libPagePrev').addEventListener('click', ()=>{
+      if(LIBRARY_STATE.page>0){ LIBRARY_STATE.page--; renderLibraryTab(); }
+    });
+    document.getElementById('libPageNext').addEventListener('click', ()=>{
+      if(LIBRARY_STATE.page<totalPages-1){ LIBRARY_STATE.page++; renderLibraryTab(); }
+    });
+  }
+
+  const start = LIBRARY_STATE.page * LIBRARY_PAGE_SIZE;
+  return { pageRows: rows.slice(start, start+LIBRARY_PAGE_SIZE), start };
 }
 
 function renderLibraryTab(){
@@ -1624,9 +1659,10 @@ function renderLibraryTab(){
 
   if(LIBRARY_STATE.subTab==='artists'){
     const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:k, count:c}));
-    listEl.innerHTML = rows.map((it,i)=>`
-      <li class="lib-row" data-idx="${i}">
-        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+    const {pageRows, start} = paginateLibraryRows(rows);
+    listEl.innerHTML = pageRows.map((it,i)=>`
+      <li class="lib-row" data-idx="${start+i}">
+        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         <div class="rank-main"><div class="rank-title">${it.artist}</div><div class="rank-sub">&nbsp;</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
@@ -1635,6 +1671,7 @@ function renderLibraryTab(){
         const it = rows[Number(row.dataset.idx)];
         LIBRARY_STATE.filterArtist = it.artist;
         LIBRARY_STATE.subTab = 'albums';
+        LIBRARY_STATE.page = 0;
         renderLibraryTab();
       });
     });
@@ -1643,9 +1680,10 @@ function renderLibraryTab(){
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     });
-    listEl.innerHTML = rows.map((it,i)=>`
-      <li class="lib-row" data-idx="${i}">
-        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+    const {pageRows, start} = paginateLibraryRows(rows);
+    listEl.innerHTML = pageRows.map((it,i)=>`
+      <li class="lib-row" data-idx="${start+i}">
+        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         <div class="rank-main"><div class="rank-title">${it.album}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
@@ -1655,6 +1693,7 @@ function renderLibraryTab(){
         LIBRARY_STATE.filterAlbumKey = it.key;
         LIBRARY_STATE.filterAlbumLabel = it.album;
         LIBRARY_STATE.subTab = 'tracks';
+        LIBRARY_STATE.page = 0;
         renderLibraryTab();
       });
     });
@@ -1663,9 +1702,10 @@ function renderLibraryTab(){
       const [artist,track] = k.split('|||');
       return { artist, track, count: c };
     });
-    listEl.innerHTML = rows.map((it,i)=>`
+    const {pageRows, start} = paginateLibraryRows(rows);
+    listEl.innerHTML = pageRows.map((it,i)=>`
       <li>
-        <span class="rank-num">${String(i+1).padStart(3,'0')}</span>
+        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');

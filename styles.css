@@ -368,6 +368,13 @@
     padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12.5px;
     min-width:160px;
   }
+  .lib-pagination{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    margin-top:20px;
+  }
+  .lib-page-info{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted);
+  }
 
   .cmp{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:400; }
   .cmp.up{ color:var(--green); }

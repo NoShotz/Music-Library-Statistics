@@ -1605,7 +1605,7 @@ function renderLibraryTab(){
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
-    titleEl.textContent = 'albums;
+    titleEl.textContent = 'albums';
     notice.style.display = 'block';
     notice.innerHTML = `Showing albums by <b>${LIBRARY_STATE.filterArtist}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;

@@ -1403,7 +1403,7 @@ function renderReport(){
   } else if(type==='year'){
     subCard.style.display = '';
     destroyChart('subPeriod');
-    document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of year';
+    document.getElementById('subPeriodTitle').textContent = 'Daily Scrobbles';
     setText('subPeriodDesc', periodLabel(type,key));
     renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles));
     renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [
@@ -1412,7 +1412,7 @@ function renderReport(){
     ] : null);
   } else {
     subCard.style.display = '';
-    document.getElementById('subPeriodTitle').textContent = 'Scrobbles by day of month';
+    document.getElementById('subPeriodTitle').textContent = 'Daily Scrobbles';
     setText('subPeriodDesc', periodLabel(type,key));
     renderMonthBarChart('subPeriodHeatmap', key, curScrobbles);
     renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [

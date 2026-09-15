@@ -20,7 +20,7 @@
     font-family:'Work Sans',sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:75%;margin:0 auto;padding:0 24px 80px;}
+  .wrap{max-width:1480px;margin:0 auto;padding:0 24px 80px;}
 
   /* ---------- HERO ---------- */
   .hero{
@@ -28,7 +28,7 @@
     align-items:center;
     gap:48px;
     padding:64px 24px 48px;
-    max-width:75%;
+    max-width:1480px;
     margin:0 auto;
     flex-wrap:wrap;
   }
@@ -90,7 +90,7 @@
   /* ---------- TABS ---------- */
   .tabnav{
     display:flex;gap:8px;
-    max-width:75%;margin:0 auto;padding:0 24px;
+    max-width:1480px;margin:0 auto;padding:0 24px;
   }
   .tab-btn{
     background:var(--surface);

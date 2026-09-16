@@ -187,7 +187,7 @@ const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAA
 // library_data.json) and use its art too, falling back to the artist's image
 // only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
-  if(itemType==='album') return {folder:'albums', name: it.album};
+  if(itemType==='album') return {folder:'album', name: it.album};
   if(itemType==='track' && TRACK_META){
     // TRACK_META already maps artist+track -> {year, length_sec, album} from
     // library_data.json, so use the actual album's art rather than guessing --
@@ -196,7 +196,7 @@ function artFor(itemType, it){
     const meta = TRACK_META[normArtist(it.artist)+'|||'+normTrack(it.track)];
     if(meta && meta.album) return {folder:'album', name: meta.album};
   }
-  return {folder:'artists', name: it.artist}; // fallback: no library data, or track not found in it
+  return {folder:'artist', name: it.artist}; // fallback: no library data, or track not found in it
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';

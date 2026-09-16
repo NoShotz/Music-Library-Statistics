@@ -187,8 +187,8 @@ const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAA
 // album), so track rows use the artist's image instead of trying to guess a
 // single album.
 function artFor(itemType, it){
-  if(itemType==='album') return {folder:'album', name: it.album};
-  return {folder:'artist', name: it.artist};
+  if(itemType==='album') return {folder:'albums', name: it.album};
+  return {folder:'artists', name: it.artist};
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';

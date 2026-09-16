@@ -187,16 +187,37 @@ const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAA
 // library_data.json) and use its art too, falling back to the artist's image
 // only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
-  if(itemType==='album') return {folder:'albums', name: it.album};
-  if(itemType==='track' && TRACK_META){
-    // TRACK_META already maps artist+track -> {year, length_sec, album} from
-    // library_data.json, so use the actual album's art rather than guessing --
-    // a track only has one album entry in that data model, same assumption
-    // already relied on elsewhere (release year, track length).
-    const meta = TRACK_META[normArtist(it.artist)+'|||'+normTrack(it.track)];
-    if(meta && meta.album) return {folder:'albums', name: meta.album};
+  if(itemType === 'album' && TRACK_META){
+    const artist = normArtist(it.artist);
+    const album = normTrack(it.album).toLowerCase();
+
+    // Find the canonical album name from library_data.json via TRACK_META.
+    for(const meta of Object.values(TRACK_META)){
+      if(
+        meta.artist &&
+        normArtist(meta.artist) === artist &&
+        meta.album &&
+        normTrack(meta.album).toLowerCase() === album
+      ){
+        return {folder:'albums', name:meta.album};
+      }
+    }
+
+    // Fall back to the album name from the current data if no match exists.
+    return {folder:'albums', name:it.album};
   }
-  return {folder:'artists', name: it.artist}; // fallback: no library data, or track not found in it
+
+  if(itemType === 'track' && TRACK_META){
+    const meta = TRACK_META[
+      normArtist(it.artist)+'|||'+normTrack(it.track)
+    ];
+
+    if(meta && meta.album){
+      return {folder:'albums', name:meta.album};
+    }
+  }
+
+  return {folder:'artists', name:it.artist};
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';

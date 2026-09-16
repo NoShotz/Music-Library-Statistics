@@ -182,13 +182,21 @@ function sanitizeArtFilename(name){
 // instead of the browser's broken-image icon.
 const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
 
-// Which folder/name to use for a given row type. Tracks don't have their own
-// art file (and an aggregated "artist+track" row can span more than one
-// album), so track rows use the artist's image instead of trying to guess a
-// single album.
+// Which folder/name to use for a given row type. Album rows use the album's
+// own art; track rows look up that track's album via TRACK_META (from
+// library_data.json) and use its art too, falling back to the artist's image
+// only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
   if(itemType==='album') return {folder:'albums', name: it.album};
-  return {folder:'artists', name: it.artist};
+  if(itemType==='track' && TRACK_META){
+    // TRACK_META already maps artist+track -> {year, length_sec, album} from
+    // library_data.json, so use the actual album's art rather than guessing --
+    // a track only has one album entry in that data model, same assumption
+    // already relied on elsewhere (release year, track length).
+    const meta = TRACK_META[normArtist(it.artist)+'|||'+normTrack(it.track)];
+    if(meta && meta.album) return {folder:'album', name: meta.album};
+  }
+  return {folder:'artists', name: it.artist}; // fallback: no library data, or track not found in it
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';

@@ -369,6 +369,22 @@
       ]
     },
     {
+      "artist": "Angine De Poitrine",
+      "artistCountry": "Canada",
+      "albums": [
+        {
+          "album": "Vol. II",
+          "year": 2026,
+          "tracks": [
+            {
+              "title": "Fabienk",
+              "length": "6:31"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "April Wine",
       "artistCountry": "Canada",
       "albums": [

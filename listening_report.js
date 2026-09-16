@@ -182,28 +182,53 @@ function sanitizeArtFilename(name){
 // instead of the browser's broken-image icon.
 const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
 
+// Looks up the canonical album name from library_data.json for a given
+// artist+album (matched by normalized name), falling back to the name as
+// given if there's no library match. Shared by artFor()'s own album lookup
+// and by the artist-image-missing -> top-album-art fallback in bindArtThumbs.
+function canonicalAlbumName(artistName, albumName){
+  if(LIBRARY && Array.isArray(LIBRARY.artists)){
+    const artist = normArtist(artistName);
+    const album = normAlbum(albumName);
+    for(const artistData of LIBRARY.artists){
+      if(normArtist(artistData.artist) !== artist) continue;
+      for(const albumData of (artistData.albums || [])){
+        if(normAlbum(albumData.album) === album) return albumData.album;
+      }
+    }
+  }
+  return albumName;
+}
+
+// Lazily-built, memoized na -> {artist, album} for that artist's most-
+// scrobbled album, used to fall back an artist's thumbnail to their top
+// album's art when the artist doesn't have their own image on disk.
+let ARTIST_TOP_ALBUM_CACHE = null;
+function getArtistTopAlbum(artistName){
+  if(!ARTIST_TOP_ALBUM_CACHE){
+    ARTIST_TOP_ALBUM_CACHE = {};
+    const counts = {}; // na -> { albumKeyStr -> count }
+    ENRICHED.forEach(r=>{
+      const ak = albumKey(r);
+      counts[r.na] = counts[r.na] || {};
+      counts[r.na][ak] = (counts[r.na][ak]||0) + 1;
+    });
+    Object.keys(counts).forEach(na=>{
+      let bestKey = null, bestCount = -1;
+      Object.entries(counts[na]).forEach(([k,c])=>{ if(c>bestCount){ bestCount=c; bestKey=k; } });
+      if(bestKey) ARTIST_TOP_ALBUM_CACHE[na] = albumDisplay(bestKey); // {artist, album}
+    });
+  }
+  return ARTIST_TOP_ALBUM_CACHE[normArtist(artistName)] || null;
+}
+
 // Which folder/name to use for a given row type. Album rows use the album's
 // own art; track rows look up that track's album via TRACK_META (from
 // library_data.json) and use its art too, falling back to the artist's image
 // only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
   if(itemType === 'album' && LIBRARY && Array.isArray(LIBRARY.artists)){
-    const artist = normArtist(it.artist);
-    const album = normAlbum(it.album);
-
-    // Find the canonical album name from library_data.json.
-    for(const artistData of LIBRARY.artists){
-      if(normArtist(artistData.artist) !== artist) continue;
-
-      for(const albumData of (artistData.albums || [])){
-        if(normAlbum(albumData.album) === album){
-          return {folder:'albums', name:albumData.album};
-        }
-      }
-    }
-
-    // Fall back to the album name from the current data if no library match exists.
-    return {folder:'albums', name:it.album};
+    return {folder:'albums', name: canonicalAlbumName(it.artist, it.album)};
   }
 
   if(itemType === 'track' && TRACK_META){
@@ -224,18 +249,37 @@ function artThumbHtml(itemType, it){
   return `<img class="art-thumb" data-art-folder="${folder}" data-art-name="${String(name).replace(/"/g,'&quot;')}">`;
 }
 // Called after setting a list's innerHTML: wires up each .art-thumb's actual
-// src with a jpg -> png -> blank fallback chain, since the art is a mix of
-// both formats and we don't know which one a given file is ahead of time.
+// src with a jpg -> png fallback chain, since the art is a mix of both
+// formats and we don't know which one a given file is ahead of time. For
+// artist thumbnails specifically, if the artist has no image of their own,
+// falls back to their most-scrobbled album's art (jpg -> png) before finally
+// giving up and showing a blank placeholder.
 function bindArtThumbs(container){
   if(!container) return;
   container.querySelectorAll('.art-thumb[data-art-name]').forEach(img=>{
     const folder = img.dataset.artFolder;
-    const safe = sanitizeArtFilename(img.dataset.artName);
+    const rawName = img.dataset.artName;
+    const safe = sanitizeArtFilename(rawName);
     img.removeAttribute('data-art-name'); // guards against re-binding if this container gets bound twice
     const base = 'images/' + folder + '/' + encodeURIComponent(safe);
+
+    function giveUp(){ img.src = ART_BLANK_PX; img.onerror = null; }
+
+    function tryAlbumFallback(){
+      const top = folder==='artists' ? getArtistTopAlbum(rawName) : null;
+      if(!top){ giveUp(); return; }
+      const albSafe = sanitizeArtFilename(canonicalAlbumName(top.artist, top.album));
+      const albBase = 'images/albums/' + encodeURIComponent(albSafe);
+      img.src = albBase + '.jpg';
+      img.onerror = function(){
+        img.onerror = giveUp;
+        img.src = albBase + '.png';
+      };
+    }
+
     img.src = base + '.jpg';
     img.onerror = function(){
-      img.onerror = function(){ img.src = ART_BLANK_PX; img.onerror = null; };
+      img.onerror = tryAlbumFallback;
       img.src = base + '.png';
     };
   });

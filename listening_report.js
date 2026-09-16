@@ -182,13 +182,41 @@ function sanitizeArtFilename(name){
 // instead of the browser's broken-image icon.
 const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
 
-// Which folder/name to use for a given row type. Tracks don't have their own
-// art file (and an aggregated "artist+track" row can span more than one
-// album), so track rows use the artist's image instead of trying to guess a
-// single album.
+// Which folder/name to use for a given row type. Album rows use the album's
+// own art; track rows look up that track's album via TRACK_META (from
+// library_data.json) and use its art too, falling back to the artist's image
+// only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
-  if(itemType==='album') return {folder:'album', name: it.album};
-  return {folder:'artist', name: it.artist};
+  if(itemType === 'album' && LIBRARY && Array.isArray(LIBRARY.artists)){
+    const artist = normArtist(it.artist);
+    const album = normAlbum(it.album);
+
+    // Find the canonical album name from library_data.json.
+    for(const artistData of LIBRARY.artists){
+      if(normArtist(artistData.artist) !== artist) continue;
+
+      for(const albumData of (artistData.albums || [])){
+        if(normAlbum(albumData.album) === album){
+          return {folder:'albums', name:albumData.album};
+        }
+      }
+    }
+
+    // Fall back to the album name from the current data if no library match exists.
+    return {folder:'albums', name:it.album};
+  }
+
+  if(itemType === 'track' && TRACK_META){
+    const meta = TRACK_META[
+      normArtist(it.artist)+'|||'+normTrack(it.track)
+    ];
+
+    if(meta && meta.album){
+      return {folder:'albums', name:meta.album};
+    }
+  }
+
+  return {folder:'artists', name:it.artist};
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';

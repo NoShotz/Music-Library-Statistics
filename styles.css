@@ -298,8 +298,9 @@
   }
   .art-thumb{
     width:36px;height:36px;flex:0 0 36px;
-    border-radius:4px;object-fit:cover;
+    object-fit:cover;
     background:var(--surface-2);
+    border:1px solid var(--hair);
   }
   .ranked li:last-child{border-bottom:none;}
   .ranked li.lib-row{cursor:pointer;}

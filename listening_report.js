@@ -187,23 +187,22 @@ const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAA
 // library_data.json) and use its art too, falling back to the artist's image
 // only if there's no library data or the track isn't found in it.
 function artFor(itemType, it){
-  if(itemType === 'album' && TRACK_META){
+  if(itemType === 'album' && LIBRARY && Array.isArray(LIBRARY.artists)){
     const artist = normArtist(it.artist);
-    const album = normTrack(it.album).toLowerCase();
+    const album = normAlbum(it.album);
 
-    // Find the canonical album name from library_data.json via TRACK_META.
-    for(const meta of Object.values(TRACK_META)){
-      if(
-        meta.artist &&
-        normArtist(meta.artist) === artist &&
-        meta.album &&
-        normTrack(meta.album).toLowerCase() === album
-      ){
-        return {folder:'albums', name:meta.album};
+    // Find the canonical album name from library_data.json.
+    for(const artistData of LIBRARY.artists){
+      if(normArtist(artistData.artist) !== artist) continue;
+
+      for(const albumData of (artistData.albums || [])){
+        if(normAlbum(albumData.album) === album){
+          return {folder:'albums', name:albumData.album};
+        }
       }
     }
 
-    // Fall back to the album name from the current data if no match exists.
+    // Fall back to the album name from the current data if no library match exists.
     return {folder:'albums', name:it.album};
   }
 

@@ -598,7 +598,7 @@ function discoveryRows(newResult, type){
     if(type==='artist') return {artist:it.key, count:it.count};
     if(type==='album'){
       const d = albumDisplay(it.key);
-      return { artist: d.artist, album: d.album, count: it.count };
+      return { artist: d.artist, album: d.album, key: it.key, count: it.count };
     }
     const [artist, rest] = it.key.split('|||');
     return {artist, track:rest, count:it.count};
@@ -622,7 +622,7 @@ function computeStats(scrobbles, periodType, periodKey){
     topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
     topAlbums: topN(scrobbles, r=>albumKey(r), 5, (k,c)=>{
       const d = albumDisplay(k);
-      return { artist: d.artist, album: d.album, count: c };
+      return { artist: d.artist, album: d.album, key: k, count: c };
     }),
     topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; }),
     newArtists, newAlbums, newTracks,
@@ -944,7 +944,7 @@ function renderOverview(){
   const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
   const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
     const d = albumDisplay(k);
-    return { artist: d.artist, album: d.album, count: c };
+    return { artist: d.artist, album: d.album, key: k, count: c };
   });
 
   const yearCounts = {};
@@ -1099,9 +1099,9 @@ function paintOverview(DATA){
     });
   }
 
-  function renderList(elId, items, mainFn, subFn){
+  function renderList(elId, items, mainFn, subFn, itemType){
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
-      <li>
+      <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
@@ -1109,10 +1109,15 @@ function paintOverview(DATA){
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    if(itemType){
+      document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
+        row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
+      });
+    }
   }
-  renderList('artistList', DATA.top_artists, d=>d.artist, d=>'');
-  renderList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist);
-  renderList('albumList', DATA.top_albums, d=>d.album, d=>d.artist);
+  renderList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
+  renderList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track');
+  renderList('albumList', DATA.top_albums, d=>d.album, d=>d.artist, 'album');
 
   renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
 
@@ -1435,7 +1440,7 @@ function renderReport(){
   }
 
   // ---- top lists + new stats ----
-  function renderRankedList(elId, items, mainFn, subFn, emptyMsg){
+  function renderRankedList(elId, items, mainFn, subFn, emptyMsg, itemType){
     if(!items.length && emptyMsg){
       document.getElementById(elId).innerHTML = `
         <li>
@@ -1449,7 +1454,7 @@ function renderReport(){
       return;
     }
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
-      <li>
+      <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
@@ -1457,16 +1462,21 @@ function renderReport(){
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    if(itemType){
+      document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
+        row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
+      });
+    }
   }
-  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'');
-  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist);
-  renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist);
+  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', null, 'artist');
+  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, null, 'track');
+  renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist, null, 'album');
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
-  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.');
-  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.');
-  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.');
+  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.', 'artist');
+  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.', 'track');
+  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.', 'album');
 
   setText('reportNewArtistsDesc',
     `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +
@@ -1609,6 +1619,42 @@ function clearLibraryFilter(){
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.page = 0;
+  renderLibraryTab();
+}
+
+// Jumps to the Library tab, switched to whichever sub-tab and filter corresponds
+// to clicking an artist/album/track elsewhere on the site (Overview/Report top
+// lists, discoveries lists). Reuses the exact same LIBRARY_STATE fields and
+// filtering logic that the Library tab's own internal drill-down uses, so an
+// artist click lands exactly where clicking that artist inside the Library tab
+// itself would.
+function goToLibrary(itemType, item){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.page = 0;
+
+  if(itemType==='artist'){
+    LIBRARY_STATE.subTab = 'albums';
+    LIBRARY_STATE.filterArtist = item.artist;
+  } else if(itemType==='album'){
+    LIBRARY_STATE.subTab = 'tracks';
+    LIBRARY_STATE.filterAlbumKey = item.key;
+    LIBRARY_STATE.filterAlbumLabel = item.album;
+  } else { // track
+    LIBRARY_STATE.subTab = 'scrobbles';
+    LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
+    LIBRARY_STATE.filterTrackLabel = item.track;
+  }
+
+  // Same tab-switch as clicking the "Library" tab button by hand.
+  document.getElementById('tab-overview').style.display = 'none';
+  document.getElementById('tab-report').style.display = 'none';
+  document.getElementById('tab-library').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='library'));
+
   renderLibraryTab();
 }
 

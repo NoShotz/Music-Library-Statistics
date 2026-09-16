@@ -168,6 +168,50 @@ function ymd(d){
   return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
 }
 function fmtNum(n){ return n.toLocaleString(); }
+
+// ---------- artist/album art ----------
+// Matches the same sanitization used to name the files on disk (Windows-
+// invalid characters -> underscore, trailing spaces/dots stripped).
+function sanitizeArtFilename(name){
+  return String(name)
+    .replace(/[<>:"/\\|?*]/g, '_')
+    .replace(/[ .]+$/, '');
+}
+// 1x1 transparent gif -- swapped in when neither jpg nor png exists, so a
+// missing image quietly falls back to the thumbnail's plain background color
+// instead of the browser's broken-image icon.
+const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
+
+// Which folder/name to use for a given row type. Tracks don't have their own
+// art file (and an aggregated "artist+track" row can span more than one
+// album), so track rows use the artist's image instead of trying to guess a
+// single album.
+function artFor(itemType, it){
+  if(itemType==='album') return {folder:'album', name: it.album};
+  return {folder:'artist', name: it.artist};
+}
+function artThumbHtml(itemType, it){
+  if(!itemType) return '';
+  const {folder, name} = artFor(itemType, it);
+  return `<img class="art-thumb" data-art-folder="${folder}" data-art-name="${String(name).replace(/"/g,'&quot;')}">`;
+}
+// Called after setting a list's innerHTML: wires up each .art-thumb's actual
+// src with a jpg -> png -> blank fallback chain, since the art is a mix of
+// both formats and we don't know which one a given file is ahead of time.
+function bindArtThumbs(container){
+  if(!container) return;
+  container.querySelectorAll('.art-thumb[data-art-name]').forEach(img=>{
+    const folder = img.dataset.artFolder;
+    const safe = sanitizeArtFilename(img.dataset.artName);
+    img.removeAttribute('data-art-name'); // guards against re-binding if this container gets bound twice
+    const base = 'images/' + folder + '/' + encodeURIComponent(safe);
+    img.src = base + '.jpg';
+    img.onerror = function(){
+      img.onerror = function(){ img.src = ART_BLANK_PX; img.onerror = null; };
+      img.src = base + '.png';
+    };
+  });
+}
 function fmtDateNice(dateStr){
   if(!dateStr) return '—';
   const d = new Date(dateStr+'T00:00:00Z');
@@ -1103,12 +1147,14 @@ function paintOverview(DATA){
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
       <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+        ${artThumbHtml(itemType, it)}
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
           <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    bindArtThumbs(document.getElementById(elId));
     if(itemType){
       document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
         row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
@@ -1456,12 +1502,14 @@ function renderReport(){
     document.getElementById(elId).innerHTML = items.map((it,i)=>`
       <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+        ${artThumbHtml(itemType, it)}
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
           <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    bindArtThumbs(document.getElementById(elId));
     if(itemType){
       document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
         row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
@@ -1741,9 +1789,11 @@ function renderLibraryTab(){
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        ${artThumbHtml('artist', it)}
         <div class="rank-main"><div class="rank-title">${it.artist}</div><div class="rank-sub">&nbsp;</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    bindArtThumbs(listEl);
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
@@ -1763,9 +1813,11 @@ function renderLibraryTab(){
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        ${artThumbHtml('album', it)}
         <div class="rank-main"><div class="rank-title">${it.album}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    bindArtThumbs(listEl);
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
@@ -1786,9 +1838,11 @@ function renderLibraryTab(){
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li class="lib-row" data-idx="${start+i}">
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        ${artThumbHtml('track', it)}
         <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`).join('');
+    bindArtThumbs(listEl);
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
@@ -1809,9 +1863,11 @@ function renderLibraryTab(){
     listEl.innerHTML = pageRows.map((it,i)=>`
       <li>
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        ${artThumbHtml('track', it)}
         <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
         <span class="rank-count">${fmtDateTime(it.date)}</span>
       </li>`).join('');
+    bindArtThumbs(listEl);
   }
 }
 

@@ -293,8 +293,13 @@
   /* ---------- CHART LIST (ranked) ---------- */
   .ranked{list-style:none;margin:0;padding:0;}
   .ranked li{
-    display:flex;align-items:baseline;gap:14px;
+    display:flex;align-items:center;gap:14px;
     padding:10px 0;border-bottom:1px solid var(--hair);
+  }
+  .art-thumb{
+    width:36px;height:36px;flex:0 0 36px;
+    border-radius:4px;object-fit:cover;
+    background:var(--surface-2);
   }
   .ranked li:last-child{border-bottom:none;}
   .ranked li.lib-row{cursor:pointer;}

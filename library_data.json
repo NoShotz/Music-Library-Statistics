@@ -1464,6 +1464,10 @@
           "year": 1983,
           "tracks": [
             {
+              "title": "Foolin'",
+              "length": "4:34"
+            },
+            {
               "title": "Photograph",
               "length": "4:08"
             },
@@ -2818,6 +2822,16 @@
       "artist": "Journey",
       "artistCountry": "United States",
       "albums": [
+        {
+          "album": "Infinity",
+          "year": 1978,
+          "tracks": [
+            {
+              "title": "Wheel In The Sky",
+              "length": "4:14"
+            }
+          ]
+        },
         {
           "album": "Departure",
           "year": 1980,

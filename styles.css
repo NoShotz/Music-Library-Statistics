@@ -124,12 +124,12 @@
   /* ---------- STAT GRID ---------- */
   .stat-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,285.2px));
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
     gap:1px;
     margin-bottom:8px;
   }
   .stat-grid.compact{
-    justify-content:start;
+    grid-template-columns:repeat(auto-fit,minmax(160px,285.2px));
   }
   .stat-card{
     background:var(--surface);

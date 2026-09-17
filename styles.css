@@ -432,6 +432,7 @@
   .lib-date-custom{
     display:flex;
     align-items:center;
+    justify-content:flex-end;
     gap:16px;
     margin:0 0 16px;
     flex-wrap:wrap;

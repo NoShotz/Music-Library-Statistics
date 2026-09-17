@@ -1339,8 +1339,6 @@ function initTabs(){
       document.getElementById('tab-library').style.display = tab==='library' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
-      // Leaving the Library tab clears any active filter / search so returning
-      // later always starts from the unfiltered Artists list.
       if(tab !== 'library'){
         LIBRARY_STATE.filterArtist = null;
         LIBRARY_STATE.filterAlbumKey = null;
@@ -1384,8 +1382,6 @@ function initReportControls(){
   STATE.reportType = 'year';
   STATE.reportKey = PERIOD_INDEXES.year[PERIOD_INDEXES.year.length-1];
 
-  // Only the Year/Month/Week buttons (data-type) — not the Library sub-nav
-  // buttons which share the .seg-btn class but use data-subtab instead.
   document.querySelectorAll('.seg-btn[data-type]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.seg-btn[data-type]').forEach(b=>b.classList.toggle('active', b===btn));
@@ -2002,10 +1998,10 @@ function renderLibraryTab(){
   if(searchEl){
     if(searchEl.value !== LIBRARY_STATE.searchQuery) searchEl.value = LIBRARY_STATE.searchQuery;
     const placeholders = {
-      artists: 'Search artists…',
-      albums: 'Search albums or artists…',
-      tracks: 'Search tracks or artists…',
-      scrobbles: 'Search scrobbles…'
+      artists: 'Search artists, albums, or tracks…',
+      albums: 'Search albums, artists, or tracks…',
+      tracks: 'Search tracks, artists, or albums…',
+      scrobbles: 'Search tracks, artists, or albums…'
     };
     searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
   }
@@ -2037,7 +2033,6 @@ function renderLibraryTab(){
   }
 
   if(q){
-    // Search-only: "Showing artists matching …" / with a drill-down: "… · matching …"
     if(noticeParts.length === 0){
       const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
       noticeParts.push(`${kind} matching <b>${q.replace(/</g,'&lt;')}</b>`);
@@ -2056,8 +2051,22 @@ function renderLibraryTab(){
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
+    // Index album/track names per artist so searching "YYZ" or "Moving Pictures"
+    // surfaces the artist that owns them.
+    const relatedByNa = {};
+    if(q){
+      scope.forEach(r=>{
+        if(!relatedByNa[r.na]) relatedByNa[r.na] = {albums: new Set(), tracks: new Set()};
+        if(r.album) relatedByNa[r.na].albums.add(r.album);
+        relatedByNa[r.na].tracks.add(r.track);
+      });
+    }
     let rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
-    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.artist));
+    if(q) rows = rows.filter(it=>{
+      const rel = relatedByNa[normArtist(it.artist)];
+      const extras = rel ? [...rel.albums, ...rel.tracks] : [];
+      return libraryMatchesSearch(q, it.artist, ...extras);
+    });
     renderLibraryStatGrid('artists', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2079,11 +2088,23 @@ function renderLibraryTab(){
       });
     });
   } else if(LIBRARY_STATE.subTab==='albums'){
+    // Index track names per album so searching a track title surfaces its album.
+    const tracksByAlbumKey = {};
+    if(q){
+      scope.forEach(r=>{
+        const k = albumKey(r);
+        if(!tracksByAlbumKey[k]) tracksByAlbumKey[k] = new Set();
+        tracksByAlbumKey[k].add(r.track);
+      });
+    }
     let rows = topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     });
-    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.album, it.artist));
+    if(q) rows = rows.filter(it=>{
+      const tracks = tracksByAlbumKey[it.key] ? [...tracksByAlbumKey[it.key]] : [];
+      return libraryMatchesSearch(q, it.album, it.artist, ...tracks);
+    });
     renderLibraryStatGrid('albums', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2106,15 +2127,22 @@ function renderLibraryTab(){
       });
     });
   } else if(LIBRARY_STATE.subTab==='tracks'){
+    const albumByTrack = {};
+    scope.forEach(r=>{
+      const k = r.artist+'|||'+r.track;
+      if(!albumByTrack[k] && r.album) albumByTrack[k] = r.album;
+    });
     let rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
       const [artist,track] = k.split('|||');
+      const meta = TRACK_META && TRACK_META[normArtist(artist)+'|||'+normTrack(track)];
       return {
         artist: canonicalArtistName(artist),
         track: canonicalTrackName(artist, track),
+        album: (meta && meta.album) || albumByTrack[k] || '',
         count: c
       };
     });
-    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist));
+    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist, it.album));
     renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2138,8 +2166,6 @@ function renderLibraryTab(){
     });
   } else {
     let rows = scope.slice().sort((a,b)=>b.date-a.date);
-    // Match raw scrobble strings only — avoid canonical* lookups which walk
-    // the whole library for every row and made this tab laggy on ~14k items.
     if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist, it.album));
     renderLibraryStatGrid('scrobbles', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);

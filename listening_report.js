@@ -1838,6 +1838,12 @@ function renderReport(){
 const LIBRARY_PAGE_SIZE = 50;
 const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, filterDate: null, searchQuery: '', page: 0 };
 
+function clearLibrarySearch(){
+  LIBRARY_STATE.searchQuery = '';
+  const searchEl = document.getElementById('librarySearch');
+  if(searchEl) searchEl.value = '';
+}
+
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1875,6 +1881,7 @@ function clearLibraryFilter(){
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterDate = null;
+  clearLibrarySearch();
   LIBRARY_STATE.page = 0;
   renderLibraryTab();
 }
@@ -1902,6 +1909,7 @@ function goToLibrary(itemType, item){
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterDate = null;
+  clearLibrarySearch();
   LIBRARY_STATE.page = 0;
 
   if(itemType==='artist'){
@@ -1933,6 +1941,7 @@ function goToLibraryScrobblesByDate(dateStr){
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterDate = dateStr;
+  clearLibrarySearch();
   LIBRARY_STATE.subTab = 'scrobbles';
   LIBRARY_STATE.page = 0;
 
@@ -2018,32 +2027,36 @@ function renderLibraryTab(){
   const q = (LIBRARY_STATE.searchQuery || '').trim();
 
   let scope = ENRICHED, filtered = false;
+  const noticeParts = [];
+
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
     filtered = true;
-    notice.style.display = 'block';
-    notice.innerHTML = `Showing albums by <b>${LIBRARY_STATE.filterArtist}</b> &nbsp;·&nbsp; click to clear`;
-    notice.onclick = clearLibraryFilter;
+    noticeParts.push(`albums by <b>${LIBRARY_STATE.filterArtist}</b>`);
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
     scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
     filtered = true;
-    notice.style.display = 'block';
-    notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
-    notice.onclick = clearLibraryFilter;
+    noticeParts.push(`tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
     // Match by normalized artist+track so canonical display labels still filter
     // correctly against scrobble strings that may differ in casing.
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = ENRICHED.filter(r=>r.na===nfa && r.nt===nft);
-    notice.style.display = 'block';
-    notice.innerHTML = `Showing scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b> &nbsp;·&nbsp; click to clear`;
-    notice.onclick = clearLibraryFilter;
+    noticeParts.push(`scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b>`);
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterDate){
     scope = ENRICHED.filter(r=>r.dateStr===LIBRARY_STATE.filterDate);
+    noticeParts.push(`scrobbles on <b>${fmtDateNice(LIBRARY_STATE.filterDate)}</b>`);
+  }
+
+  if(q){
+    noticeParts.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+  }
+
+  if(noticeParts.length){
     notice.style.display = 'block';
-    notice.innerHTML = `Showing scrobbles on <b>${fmtDateNice(LIBRARY_STATE.filterDate)}</b> &nbsp;·&nbsp; click to clear`;
+    notice.innerHTML = `Showing ${noticeParts.join(' · ')} &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';
@@ -2066,6 +2079,7 @@ function renderLibraryTab(){
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
+        clearLibrarySearch();
         LIBRARY_STATE.filterArtist = it.artist;
         LIBRARY_STATE.subTab = 'albums';
         LIBRARY_STATE.page = 0;
@@ -2091,6 +2105,7 @@ function renderLibraryTab(){
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
+        clearLibrarySearch();
         LIBRARY_STATE.filterAlbumKey = it.key;
         LIBRARY_STATE.filterAlbumLabel = it.album;
         LIBRARY_STATE.subTab = 'tracks';
@@ -2121,6 +2136,7 @@ function renderLibraryTab(){
     listEl.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const it = rows[Number(row.dataset.idx)];
+        clearLibrarySearch();
         LIBRARY_STATE.filterTrackKey = it.artist+'|||'+it.track;
         LIBRARY_STATE.filterTrackLabel = it.track;
         LIBRARY_STATE.subTab = 'scrobbles';

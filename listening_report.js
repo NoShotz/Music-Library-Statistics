@@ -2077,9 +2077,9 @@ function renderLibraryTab(){
     if(searchEl.value !== LIBRARY_STATE.searchQuery) searchEl.value = LIBRARY_STATE.searchQuery;
     const placeholders = {
       artists: 'Search artists, albums, or tracks…',
-      albums: 'Search albums, artists, or tracks…',
-      tracks: 'Search tracks, artists, or albums…',
-      scrobbles: 'Search tracks, artists, or albums…'
+      albums: 'Search artists, albums, or tracks…',
+      tracks: 'Search artists, albums, or tracks…',
+      scrobbles: 'Search artists, albums, or tracks…'
     };
     searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
   }
@@ -2098,8 +2098,9 @@ function renderLibraryTab(){
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
+  // Keep sub-tab names lowercase in the callout — only proper nouns (artist /
+  // album / track titles, formatted dates) are capitalized.
   const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
-  const Kind = kind.charAt(0).toUpperCase() + kind.slice(1);
 
   let scope = ENRICHED, filtered = false;
 
@@ -2140,7 +2141,9 @@ function renderLibraryTab(){
 
   const hasAny = datePhrase || filterPhrase || q;
   if(hasAny){
-    let head = `Showing ${Kind}`;
+    // Natural sentence: "Showing albums from Jun 28, 2016 – Sep 16, 2026 by Kiss"
+    // / "Showing scrobbles matching YYZ" — sub-tab word stays lowercase.
+    let head = `Showing ${kind}`;
     if(datePhrase) head += ` ${datePhrase}`;
     const tail = [];
     if(filterPhrase) tail.push(filterPhrase);

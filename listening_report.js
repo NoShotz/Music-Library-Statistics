@@ -1340,17 +1340,7 @@ function initTabs(){
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
       if(tab !== 'library'){
-        LIBRARY_STATE.filterArtist = null;
-        LIBRARY_STATE.filterAlbumKey = null;
-        LIBRARY_STATE.filterAlbumLabel = null;
-        LIBRARY_STATE.filterTrackKey = null;
-        LIBRARY_STATE.filterTrackLabel = null;
-        LIBRARY_STATE.filterDate = null;
-        LIBRARY_STATE.searchQuery = '';
-        LIBRARY_STATE.page = 0;
-        LIBRARY_STATE.subTab = 'artists';
-        const searchEl = document.getElementById('librarySearch');
-        if(searchEl) searchEl.value = '';
+        resetLibraryFilters();
       }
 
       if(tab==='report'){
@@ -1828,12 +1818,64 @@ function renderReport(){
 // rows) so it stays correct for soundtrack/various-artists albums, where an
 // artist's own scrobbles can belong to an album credited to "Various Artists".
 const LIBRARY_PAGE_SIZE = 50;
-const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, filterDate: null, searchQuery: '', page: 0 };
+const LIBRARY_STATE = {
+  subTab: 'artists',
+  filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null,
+  filterTrackKey: null, filterTrackLabel: null, filterDate: null,
+  searchQuery: '',
+  datePreset: 'all', dateFrom: null, dateTo: null,
+  page: 0
+};
 
 function clearLibrarySearch(){
   LIBRARY_STATE.searchQuery = '';
   const searchEl = document.getElementById('librarySearch');
   if(searchEl) searchEl.value = '';
+}
+
+function clearLibraryDateRange(){
+  LIBRARY_STATE.datePreset = 'all';
+  LIBRARY_STATE.dateFrom = null;
+  LIBRARY_STATE.dateTo = null;
+  const preset = document.getElementById('libraryDatePreset');
+  if(preset) preset.value = 'all';
+  const custom = document.getElementById('libraryDateCustom');
+  if(custom) custom.style.display = 'none';
+  const fromEl = document.getElementById('libraryDateFrom');
+  const toEl = document.getElementById('libraryDateTo');
+  if(fromEl) fromEl.value = '';
+  if(toEl) toEl.value = '';
+}
+
+function resetLibraryFilters(){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterDate = null;
+  clearLibrarySearch();
+  clearLibraryDateRange();
+  LIBRARY_STATE.page = 0;
+  LIBRARY_STATE.subTab = 'artists';
+}
+
+// Resolve the active date-range bounds as {from,to} YYYY-MM-DD strings, or null for all-time.
+// Presets are relative to the latest scrobble date in the dataset.
+function libraryDateBounds(){
+  if(LIBRARY_STATE.datePreset === 'all' || !LIBRARY_STATE.datePreset) return null;
+  if(LIBRARY_STATE.datePreset === 'custom'){
+    const from = LIBRARY_STATE.dateFrom || null;
+    const to = LIBRARY_STATE.dateTo || null;
+    if(!from && !to) return null;
+    return { from, to };
+  }
+  const days = Number(LIBRARY_STATE.datePreset);
+  if(!days || !ENRICHED || !ENRICHED.length) return null;
+  const lastStr = ENRICHED[ENRICHED.length-1].dateStr;
+  const lastD = new Date(lastStr + 'T00:00:00Z');
+  const fromD = new Date(lastD.getTime() - (days - 1) * 86400000);
+  return { from: ymd(fromD), to: lastStr };
 }
 
 function initLibraryTab(){
@@ -1860,17 +1902,65 @@ function initLibraryTab(){
       renderLibraryTab();
     });
   }
+
+  const presetEl = document.getElementById('libraryDatePreset');
+  const customWrap = document.getElementById('libraryDateCustom');
+  const fromEl = document.getElementById('libraryDateFrom');
+  const toEl = document.getElementById('libraryDateTo');
+
+  // Bound the date inputs to the scrobble span once data is ready
+  if(ENRICHED && ENRICHED.length){
+    const min = ENRICHED[0].dateStr, max = ENRICHED[ENRICHED.length-1].dateStr;
+    if(fromEl){ fromEl.min = min; fromEl.max = max; }
+    if(toEl){ toEl.min = min; toEl.max = max; }
+  }
+
+  if(presetEl){
+    presetEl.addEventListener('change', ()=>{
+      LIBRARY_STATE.datePreset = presetEl.value;
+      LIBRARY_STATE.filterDate = null; // preset overrides single-day heatmap filter
+      if(presetEl.value === 'custom'){
+        if(customWrap) customWrap.style.display = 'flex';
+        // Seed empty custom inputs with full data span
+        if(ENRICHED && ENRICHED.length){
+          if(fromEl && !fromEl.value) fromEl.value = ENRICHED[0].dateStr;
+          if(toEl && !toEl.value) toEl.value = ENRICHED[ENRICHED.length-1].dateStr;
+          LIBRARY_STATE.dateFrom = fromEl ? fromEl.value : null;
+          LIBRARY_STATE.dateTo = toEl ? toEl.value : null;
+        }
+      } else {
+        if(customWrap) customWrap.style.display = 'none';
+        LIBRARY_STATE.dateFrom = null;
+        LIBRARY_STATE.dateTo = null;
+      }
+      LIBRARY_STATE.page = 0;
+      renderLibraryTab();
+    });
+  }
+  if(fromEl){
+    fromEl.addEventListener('change', ()=>{
+      LIBRARY_STATE.dateFrom = fromEl.value || null;
+      LIBRARY_STATE.datePreset = 'custom';
+      if(presetEl) presetEl.value = 'custom';
+      LIBRARY_STATE.page = 0;
+      renderLibraryTab();
+    });
+  }
+  if(toEl){
+    toEl.addEventListener('change', ()=>{
+      LIBRARY_STATE.dateTo = toEl.value || null;
+      LIBRARY_STATE.datePreset = 'custom';
+      if(presetEl) presetEl.value = 'custom';
+      LIBRARY_STATE.page = 0;
+      renderLibraryTab();
+    });
+  }
 }
 
 function clearLibraryFilter(){
-  LIBRARY_STATE.filterArtist = null;
-  LIBRARY_STATE.filterAlbumKey = null;
-  LIBRARY_STATE.filterAlbumLabel = null;
-  LIBRARY_STATE.filterTrackKey = null;
-  LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterDate = null;
-  clearLibrarySearch();
-  LIBRARY_STATE.page = 0;
+  const keepSub = LIBRARY_STATE.subTab;
+  resetLibraryFilters();
+  LIBRARY_STATE.subTab = keepSub; // stay on the current sub-tab after clearing
   renderLibraryTab();
 }
 
@@ -1898,6 +1988,7 @@ function goToLibrary(itemType, item){
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterDate = null;
   clearLibrarySearch();
+  // Keep date range when jumping from Overview/Report
   LIBRARY_STATE.page = 0;
 
   if(itemType==='artist'){
@@ -1930,6 +2021,14 @@ function goToLibraryScrobblesByDate(dateStr){
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterDate = dateStr;
   clearLibrarySearch();
+  // Single-day jump overrides the broader date-range preset
+  LIBRARY_STATE.datePreset = 'all';
+  LIBRARY_STATE.dateFrom = null;
+  LIBRARY_STATE.dateTo = null;
+  const preset = document.getElementById('libraryDatePreset');
+  if(preset) preset.value = 'all';
+  const custom = document.getElementById('libraryDateCustom');
+  if(custom) custom.style.display = 'none';
   LIBRARY_STATE.subTab = 'scrobbles';
   LIBRARY_STATE.page = 0;
 
@@ -2006,6 +2105,16 @@ function renderLibraryTab(){
     searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
   }
 
+  // Keep date-preset control in sync
+  const presetEl = document.getElementById('libraryDatePreset');
+  if(presetEl && presetEl.value !== LIBRARY_STATE.datePreset){
+    presetEl.value = LIBRARY_STATE.datePreset || 'all';
+  }
+  const customWrap = document.getElementById('libraryDateCustom');
+  if(customWrap){
+    customWrap.style.display = LIBRARY_STATE.datePreset === 'custom' ? 'flex' : 'none';
+  }
+
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
@@ -2013,22 +2122,39 @@ function renderLibraryTab(){
   let scope = ENRICHED, filtered = false;
   const noticeParts = [];
 
+  // Date-range filter (presets / custom) applies first, unless a single-day
+  // heatmap filter is active (that is more specific and wins).
+  const bounds = libraryDateBounds();
+  if(!LIBRARY_STATE.filterDate && bounds){
+    if(bounds.from) scope = scope.filter(r => r.dateStr >= bounds.from);
+    if(bounds.to) scope = scope.filter(r => r.dateStr <= bounds.to);
+    filtered = true;
+    if(LIBRARY_STATE.datePreset === 'custom'){
+      const fromLbl = bounds.from ? fmtDateNice(bounds.from) : '…';
+      const toLbl = bounds.to ? fmtDateNice(bounds.to) : '…';
+      noticeParts.push(`<b>${fromLbl}</b> – <b>${toLbl}</b>`);
+    } else {
+      const labels = {7:'Last 7 days',30:'Last 30 days',90:'Last 90 days',180:'Last 180 days',365:'Last 365 days'};
+      noticeParts.push(`<b>${labels[LIBRARY_STATE.datePreset] || LIBRARY_STATE.datePreset}</b>`);
+    }
+  }
+
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
-    scope = ENRICHED.filter(r=>normArtist(r.artist)===na);
+    scope = scope.filter(r=>normArtist(r.artist)===na);
     filtered = true;
     noticeParts.push(`albums by <b>${LIBRARY_STATE.filterArtist}</b>`);
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
-    scope = ENRICHED.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
+    scope = scope.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
     filtered = true;
     noticeParts.push(`tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
-    scope = ENRICHED.filter(r=>r.na===nfa && r.nt===nft);
+    scope = scope.filter(r=>r.na===nfa && r.nt===nft);
     noticeParts.push(`scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b>`);
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterDate){
-    scope = ENRICHED.filter(r=>r.dateStr===LIBRARY_STATE.filterDate);
+    scope = scope.filter(r=>r.dateStr===LIBRARY_STATE.filterDate);
     noticeParts.push(`scrobbles on <b>${fmtDateNice(LIBRARY_STATE.filterDate)}</b>`);
   }
 
@@ -2051,8 +2177,6 @@ function renderLibraryTab(){
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
-    // Index album/track names per artist so searching "YYZ" or "Moving Pictures"
-    // surfaces the artist that owns them.
     const relatedByNa = {};
     if(q){
       scope.forEach(r=>{
@@ -2088,7 +2212,6 @@ function renderLibraryTab(){
       });
     });
   } else if(LIBRARY_STATE.subTab==='albums'){
-    // Index track names per album so searching a track title surfaces its album.
     const tracksByAlbumKey = {};
     if(q){
       scope.forEach(r=>{

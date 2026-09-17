@@ -248,7 +248,23 @@
         <button class="seg-btn" data-subtab="tracks">Tracks</button>
         <button class="seg-btn" data-subtab="scrobbles">Scrobbles</button>
       </div>
-      <input type="search" id="librarySearch" class="lib-search" placeholder="Search…" autocomplete="off" spellcheck="false">
+      <div class="lib-toolbar-right">
+        <input type="search" id="librarySearch" class="lib-search" placeholder="Search…" autocomplete="off" spellcheck="false">
+        <select id="libraryDatePreset" class="lib-date-preset" title="Date range">
+          <option value="all">All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="180">Last 180 days</option>
+          <option value="365">Last 365 days</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lib-date-custom" id="libraryDateCustom" style="display:none;">
+      <label class="lib-date-field">From <input type="date" id="libraryDateFrom"></label>
+      <label class="lib-date-field">To <input type="date" id="libraryDateTo"></label>
     </div>
 
     <div class="callout pending" id="libraryFilterNotice" style="display:none; cursor:pointer;"></div>

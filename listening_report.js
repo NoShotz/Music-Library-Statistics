@@ -1868,14 +1868,17 @@ function goToLibrary(itemType, item){
   if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
     LIBRARY_STATE.filterArtist = item.artist;
+	document.documentElement.scrollTop = 0;
   } else if(itemType==='album'){
     LIBRARY_STATE.subTab = 'tracks';
     LIBRARY_STATE.filterAlbumKey = item.key;
     LIBRARY_STATE.filterAlbumLabel = item.album;
+	document.documentElement.scrollTop = 0;
   } else { // track
     LIBRARY_STATE.subTab = 'scrobbles';
     LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
     LIBRARY_STATE.filterTrackLabel = item.track;
+	document.documentElement.scrollTop = 0;
   }
 
   switchToLibraryTab();

@@ -757,27 +757,30 @@ function computeStats(scrobbles, periodType, periodKey){
 // ---------- heatmap data builders (replace the old sub-period bar chart) ----------
 function buildYearHeatmap(year, scrobbles){
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const matrix = [], cellMeta = [];
+  const matrix = [], cellMeta = [], cellDate = [];
   for(let m=1;m<=12;m++){
     const dim = new Date(Date.UTC(year,m,0)).getUTCDate(); // days in this month
-    const row = [], metaRow = [];
+    const row = [], metaRow = [], dateRow = [];
     for(let d=1; d<=31; d++){
       if(d<=dim){
+        const iso = year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
         row.push(0);
-        metaRow.push(fmtDateNice(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')));
+        metaRow.push(fmtDateNice(iso));
+        dateRow.push(iso);
       } else {
         row.push(null); // e.g. Feb 30th -- not a real day, render as blank
         metaRow.push(null);
+        dateRow.push(null);
       }
     }
-    matrix.push(row); cellMeta.push(metaRow);
+    matrix.push(row); cellMeta.push(metaRow); cellDate.push(dateRow);
   }
   scrobbles.forEach(r=>{
     const m = Number(r.monthKey.split('-')[1]);
     const d = Number(r.dateStr.split('-')[2]);
     matrix[m-1][d-1]++;
   });
-  return { rowLabels: monthNames, colLabels: Array.from({length:31},(_,i)=>String(i+1)), matrix, cellMeta };
+  return { rowLabels: monthNames, colLabels: Array.from({length:31},(_,i)=>String(i+1)), matrix, cellMeta, cellDate };
 }
 
 function buildYearsHeatmap(scrobbles){
@@ -787,13 +790,16 @@ function buildYearsHeatmap(scrobbles){
 
   const matrix = years.map(()=>Array(COLS).fill(null));
   const cellMeta = years.map(()=>Array(COLS).fill(null));
+  const cellDate = years.map(()=>Array(COLS).fill(null));
   years.forEach((y,ri)=>{
     const isLeap = (y%4===0 && y%100!==0) || y%400===0;
     const daysInYear = isLeap ? 366 : 365;
     for(let d=0; d<daysInYear; d++){
       const dt = new Date(Date.UTC(y,0,1) + d*86400000);
+      const iso = dt.toISOString().slice(0,10);
       matrix[ri][d] = 0;
-      cellMeta[ri][d] = fmtDateNice(dt.toISOString().slice(0,10));
+      cellMeta[ri][d] = fmtDateNice(iso);
+      cellDate[ri][d] = iso;
     }
   });
 
@@ -807,7 +813,7 @@ function buildYearsHeatmap(scrobbles){
   // per-column day-of-year label (1..366)
   const colLabels = Array.from({length: COLS}, (_,d) => String(d+1));
 
-  return { rowLabels: years.map(String), colLabels, matrix, cellMeta };
+  return { rowLabels: years.map(String), colLabels, matrix, cellMeta, cellDate };
 }
 
 const HEATMAP_LOW = [0x24,0x1d,0x16];   // near the card background -- "0 scrobbles"
@@ -913,7 +919,8 @@ function renderHeatmap(containerId, heat, opts){
       const t = max>0 ? v/max : 0;
       const bg = v===0 ? 'transparent' : heatmapColor(t);
       const date = heat.cellMeta[ri][ci] || '';
-      return `<div class="heatmap-cell" style="background:${bg};" data-date="${date}" data-count="${v}"></div>`;
+      const rawDate = (heat.cellDate && heat.cellDate[ri][ci]) || '';
+      return `<div class="heatmap-cell${opts.dateClickable?' clickable':''}" style="background:${bg};" data-date="${date}" data-raw-date="${rawDate}" data-count="${v}"></div>`;
     }).join('');
     return `<div class="heatmap-row data-row"><div class="heatmap-row-label${rowLabelCls}">${rl}</div>${cells}</div>`;
   }).join('');
@@ -937,6 +944,11 @@ function renderHeatmap(containerId, heat, opts){
       showTooltip(tt);
     });
     cell.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
+    if(opts.dateClickable){
+      cell.addEventListener('click', () => {
+        if(cell.dataset.rawDate) goToLibraryScrobblesByDate(cell.dataset.rawDate);
+      });
+    }
   });
 }
 
@@ -1169,7 +1181,7 @@ function paintOverview(DATA){
     `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div></div>`
   ).join('');
 
-  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true});
+  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true, dateClickable:true});
   renderChartSideStat('yearsHeatmapBusiest', DATA.busiest_day ? [
     {label:'Busiest day', value:fmtDateNice(DATA.busiest_day.date)},
     {label:'Scrobbles on busiest day', value:fmtNum(DATA.busiest_day.count)}
@@ -1712,7 +1724,7 @@ function renderReport(){
 // rows) so it stays correct for soundtrack/various-artists albums, where an
 // artist's own scrobbles can belong to an album credited to "Various Artists".
 const LIBRARY_PAGE_SIZE = 50;
-const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, page: 0 };
+const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, filterDate: null, page: 0 };
 
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
@@ -1726,6 +1738,7 @@ function initLibraryTab(){
       LIBRARY_STATE.filterAlbumLabel = null;
       LIBRARY_STATE.filterTrackKey = null;
       LIBRARY_STATE.filterTrackLabel = null;
+      LIBRARY_STATE.filterDate = null;
       LIBRARY_STATE.page = 0;
       renderLibraryTab();
     });
@@ -1738,8 +1751,18 @@ function clearLibraryFilter(){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterDate = null;
   LIBRARY_STATE.page = 0;
   renderLibraryTab();
+}
+
+// Same tab-switch as clicking the "Library" tab button by hand -- shared by
+// goToLibrary() and goToLibraryScrobblesByDate().
+function switchToLibraryTab(){
+  document.getElementById('tab-overview').style.display = 'none';
+  document.getElementById('tab-report').style.display = 'none';
+  document.getElementById('tab-library').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='library'));
 }
 
 // Jumps to the Library tab, switched to whichever sub-tab and filter corresponds
@@ -1754,6 +1777,7 @@ function goToLibrary(itemType, item){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterDate = null;
   LIBRARY_STATE.page = 0;
 
   if(itemType==='artist'){
@@ -1769,12 +1793,26 @@ function goToLibrary(itemType, item){
     LIBRARY_STATE.filterTrackLabel = item.track;
   }
 
-  // Same tab-switch as clicking the "Library" tab button by hand.
-  document.getElementById('tab-overview').style.display = 'none';
-  document.getElementById('tab-report').style.display = 'none';
-  document.getElementById('tab-library').style.display = 'block';
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='library'));
+  switchToLibraryTab();
+  renderLibraryTab();
+}
 
+// Jumps to the Library tab's Scrobbles sub-tab, filtered to one specific
+// calendar date -- used by the Overview "Daily scrobbles" heatmap (every cell
+// is exactly one day) and by the Report tab's "Weekly scrobbles" chart when
+// viewing a single week (there, and only there, each of the 7 bars also maps
+// to exactly one specific date).
+function goToLibraryScrobblesByDate(dateStr){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterDate = dateStr;
+  LIBRARY_STATE.subTab = 'scrobbles';
+  LIBRARY_STATE.page = 0;
+
+  switchToLibraryTab();
   renderLibraryTab();
 }
 

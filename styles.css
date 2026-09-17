@@ -217,8 +217,10 @@
   .heatmap-row.col-label-row{height:16px;flex:0 0 16px;}
   .heatmap-cell{
     flex:0 0 var(--cell);width:var(--cell);height:var(--cell);border-radius:2px;
-    background:#241d16;cursor:pointer;
+    background:#241d16;cursor:default;
   }
+  .heatmap-cell.clickable{cursor:pointer;}
+  .heatmap-cell.clickable:hover{outline:1px solid var(--gold-dim);}
   .heatmap-cell.empty{background:transparent;cursor:default;}
   .map-box .jvm-region{cursor:pointer;}
   .clock-svg{overflow:visible;}

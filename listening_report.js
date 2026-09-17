@@ -1849,7 +1849,29 @@ function resetLibraryFilters(){
   LIBRARY_STATE.subTab = 'artists';
 }
 
-// Date bounds for the Report tab's currently selected year/month/week.
+// Drop drill-down filters that don't apply to the given sub-tab.
+// Hierarchy: artists (none) ← albums (artist) ← tracks (artist, album) ← scrobbles (artist, album, track)
+function pruneLibraryFiltersForSubTab(subTab){
+  if(subTab === 'artists'){
+    LIBRARY_STATE.filterArtist = null;
+    LIBRARY_STATE.filterAlbumKey = null;
+    LIBRARY_STATE.filterAlbumLabel = null;
+    LIBRARY_STATE.filterTrackKey = null;
+    LIBRARY_STATE.filterTrackLabel = null;
+  } else if(subTab === 'albums'){
+    LIBRARY_STATE.filterAlbumKey = null;
+    LIBRARY_STATE.filterAlbumLabel = null;
+    LIBRARY_STATE.filterTrackKey = null;
+    LIBRARY_STATE.filterTrackLabel = null;
+    // keep filterArtist
+  } else if(subTab === 'tracks'){
+    LIBRARY_STATE.filterTrackKey = null;
+    LIBRARY_STATE.filterTrackLabel = null;
+    // keep filterArtist, filterAlbumKey
+  }
+  // scrobbles: keep all three
+}
+
 function reportPeriodDateBounds(){
   const type = STATE.reportType, key = STATE.reportKey;
   if(!type || !key) return null;
@@ -1858,7 +1880,6 @@ function reportPeriodDateBounds(){
   }
   if(type === 'month'){
     const [y, m] = key.split('-').map(Number);
-    // Day 0 of next month = last day of this month (UTC)
     const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
     return {
       from: key + '-01',
@@ -1866,7 +1887,6 @@ function reportPeriodDateBounds(){
     };
   }
   if(type === 'week'){
-    // key is the Monday YYYY-MM-DD; week runs Mon–Sun
     const start = new Date(key + 'T00:00:00Z');
     const end = new Date(start.getTime() + 6 * 86400000);
     return { from: key, to: ymd(end) };
@@ -1908,11 +1928,9 @@ function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       LIBRARY_STATE.subTab = btn.dataset.subtab;
-      LIBRARY_STATE.filterArtist = null;
-      LIBRARY_STATE.filterAlbumKey = null;
-      LIBRARY_STATE.filterAlbumLabel = null;
-      LIBRARY_STATE.filterTrackKey = null;
-      LIBRARY_STATE.filterTrackLabel = null;
+      // Keep filters that still make sense on the destination sub-tab
+      // (e.g. artist filter survives albums→tracks→scrobbles).
+      pruneLibraryFiltersForSubTab(LIBRARY_STATE.subTab);
       LIBRARY_STATE.page = 0;
       renderLibraryTab();
     });
@@ -2009,8 +2027,7 @@ function goToLibrary(itemType, item){
   clearLibrarySearch();
   LIBRARY_STATE.page = 0;
 
-  // Carry over the date context from the tab the user clicked on:
-  // Overview → all time; Report → the year/month/week currently selected.
+  // Overview → all time; Report → current year/month/week range
   const onReport = document.getElementById('tab-report') &&
     document.getElementById('tab-report').style.display !== 'none';
   if(onReport){
@@ -2028,10 +2045,15 @@ function goToLibrary(itemType, item){
     LIBRARY_STATE.subTab = 'tracks';
     LIBRARY_STATE.filterAlbumKey = item.key;
     LIBRARY_STATE.filterAlbumLabel = item.album;
+    // Also scope to the album's artist when known (keeps filter if user switches sub-tabs)
+    if(item.artist && item.artist !== 'Various Artists'){
+      LIBRARY_STATE.filterArtist = item.artist;
+    }
   } else {
     LIBRARY_STATE.subTab = 'scrobbles';
     LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
     LIBRARY_STATE.filterTrackLabel = item.track;
+    if(item.artist) LIBRARY_STATE.filterArtist = item.artist;
   }
 
   switchToLibraryTab();
@@ -2136,7 +2158,6 @@ function renderLibraryTab(){
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
   const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
-  // Sub-tab words stay lowercase; only proper nouns are capitalized.
 
   let scope = ENRICHED, filtered = false;
 
@@ -2158,25 +2179,31 @@ function renderLibraryTab(){
     }
   }
 
-  let filterPhrase = null;
-  if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
+  // Apply every drill-down filter that is valid for the current sub-tab.
+  // Artist → albums/tracks/scrobbles; album → tracks/scrobbles; track → scrobbles.
+  const filterParts = [];
+  if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = scope.filter(r=>normArtist(r.artist)===na);
     filtered = true;
-    filterPhrase = `by <b>${LIBRARY_STATE.filterArtist}</b>`;
-  } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
+    filterParts.push(`by <b>${LIBRARY_STATE.filterArtist}</b>`);
+  }
+  if(LIBRARY_STATE.filterAlbumKey && (LIBRARY_STATE.subTab === 'tracks' || LIBRARY_STATE.subTab === 'scrobbles')){
     scope = scope.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
     filtered = true;
-    filterPhrase = `from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`;
-  } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
+    filterParts.push(`from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
+  }
+  if(LIBRARY_STATE.filterTrackKey && LIBRARY_STATE.subTab === 'scrobbles'){
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = scope.filter(r=>r.na===nfa && r.nt===nft);
-    filterPhrase = `matching <b>${LIBRARY_STATE.filterTrackLabel}</b>`;
+    filterParts.push(`matching <b>${LIBRARY_STATE.filterTrackLabel}</b>`);
   }
+  const filterPhrase = filterParts.length ? filterParts.join(' ') : null;
 
   const hasAny = datePhrase || filterPhrase || q;
   if(hasAny){
+    // Sub-tab words stay lowercase; only proper nouns are capitalized.
     let head = `Showing ${kind}`;
     if(datePhrase) head += ` ${datePhrase}`;
     const tail = [];

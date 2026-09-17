@@ -1843,7 +1843,6 @@ function clearLibraryFilter(){
 // Same tab-switch as clicking the "Library" tab button by hand -- shared by
 // goToLibrary() and goToLibraryScrobblesByDate().
 function switchToLibraryTab(){
-  document.documentElement.scrollTop = 0;
   document.getElementById('tab-overview').style.display = 'none';
   document.getElementById('tab-report').style.display = 'none';
   document.getElementById('tab-library').style.display = 'block';
@@ -1868,17 +1867,14 @@ function goToLibrary(itemType, item){
   if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
     LIBRARY_STATE.filterArtist = item.artist;
-	document.documentElement.scrollTop = 0;
   } else if(itemType==='album'){
     LIBRARY_STATE.subTab = 'tracks';
     LIBRARY_STATE.filterAlbumKey = item.key;
     LIBRARY_STATE.filterAlbumLabel = item.album;
-	document.documentElement.scrollTop = 0;
   } else { // track
     LIBRARY_STATE.subTab = 'scrobbles';
     LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
     LIBRARY_STATE.filterTrackLabel = item.track;
-	document.documentElement.scrollTop = 0;
   }
 
   switchToLibraryTab();
@@ -2080,6 +2076,11 @@ function renderLibraryTab(){
       </li>`).join('');
     bindArtThumbs(listEl);
   }
+
+  // Scroll to top after any library filter / sub-tab / pagination change
+  // so the user lands at the filter notice + stats instead of remaining
+  // mid-list from the previous view.
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 boot();

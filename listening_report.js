@@ -1897,6 +1897,12 @@ function initLibraryTab(){
   if(searchEl){
     searchEl.addEventListener('input', ()=>{
       LIBRARY_STATE.searchQuery = searchEl.value;
+      // Typing a search on Scrobbles replaces any track drill-down so the
+      // callout doesn't end up with "matching X · matching x".
+      if(LIBRARY_STATE.subTab === 'scrobbles'){
+        LIBRARY_STATE.filterTrackKey = null;
+        LIBRARY_STATE.filterTrackLabel = null;
+      }
       LIBRARY_STATE.page = 0;
       LIBRARY_STATE._searchTyping = true;
       renderLibraryTab();
@@ -2129,7 +2135,6 @@ function renderLibraryTab(){
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = scope.filter(r=>r.na===nfa && r.nt===nft);
-    // Use "matching" for consistency with search wording
     filterPhrase = `matching <b>${LIBRARY_STATE.filterTrackLabel}</b>`;
   }
 
@@ -2139,14 +2144,14 @@ function renderLibraryTab(){
     if(datePhrase) head += ` ${datePhrase}`;
     const tail = [];
     if(filterPhrase) tail.push(filterPhrase);
-    // Avoid duplicate "matching X · matching X" if search equals track filter label
-    if(q && !(filterPhrase && filterPhrase.includes(q.replace(/</g,'&lt;')))){
-      tail.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
-    } else if(q && !filterPhrase){
-      tail.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+    if(q){
+      const qEsc = q.replace(/</g,'&lt;');
+      if(!(filterPhrase && filterPhrase.toLowerCase().includes(qEsc.toLowerCase()))){
+        tail.push(`matching <b>${qEsc}</b>`);
+      }
     }
     notice.style.display = 'block';
-    notice.innerHTML = head + (tail.length ? ' · ' + tail.join(' · ') : '') + ' &nbsp;·&nbsp; click to clear';
+    notice.innerHTML = head + (tail.length ? ' ' + tail.join(' ') : '') + ' &nbsp;·&nbsp; click to clear';
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';

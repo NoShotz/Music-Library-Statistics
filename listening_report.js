@@ -1390,6 +1390,16 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       scales:{
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
         y:{ grid:{color:'#241d16'}, beginAtZero:true, ticks:{ precision:0 } }
+      },
+      // Each bar is one calendar day of the month → click opens Library → Scrobbles filtered to that day.
+      onClick: (evt, elements) => {
+        if(!elements.length) return;
+        const day = elements[0].index + 1; // 0-based index → day-of-month
+        const dateStr = monthKey + '-' + String(day).padStart(2,'0');
+        goToLibraryScrobblesByDate(dateStr);
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       }
     }
   });
@@ -1553,7 +1563,7 @@ function renderReport(){
     destroyChart('subPeriod');
     document.getElementById('subPeriodTitle').textContent = 'Daily Scrobbles';
     setText('subPeriodDesc', periodLabel(type,key));
-    renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles));
+    renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles), {dateClickable:true});
     renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [
       {label:'Busiest day', value:fmtDayMonth(cur.busiestDay.date)},
       {label:'Scrobbles on busiest day', value:fmtNum(cur.busiestDay.count)}
@@ -1626,8 +1636,20 @@ function renderReport(){
     : '';
 
   // ---- day of week (cur vs prev) ----
+  // When the report period is a single week, each bar maps to exactly one
+  // calendar date (Mon of that week + index). Year/month aggregates span many
+  // Mondays/etc., so those bars stay non-clickable.
   const dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   destroyChart('dow');
+  const weekDayDates = (type==='week')
+    ? (() => {
+        const start = new Date(key+'T00:00:00Z');
+        return Array.from({length:7}, (_,i)=>{
+          const d = new Date(start.getTime() + i*86400000);
+          return ymd(d);
+        });
+      })()
+    : null;
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
@@ -1636,7 +1658,18 @@ function renderReport(){
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } },
+      onClick: weekDayDates ? (evt, elements) => {
+        // Only the current-period dataset (index 0) is a single concrete day.
+        if(!elements.length || elements[0].datasetIndex !== 0) return;
+        const dateStr = weekDayDates[elements[0].index];
+        if(dateStr) goToLibraryScrobblesByDate(dateStr);
+      } : undefined,
+      onHover: weekDayDates ? (evt, elements) => {
+        const overCurrent = elements.some(e => e.datasetIndex === 0);
+        evt.native.target.style.cursor = overCurrent ? 'pointer' : 'default';
+      } : undefined
+    }
   });
   {
     const bestDay = busiestWeekday(cur.weekday);
@@ -1886,6 +1919,11 @@ function renderLibraryTab(){
     scope = ENRICHED.filter(r=>(r.artist+'|||'+r.track)===LIBRARY_STATE.filterTrackKey);
     notice.style.display = 'block';
     notice.innerHTML = `Showing scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b> &nbsp;·&nbsp; click to clear`;
+    notice.onclick = clearLibraryFilter;
+  } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterDate){
+    scope = ENRICHED.filter(r=>r.dateStr===LIBRARY_STATE.filterDate);
+    notice.style.display = 'block';
+    notice.innerHTML = `Showing scrobbles on <b>${fmtDateNice(LIBRARY_STATE.filterDate)}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';

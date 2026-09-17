@@ -1352,6 +1352,8 @@ function initTabs(){
       } else if(MAP_REFS['overview']){
         MAP_REFS['overview'].updateSize();
       }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 }
@@ -1560,6 +1562,10 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
 }
 
 function renderReport(){
+  // Scroll to top on every period change (year/month/week type or timeframe)
+  // so the user starts at the controls + stats instead of remaining mid-page.
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
   const type = STATE.reportType, key = STATE.reportKey;
   const list = PERIOD_INDEXES[type];
   const idx = list.indexOf(key);
@@ -1847,6 +1853,7 @@ function switchToLibraryTab(){
   document.getElementById('tab-report').style.display = 'none';
   document.getElementById('tab-library').style.display = 'block';
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='library'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Jumps to the Library tab, switched to whichever sub-tab and filter corresponds

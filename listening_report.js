@@ -1339,19 +1339,9 @@ function initTabs(){
       document.getElementById('tab-library').style.display = tab==='library' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
-      if(tab !== 'library'){
-        resetLibraryFilters();
-      }
+      if(tab !== 'library') resetLibraryFilters();
 
       if(tab==='report'){
-        // The Report tab (and its map) is first built at boot while this tab is
-        // still display:none, so jsVectorMap measures a zero-height container
-        // and renders cut off. updateSize() alone doesn't fully recover from
-        // that bad initial measurement -- a full re-render (which recreates the
-        // map from scratch against the now-visible container) does, and it's
-        // exactly what already happens whenever the period selector changes,
-        // which is why switching year/month/week "fixes" it. So just do the
-        // same thing when the tab itself is switched into view.
         renderReport();
       } else if(tab==='library'){
         renderLibraryTab();
@@ -1821,7 +1811,7 @@ const LIBRARY_PAGE_SIZE = 50;
 const LIBRARY_STATE = {
   subTab: 'artists',
   filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null,
-  filterTrackKey: null, filterTrackLabel: null, filterDate: null,
+  filterTrackKey: null, filterTrackLabel: null,
   searchQuery: '',
   datePreset: 'all', dateFrom: null, dateTo: null,
   page: 0
@@ -1853,15 +1843,12 @@ function resetLibraryFilters(){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterDate = null;
   clearLibrarySearch();
   clearLibraryDateRange();
   LIBRARY_STATE.page = 0;
   LIBRARY_STATE.subTab = 'artists';
 }
 
-// Resolve the active date-range bounds as {from,to} YYYY-MM-DD strings, or null for all-time.
-// Presets are relative to the latest scrobble date in the dataset.
 function libraryDateBounds(){
   if(LIBRARY_STATE.datePreset === 'all' || !LIBRARY_STATE.datePreset) return null;
   if(LIBRARY_STATE.datePreset === 'custom'){
@@ -1878,6 +1865,20 @@ function libraryDateBounds(){
   return { from: ymd(fromD), to: lastStr };
 }
 
+function setLibraryCustomDateRange(fromStr, toStr){
+  LIBRARY_STATE.datePreset = 'custom';
+  LIBRARY_STATE.dateFrom = fromStr || null;
+  LIBRARY_STATE.dateTo = toStr || null;
+  const preset = document.getElementById('libraryDatePreset');
+  if(preset) preset.value = 'custom';
+  const custom = document.getElementById('libraryDateCustom');
+  if(custom) custom.style.display = 'flex';
+  const fromEl = document.getElementById('libraryDateFrom');
+  const toEl = document.getElementById('libraryDateTo');
+  if(fromEl) fromEl.value = fromStr || '';
+  if(toEl) toEl.value = toStr || '';
+}
+
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1887,7 +1888,6 @@ function initLibraryTab(){
       LIBRARY_STATE.filterAlbumLabel = null;
       LIBRARY_STATE.filterTrackKey = null;
       LIBRARY_STATE.filterTrackLabel = null;
-      LIBRARY_STATE.filterDate = null;
       LIBRARY_STATE.page = 0;
       renderLibraryTab();
     });
@@ -1908,7 +1908,6 @@ function initLibraryTab(){
   const fromEl = document.getElementById('libraryDateFrom');
   const toEl = document.getElementById('libraryDateTo');
 
-  // Bound the date inputs to the scrobble span once data is ready
   if(ENRICHED && ENRICHED.length){
     const min = ENRICHED[0].dateStr, max = ENRICHED[ENRICHED.length-1].dateStr;
     if(fromEl){ fromEl.min = min; fromEl.max = max; }
@@ -1918,10 +1917,8 @@ function initLibraryTab(){
   if(presetEl){
     presetEl.addEventListener('change', ()=>{
       LIBRARY_STATE.datePreset = presetEl.value;
-      LIBRARY_STATE.filterDate = null; // preset overrides single-day heatmap filter
       if(presetEl.value === 'custom'){
         if(customWrap) customWrap.style.display = 'flex';
-        // Seed empty custom inputs with full data span
         if(ENRICHED && ENRICHED.length){
           if(fromEl && !fromEl.value) fromEl.value = ENRICHED[0].dateStr;
           if(toEl && !toEl.value) toEl.value = ENRICHED[ENRICHED.length-1].dateStr;
@@ -1960,12 +1957,10 @@ function initLibraryTab(){
 function clearLibraryFilter(){
   const keepSub = LIBRARY_STATE.subTab;
   resetLibraryFilters();
-  LIBRARY_STATE.subTab = keepSub; // stay on the current sub-tab after clearing
+  LIBRARY_STATE.subTab = keepSub;
   renderLibraryTab();
 }
 
-// Same tab-switch as clicking the "Library" tab button by hand -- shared by
-// goToLibrary() and goToLibraryScrobblesByDate().
 function switchToLibraryTab(){
   document.getElementById('tab-overview').style.display = 'none';
   document.getElementById('tab-report').style.display = 'none';
@@ -1974,21 +1969,13 @@ function switchToLibraryTab(){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Jumps to the Library tab, switched to whichever sub-tab and filter corresponds
-// to clicking an artist/album/track elsewhere on the site (Overview/Report top
-// lists, discoveries lists). Reuses the exact same LIBRARY_STATE fields and
-// filtering logic that the Library tab's own internal drill-down uses, so an
-// artist click lands exactly where clicking that artist inside the Library tab
-// itself would.
 function goToLibrary(itemType, item){
   LIBRARY_STATE.filterArtist = null;
   LIBRARY_STATE.filterAlbumKey = null;
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterDate = null;
   clearLibrarySearch();
-  // Keep date range when jumping from Overview/Report
   LIBRARY_STATE.page = 0;
 
   if(itemType==='artist'){
@@ -1998,7 +1985,7 @@ function goToLibrary(itemType, item){
     LIBRARY_STATE.subTab = 'tracks';
     LIBRARY_STATE.filterAlbumKey = item.key;
     LIBRARY_STATE.filterAlbumLabel = item.album;
-  } else { // track
+  } else {
     LIBRARY_STATE.subTab = 'scrobbles';
     LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
     LIBRARY_STATE.filterTrackLabel = item.track;
@@ -2008,27 +1995,14 @@ function goToLibrary(itemType, item){
   renderLibraryTab();
 }
 
-// Jumps to the Library tab's Scrobbles sub-tab, filtered to one specific
-// calendar date -- used by the Overview "Daily scrobbles" heatmap (every cell
-// is exactly one day) and by the Report tab's "Weekly scrobbles" chart when
-// viewing a single week (there, and only there, each of the 7 bars also maps
-// to exactly one specific date).
 function goToLibraryScrobblesByDate(dateStr){
   LIBRARY_STATE.filterArtist = null;
   LIBRARY_STATE.filterAlbumKey = null;
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterDate = dateStr;
   clearLibrarySearch();
-  // Single-day jump overrides the broader date-range preset
-  LIBRARY_STATE.datePreset = 'all';
-  LIBRARY_STATE.dateFrom = null;
-  LIBRARY_STATE.dateTo = null;
-  const preset = document.getElementById('libraryDatePreset');
-  if(preset) preset.value = 'all';
-  const custom = document.getElementById('libraryDateCustom');
-  if(custom) custom.style.display = 'none';
+  setLibraryCustomDateRange(dateStr, dateStr);
   LIBRARY_STATE.subTab = 'scrobbles';
   LIBRARY_STATE.page = 0;
 
@@ -2080,7 +2054,6 @@ function renderLibraryStatGrid(itemLabel, itemCount, scrobbleTotal){
   ).join('');
 }
 
-// Case-insensitive substring match used by the Library search bar.
 function libraryMatchesSearch(q, ...haystacks){
   if(!q) return true;
   const nq = q.toLowerCase().trim();
@@ -2105,71 +2078,75 @@ function renderLibraryTab(){
     searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
   }
 
-  // Keep date-preset control in sync
   const presetEl = document.getElementById('libraryDatePreset');
-  if(presetEl && presetEl.value !== LIBRARY_STATE.datePreset){
+  if(presetEl && presetEl.value !== (LIBRARY_STATE.datePreset || 'all')){
     presetEl.value = LIBRARY_STATE.datePreset || 'all';
   }
   const customWrap = document.getElementById('libraryDateCustom');
-  if(customWrap){
-    customWrap.style.display = LIBRARY_STATE.datePreset === 'custom' ? 'flex' : 'none';
-  }
+  if(customWrap) customWrap.style.display = LIBRARY_STATE.datePreset === 'custom' ? 'flex' : 'none';
+  const fromEl = document.getElementById('libraryDateFrom');
+  const toEl = document.getElementById('libraryDateTo');
+  if(fromEl && LIBRARY_STATE.dateFrom && fromEl.value !== LIBRARY_STATE.dateFrom) fromEl.value = LIBRARY_STATE.dateFrom;
+  if(toEl && LIBRARY_STATE.dateTo && toEl.value !== LIBRARY_STATE.dateTo) toEl.value = LIBRARY_STATE.dateTo;
 
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
+  const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
+  const Kind = kind.charAt(0).toUpperCase() + kind.slice(1);
 
   let scope = ENRICHED, filtered = false;
-  const noticeParts = [];
 
-  // Date-range filter (presets / custom) applies first, unless a single-day
-  // heatmap filter is active (that is more specific and wins).
   const bounds = libraryDateBounds();
-  if(!LIBRARY_STATE.filterDate && bounds){
+  let datePhrase = null;
+  if(bounds){
     if(bounds.from) scope = scope.filter(r => r.dateStr >= bounds.from);
     if(bounds.to) scope = scope.filter(r => r.dateStr <= bounds.to);
     filtered = true;
-    if(LIBRARY_STATE.datePreset === 'custom'){
+    if(bounds.from && bounds.to && bounds.from === bounds.to){
+      datePhrase = `on <b>${fmtDateNice(bounds.from)}</b>`;
+    } else if(LIBRARY_STATE.datePreset === 'custom'){
       const fromLbl = bounds.from ? fmtDateNice(bounds.from) : '…';
       const toLbl = bounds.to ? fmtDateNice(bounds.to) : '…';
-      noticeParts.push(`<b>${fromLbl}</b> – <b>${toLbl}</b>`);
+      datePhrase = `from <b>${fromLbl}</b> – <b>${toLbl}</b>`;
     } else {
       const labels = {7:'Last 7 days',30:'Last 30 days',90:'Last 90 days',180:'Last 180 days',365:'Last 365 days'};
-      noticeParts.push(`<b>${labels[LIBRARY_STATE.datePreset] || LIBRARY_STATE.datePreset}</b>`);
+      datePhrase = `in <b>${labels[LIBRARY_STATE.datePreset] || LIBRARY_STATE.datePreset}</b>`;
     }
   }
 
+  let filterPhrase = null;
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = scope.filter(r=>normArtist(r.artist)===na);
     filtered = true;
-    noticeParts.push(`albums by <b>${LIBRARY_STATE.filterArtist}</b>`);
+    filterPhrase = `by <b>${LIBRARY_STATE.filterArtist}</b>`;
   } else if(LIBRARY_STATE.subTab==='tracks' && LIBRARY_STATE.filterAlbumKey){
     scope = scope.filter(r=>albumKey(r)===LIBRARY_STATE.filterAlbumKey);
     filtered = true;
-    noticeParts.push(`tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
+    filterPhrase = `from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`;
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = scope.filter(r=>r.na===nfa && r.nt===nft);
-    noticeParts.push(`scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b>`);
-  } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterDate){
-    scope = scope.filter(r=>r.dateStr===LIBRARY_STATE.filterDate);
-    noticeParts.push(`scrobbles on <b>${fmtDateNice(LIBRARY_STATE.filterDate)}</b>`);
+    // Use "matching" for consistency with search wording
+    filterPhrase = `matching <b>${LIBRARY_STATE.filterTrackLabel}</b>`;
   }
 
-  if(q){
-    if(noticeParts.length === 0){
-      const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
-      noticeParts.push(`${kind} matching <b>${q.replace(/</g,'&lt;')}</b>`);
-    } else {
-      noticeParts.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+  const hasAny = datePhrase || filterPhrase || q;
+  if(hasAny){
+    let head = `Showing ${Kind}`;
+    if(datePhrase) head += ` ${datePhrase}`;
+    const tail = [];
+    if(filterPhrase) tail.push(filterPhrase);
+    // Avoid duplicate "matching X · matching X" if search equals track filter label
+    if(q && !(filterPhrase && filterPhrase.includes(q.replace(/</g,'&lt;')))){
+      tail.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+    } else if(q && !filterPhrase){
+      tail.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
     }
-  }
-
-  if(noticeParts.length){
     notice.style.display = 'block';
-    notice.innerHTML = `Showing ${noticeParts.join(' · ')} &nbsp;·&nbsp; click to clear`;
+    notice.innerHTML = head + (tail.length ? ' · ' + tail.join(' · ') : '') + ' &nbsp;·&nbsp; click to clear';
     notice.onclick = clearLibraryFilter;
   } else {
     notice.style.display = 'none';

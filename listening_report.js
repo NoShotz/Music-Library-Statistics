@@ -76,14 +76,14 @@ function buildLibraryLookups(){
     COUNTRY_BY_ARTIST[na] = a.artistCountry;
     (a.albums||[]).forEach(al=>{
       const nal = normAlbum(al.album);
-      const baseKey = na + '|||' + nal;
+      const baseKey = joinKey(na, nal);
       if(!relatedRaw[baseKey]) relatedRaw[baseKey] = new Set();
       relatedRaw[baseKey].add(na);
       (al.otherArtists||[]).forEach(other=>{
         relatedRaw[baseKey].add(normArtist(other));
       });
       (al.tracks||[]).forEach(t=>{
-        const key = na + '|||' + normTrack(t.title);
+        const key = joinKey(na, normTrack(t.title));
         TRACK_META[key] = {
           year: al.year,
           length_sec: parseLength(t.length),
@@ -100,8 +100,8 @@ function buildLibraryLookups(){
     if(artists.length < 2) return; // ordinary album, leave as-is
     // Propagate the full set under every participant's base key
     artists.forEach(na=>{
-      const nal = baseKey.split('|||')[1];
-      const k = na + '|||' + nal;
+      const nal = splitKey(baseKey)[1];
+      const k = joinKey(na, nal);
       ALBUM_RELATED[k] = artists;
     });
   });
@@ -134,15 +134,25 @@ function normAlbum(s){
   return normTrack(s);
 }
 
+// ---------- composite key helpers ----------
+// Two-part identity keys are used throughout (album keys, track keys, both
+// normalized and raw) by joining with '|||' -- a separator that can't appear
+// in a real artist/album/track name. These wrappers keep that convention in
+// one place instead of every call site hand-building/parsing the join.
+function joinKey(a, b){ return a + '|||' + b; }
+function splitKey(key){ return key.split('|||'); }
+function trackKey(artist, track){ return joinKey(artist, track); }
+function normTrackKey(artist, track){ return joinKey(normArtist(artist), normTrack(track)); }
+
 // Canonical album identity for aggregation.
 // Ordinary albums: "normArtist|||normAlbum"
 // Soundtrack / multi-artist albums (via otherArtists): "artist1|artist2|...|||normAlbum"
 // so all contributing artists collapse to one album entity.
 function albumKey(r){
-  const base = r.na + '|||' + r.nal;
+  const base = joinKey(r.na, r.nal);
   const related = ALBUM_RELATED && ALBUM_RELATED[base];
   if(related && related.length > 1){
-    return related.join('|') + '|||' + r.nal;
+    return joinKey(related.join('|'), r.nal);
   }
   return base;
 }
@@ -153,7 +163,7 @@ function albumKey(r){
 // library_data.json spelling wins over whatever casing the scrobble export used.
 function albumDisplay(key){
   const first = GLOBAL_FIRST && GLOBAL_FIRST.firstAlbum[key];
-  const parts = key.split('|||');
+  const parts = splitKey(key);
   const artistPart = parts[0] || '';
   const isVarious = artistPart.includes('|');
   const rawArtist = isVarious ? 'Various Artists' : (first ? first.artist : artistPart);
@@ -274,7 +284,7 @@ function artFor(itemType, it){
 
   if(itemType === 'track' && TRACK_META){
     const meta = TRACK_META[
-      normArtist(it.artist)+'|||'+normTrack(it.track)
+      normTrackKey(it.artist, it.track)
     ];
 
     if(meta && meta.album){
@@ -412,7 +422,7 @@ function buildGlobalFirstSeen(enriched){
     // albumKey collapses casing variants and multi-artist soundtracks
     const aKey = albumKey(r);
     if(!(aKey in firstAlbum)) firstAlbum[aKey]=r;
-    const tKey = r.artist+'|||'+r.track;
+    const tKey = trackKey(r.artist, r.track);
     if(!(tKey in firstTrack)) firstTrack[tKey]=r;
   });
   return {firstArtist, firstAlbum, firstTrack};
@@ -565,7 +575,7 @@ function totalSecondsFor(scrobbles){
   const avgFallback = averageKnownLength();
   let total = 0;
   scrobbles.forEach(r=>{
-    const meta = TRACK_META[r.na+'|||'+r.nt];
+    const meta = TRACK_META[joinKey(r.na, r.nt)];
     total += (meta && meta.length_sec) ? meta.length_sec : avgFallback;
   });
   return total;
@@ -709,7 +719,7 @@ function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
   const counts = {};
   scrobbles.forEach(r=>{
-    const meta = TRACK_META[r.na+'|||'+r.nt];
+    const meta = TRACK_META[joinKey(r.na, r.nt)];
     if(meta && meta.year){
       const dec = Math.floor(meta.year/10)*10;
       counts[dec] = (counts[dec]||0)+1;
@@ -724,7 +734,7 @@ function computeNew(scrobbles, type, periodType, periodKey){
                   : GLOBAL_FIRST.firstTrack;
   const keyFn = type==='artist' ? r=>r.artist
               : type==='album'  ? r=>albumKey(r)
-              : r=>r.artist+'|||'+r.track;
+              : r=>trackKey(r.artist, r.track);
   const fieldName = periodType==='year' ? 'year' : periodType==='month' ? 'monthKey' : 'weekStart';
   const matchVal = periodType==='year' ? Number(periodKey) : periodKey;
 
@@ -758,7 +768,7 @@ function discoveryRows(newResult, type){
       const d = albumDisplay(it.key);
       return { artist: d.artist, album: d.album, key: it.key, count: it.count };
     }
-    const [artist, rest] = it.key.split('|||');
+    const [artist, rest] = splitKey(it.key);
     return {
       artist: canonicalArtistName(artist),
       track: canonicalTrackName(artist, rest),
@@ -786,8 +796,8 @@ function computeStats(scrobbles, periodType, periodKey){
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     }),
-    topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{
-      const [artist,track]=k.split('|||');
+    topTracks: topN(scrobbles, r=>trackKey(r.artist, r.track), 5, (k,c)=>{
+      const [artist,track]=splitKey(k);
       return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
     }),
     newArtists, newAlbums, newTracks,
@@ -1114,12 +1124,12 @@ function renderOverview(){
   const uniqueArtists = Object.keys(artistCounts).length;
 
   const albumKeys = new Set(), trackKeys = new Set();
-  s.forEach(r=>{ albumKeys.add(albumKey(r)); trackKeys.add(r.artist+'|||'+r.track); });
+  s.forEach(r=>{ albumKeys.add(albumKey(r)); trackKeys.add(trackKey(r.artist, r.track)); });
   const uniqueAlbums = albumKeys.size, uniqueTracks = trackKeys.size;
 
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:canonicalArtistName(k),count:c}));
-  const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{
-    const [artist,track]=k.split('|||');
+  const topTracks = topN(s, r=>trackKey(r.artist, r.track), 5, (k,c)=>{
+    const [artist,track]=splitKey(k);
     return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
   });
   const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
@@ -2051,7 +2061,7 @@ function goToLibrary(itemType, item){
     }
   } else {
     LIBRARY_STATE.subTab = 'scrobbles';
-    LIBRARY_STATE.filterTrackKey = item.artist+'|||'+item.track;
+    LIBRARY_STATE.filterTrackKey = trackKey(item.artist, item.track);
     LIBRARY_STATE.filterTrackLabel = item.track;
     if(item.artist) LIBRARY_STATE.filterArtist = item.artist;
   }
@@ -2126,6 +2136,161 @@ function libraryMatchesSearch(q, ...haystacks){
   return haystacks.some(h => h && String(h).toLowerCase().includes(nq));
 }
 
+// Per-sub-tab config for the library list: how to build its rows, which
+// fields a search should match against, how each row's <li> is labeled, and
+// what a click on a row drills into. Consolidates what used to be four
+// near-identical branches in renderLibraryTab (build rows -> search filter ->
+// stat grid -> paginate -> template -> click handler) into one generic
+// renderer (renderLibraryRows) driven by this table.
+const LIBRARY_SUBTAB_CONFIG = {
+  artists: {
+    label: 'artists',
+    itemType: 'artist',
+    buildRows(scope){
+      return topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
+    },
+    // search should also match on an artist's albums/tracks, even though
+    // this list only displays the artist name
+    searchExtras(scope){
+      const byNa = {};
+      scope.forEach(r=>{
+        if(!byNa[r.na]) byNa[r.na] = {albums: new Set(), tracks: new Set()};
+        if(r.album) byNa[r.na].albums.add(r.album);
+        byNa[r.na].tracks.add(r.track);
+      });
+      return it=>{
+        const rel = byNa[normArtist(it.artist)];
+        return rel ? [...rel.albums, ...rel.tracks] : [];
+      };
+    },
+    matchFields: it => [it.artist],
+    scrobbleTotal: () => null,
+    title: it => it.artist,
+    sub: () => '&nbsp;',
+    count: it => fmtNum(it.count),
+    onClick(it){
+      LIBRARY_STATE.filterArtist = it.artist;
+      LIBRARY_STATE.subTab = 'albums';
+    }
+  },
+  albums: {
+    label: 'albums',
+    itemType: 'album',
+    buildRows(scope){
+      return topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
+        const d = albumDisplay(k);
+        return { artist: d.artist, album: d.album, key: k, count: c };
+      });
+    },
+    searchExtras(scope){
+      const byKey = {};
+      scope.forEach(r=>{
+        const k = albumKey(r);
+        if(!byKey[k]) byKey[k] = new Set();
+        byKey[k].add(r.track);
+      });
+      return it => byKey[it.key] ? [...byKey[it.key]] : [];
+    },
+    matchFields: it => [it.album, it.artist],
+    scrobbleTotal: (scope, filtered) => filtered ? scope.length : null,
+    title: it => it.album,
+    sub: it => it.artist,
+    count: it => fmtNum(it.count),
+    onClick(it){
+      LIBRARY_STATE.filterAlbumKey = it.key;
+      LIBRARY_STATE.filterAlbumLabel = it.album;
+      LIBRARY_STATE.subTab = 'tracks';
+    }
+  },
+  tracks: {
+    label: 'tracks',
+    itemType: 'track',
+    buildRows(scope){
+      const albumByTrack = {};
+      scope.forEach(r=>{
+        const k = trackKey(r.artist, r.track);
+        if(!albumByTrack[k] && r.album) albumByTrack[k] = r.album;
+      });
+      return topN(scope, r=>trackKey(r.artist, r.track), Infinity, (k,c)=>{
+        const [artist,track] = splitKey(k);
+        const meta = TRACK_META && TRACK_META[normTrackKey(artist, track)];
+        return {
+          artist: canonicalArtistName(artist),
+          track: canonicalTrackName(artist, track),
+          album: (meta && meta.album) || albumByTrack[k] || '',
+          count: c
+        };
+      });
+    },
+    matchFields: it => [it.track, it.artist, it.album],
+    scrobbleTotal: (scope, filtered) => filtered ? scope.length : null,
+    title: it => it.track,
+    sub: it => it.artist,
+    count: it => fmtNum(it.count),
+    onClick(it){
+      LIBRARY_STATE.filterTrackKey = trackKey(it.artist, it.track);
+      LIBRARY_STATE.filterTrackLabel = it.track;
+      LIBRARY_STATE.subTab = 'scrobbles';
+    }
+  },
+  scrobbles: {
+    label: 'scrobbles',
+    itemType: 'track',
+    clickable: false,
+    buildRows(scope){
+      return scope.slice().sort((a,b)=>b.date-a.date);
+    },
+    matchFields: it => [it.track, it.artist, it.album],
+    scrobbleTotal: () => null,
+    title: it => canonicalTrackName(it.artist, it.track),
+    sub: it => canonicalArtistName(it.artist),
+    count: it => fmtDateTime(it.date)
+  }
+};
+
+// Renders the current sub-tab's row list: applies the search filter, updates
+// the stat grid, paginates, builds each <li> from the sub-tab's config, and
+// (for drill-down sub-tabs) wires up row clicks. `filtered` reflects whether
+// a date range or drill-down filter narrowed `scope` (used for the optional
+// "N scrobbles behind this" stat card).
+function renderLibraryRows(scope, q, filtered){
+  const cfg = LIBRARY_SUBTAB_CONFIG[LIBRARY_STATE.subTab];
+  const clickable = cfg.clickable !== false;
+
+  let rows = cfg.buildRows(scope);
+  if(q){
+    const extrasFor = cfg.searchExtras ? cfg.searchExtras(scope) : null;
+    rows = rows.filter(it=>{
+      const extras = extrasFor ? extrasFor(it) : [];
+      return libraryMatchesSearch(q, ...cfg.matchFields(it), ...extras);
+    });
+  }
+
+  renderLibraryStatGrid(cfg.label, rows.length, cfg.scrobbleTotal(scope, filtered));
+  const {pageRows, start} = paginateLibraryRows(rows);
+  const listEl = document.getElementById('libraryList');
+  listEl.innerHTML = pageRows.map((it,i)=>`
+      <li${clickable ? ` class="lib-row" data-idx="${start+i}"` : ''}>
+        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
+        ${artThumbHtml(cfg.itemType, it)}
+        <div class="rank-main"><div class="rank-title">${cfg.title(it)}</div><div class="rank-sub">${cfg.sub(it)}</div></div>
+        <span class="rank-count">${cfg.count(it)}</span>
+      </li>`).join('');
+  bindArtThumbs(listEl);
+
+  if(clickable){
+    listEl.querySelectorAll('.lib-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const it = rows[Number(row.dataset.idx)];
+        clearLibrarySearch();
+        cfg.onClick(it);
+        LIBRARY_STATE.page = 0;
+        renderLibraryTab();
+      });
+    });
+  }
+}
+
 function renderLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.subtab===LIBRARY_STATE.subTab);
@@ -2155,7 +2320,6 @@ function renderLibraryTab(){
   if(toEl && LIBRARY_STATE.dateTo && toEl.value !== LIBRARY_STATE.dateTo) toEl.value = LIBRARY_STATE.dateTo;
 
   const notice = document.getElementById('libraryFilterNotice');
-  const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
   const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
 
@@ -2194,7 +2358,7 @@ function renderLibraryTab(){
     filterParts.push(`from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
   }
   if(LIBRARY_STATE.filterTrackKey && LIBRARY_STATE.subTab === 'scrobbles'){
-    const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
+    const [fa, ft] = splitKey(LIBRARY_STATE.filterTrackKey);
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = scope.filter(r=>r.na===nfa && r.nt===nft);
     filterParts.push(`matching <b>${LIBRARY_STATE.filterTrackLabel}</b>`);
@@ -2222,131 +2386,7 @@ function renderLibraryTab(){
     notice.onclick = null;
   }
 
-  if(LIBRARY_STATE.subTab==='artists'){
-    const relatedByNa = {};
-    if(q){
-      scope.forEach(r=>{
-        if(!relatedByNa[r.na]) relatedByNa[r.na] = {albums: new Set(), tracks: new Set()};
-        if(r.album) relatedByNa[r.na].albums.add(r.album);
-        relatedByNa[r.na].tracks.add(r.track);
-      });
-    }
-    let rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
-    if(q) rows = rows.filter(it=>{
-      const rel = relatedByNa[normArtist(it.artist)];
-      const extras = rel ? [...rel.albums, ...rel.tracks] : [];
-      return libraryMatchesSearch(q, it.artist, ...extras);
-    });
-    renderLibraryStatGrid('artists', rows.length, null);
-    const {pageRows, start} = paginateLibraryRows(rows);
-    listEl.innerHTML = pageRows.map((it,i)=>`
-      <li class="lib-row" data-idx="${start+i}">
-        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
-        ${artThumbHtml('artist', it)}
-        <div class="rank-main"><div class="rank-title">${it.artist}</div><div class="rank-sub">&nbsp;</div></div>
-        <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
-    bindArtThumbs(listEl);
-    listEl.querySelectorAll('.lib-row').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const it = rows[Number(row.dataset.idx)];
-        clearLibrarySearch();
-        LIBRARY_STATE.filterArtist = it.artist;
-        LIBRARY_STATE.subTab = 'albums';
-        LIBRARY_STATE.page = 0;
-        renderLibraryTab();
-      });
-    });
-  } else if(LIBRARY_STATE.subTab==='albums'){
-    const tracksByAlbumKey = {};
-    if(q){
-      scope.forEach(r=>{
-        const k = albumKey(r);
-        if(!tracksByAlbumKey[k]) tracksByAlbumKey[k] = new Set();
-        tracksByAlbumKey[k].add(r.track);
-      });
-    }
-    let rows = topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
-      const d = albumDisplay(k);
-      return { artist: d.artist, album: d.album, key: k, count: c };
-    });
-    if(q) rows = rows.filter(it=>{
-      const tracks = tracksByAlbumKey[it.key] ? [...tracksByAlbumKey[it.key]] : [];
-      return libraryMatchesSearch(q, it.album, it.artist, ...tracks);
-    });
-    renderLibraryStatGrid('albums', rows.length, filtered ? scope.length : null);
-    const {pageRows, start} = paginateLibraryRows(rows);
-    listEl.innerHTML = pageRows.map((it,i)=>`
-      <li class="lib-row" data-idx="${start+i}">
-        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
-        ${artThumbHtml('album', it)}
-        <div class="rank-main"><div class="rank-title">${it.album}</div><div class="rank-sub">${it.artist}</div></div>
-        <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
-    bindArtThumbs(listEl);
-    listEl.querySelectorAll('.lib-row').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const it = rows[Number(row.dataset.idx)];
-        clearLibrarySearch();
-        LIBRARY_STATE.filterAlbumKey = it.key;
-        LIBRARY_STATE.filterAlbumLabel = it.album;
-        LIBRARY_STATE.subTab = 'tracks';
-        LIBRARY_STATE.page = 0;
-        renderLibraryTab();
-      });
-    });
-  } else if(LIBRARY_STATE.subTab==='tracks'){
-    const albumByTrack = {};
-    scope.forEach(r=>{
-      const k = r.artist+'|||'+r.track;
-      if(!albumByTrack[k] && r.album) albumByTrack[k] = r.album;
-    });
-    let rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
-      const [artist,track] = k.split('|||');
-      const meta = TRACK_META && TRACK_META[normArtist(artist)+'|||'+normTrack(track)];
-      return {
-        artist: canonicalArtistName(artist),
-        track: canonicalTrackName(artist, track),
-        album: (meta && meta.album) || albumByTrack[k] || '',
-        count: c
-      };
-    });
-    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist, it.album));
-    renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
-    const {pageRows, start} = paginateLibraryRows(rows);
-    listEl.innerHTML = pageRows.map((it,i)=>`
-      <li class="lib-row" data-idx="${start+i}">
-        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
-        ${artThumbHtml('track', it)}
-        <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
-        <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
-    bindArtThumbs(listEl);
-    listEl.querySelectorAll('.lib-row').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const it = rows[Number(row.dataset.idx)];
-        clearLibrarySearch();
-        LIBRARY_STATE.filterTrackKey = it.artist+'|||'+it.track;
-        LIBRARY_STATE.filterTrackLabel = it.track;
-        LIBRARY_STATE.subTab = 'scrobbles';
-        LIBRARY_STATE.page = 0;
-        renderLibraryTab();
-      });
-    });
-  } else {
-    let rows = scope.slice().sort((a,b)=>b.date-a.date);
-    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist, it.album));
-    renderLibraryStatGrid('scrobbles', rows.length, null);
-    const {pageRows, start} = paginateLibraryRows(rows);
-    listEl.innerHTML = pageRows.map((it,i)=>`
-      <li>
-        <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
-        ${artThumbHtml('track', it)}
-        <div class="rank-main"><div class="rank-title">${canonicalTrackName(it.artist, it.track)}</div><div class="rank-sub">${canonicalArtistName(it.artist)}</div></div>
-        <span class="rank-count">${fmtDateTime(it.date)}</span>
-      </li>`).join('');
-    bindArtThumbs(listEl);
-  }
+  renderLibraryRows(scope, q, filtered);
 
   if(!LIBRARY_STATE._searchTyping){
     window.scrollTo({ top: 0, behavior: 'smooth' });

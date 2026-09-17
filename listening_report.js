@@ -2157,7 +2157,7 @@ function renderLibraryTab(){
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
-  const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
+  const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
 
   let scope = ENRICHED, filtered = false;
 

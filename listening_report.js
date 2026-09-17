@@ -149,15 +149,21 @@ function albumKey(r){
 
 // Display name for an album key produced by albumKey().
 // Multi-artist (soundtrack) keys contain '|' in the artist portion → "Various Artists".
-// Ordinary keys fall back to the first-seen record's original casing.
+// Ordinary keys fall back to the first-seen record, then through canonicalName so
+// library_data.json spelling wins over whatever casing the scrobble export used.
 function albumDisplay(key){
   const first = GLOBAL_FIRST && GLOBAL_FIRST.firstAlbum[key];
   const parts = key.split('|||');
   const artistPart = parts[0] || '';
   const isVarious = artistPart.includes('|');
+  const rawArtist = isVarious ? 'Various Artists' : (first ? first.artist : artistPart);
+  const rawAlbum  = first ? first.album : (parts[parts.length-1] || '');
+  // For various-artist keys, pass the first scrobble's artist (if any) so the
+  // album can still be found under that participant in library_data.json.
+  const lookupArtist = first ? first.artist : rawArtist;
   return {
-    artist: isVarious ? 'Various Artists' : (first ? first.artist : artistPart),
-    album:  first ? first.album : (parts[parts.length-1] || '')
+    artist: isVarious ? 'Various Artists' : canonicalArtistName(rawArtist),
+    album:  canonicalAlbumName(lookupArtist, rawAlbum)
   };
 }
 
@@ -182,23 +188,56 @@ function sanitizeArtFilename(name){
 // instead of the browser's broken-image icon.
 const ART_BLANK_PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
 
-// Looks up the canonical album name from library_data.json for a given
-// artist+album (matched by normalized name), falling back to the name as
-// given if there's no library match. Shared by artFor()'s own album lookup
-// and by the artist-image-missing -> top-album-art fallback in bindArtThumbs.
-function canonicalAlbumName(artistName, albumName){
-  if(LIBRARY && Array.isArray(LIBRARY.artists)){
-    const artist = normArtist(artistName);
-    const album = normAlbum(albumName);
+// Looks up the canonical (library_data.json) spelling of an artist, album, or
+// track, matched by normalized name. Falls back to the name as given if
+// there's no library match. Used for on-disk art filenames and for every
+// user-visible artist/album/track label so the UI shows library spelling
+// rather than whatever casing the Last.fm scrobble export happened to use.
+//
+// kind: 'artist' | 'album' | 'track'
+// For 'artist', name is ignored; for 'album'/'track', name is the title and
+// artistName scopes the search. Album lookup falls back to a global scan
+// (any artist) when the scoped search misses -- useful for Various Artists /
+// soundtrack rows where the scrobble artist may not be the library owner.
+function canonicalName(kind, artistName, name){
+  if(!LIBRARY || !Array.isArray(LIBRARY.artists)){
+    return kind==='artist' ? artistName : name;
+  }
+  if(kind==='artist'){
+    const na = normArtist(artistName);
     for(const artistData of LIBRARY.artists){
-      if(normArtist(artistData.artist) !== artist) continue;
-      for(const albumData of (artistData.albums || [])){
-        if(normAlbum(albumData.album) === album) return albumData.album;
+      if(normArtist(artistData.artist) === na) return artistData.artist;
+    }
+    return artistName;
+  }
+  const na = normArtist(artistName);
+  const target = kind==='album' ? normAlbum(name) : normTrack(name);
+  // 1) scoped to the given artist
+  for(const artistData of LIBRARY.artists){
+    if(normArtist(artistData.artist) !== na) continue;
+    for(const albumData of (artistData.albums || [])){
+      if(kind==='album'){
+        if(normAlbum(albumData.album) === target) return albumData.album;
+      } else {
+        for(const t of (albumData.tracks || [])){
+          if(normTrack(t.title) === target) return t.title;
+        }
       }
     }
   }
-  return albumName;
+  // 2) album only: search every artist (covers Various Artists / shared soundtracks)
+  if(kind==='album'){
+    for(const artistData of LIBRARY.artists){
+      for(const albumData of (artistData.albums || [])){
+        if(normAlbum(albumData.album) === target) return albumData.album;
+      }
+    }
+  }
+  return name;
 }
+function canonicalArtistName(artistName){ return canonicalName('artist', artistName); }
+function canonicalAlbumName(artistName, albumName){ return canonicalName('album', artistName, albumName); }
+function canonicalTrackName(artistName, trackName){ return canonicalName('track', artistName, trackName); }
 
 // Lazily-built, memoized na -> {artist, album} for that artist's most-
 // scrobbled album, used to fall back an artist's thumbnail to their top
@@ -225,7 +264,9 @@ function getArtistTopAlbum(artistName){
 // Which folder/name to use for a given row type. Album rows use the album's
 // own art; track rows look up that track's album via TRACK_META (from
 // library_data.json) and use its art too, falling back to the artist's image
-// only if there's no library data or the track isn't found in it.
+// only if there's no library data or the track isn't found in it. Names are
+// always run through the canonical* helpers so on-disk filenames (named from
+// the library export) match even when the scrobble has different casing.
 function artFor(itemType, it){
   if(itemType === 'album' && LIBRARY && Array.isArray(LIBRARY.artists)){
     return {folder:'albums', name: canonicalAlbumName(it.artist, it.album)};
@@ -237,11 +278,11 @@ function artFor(itemType, it){
     ];
 
     if(meta && meta.album){
-      return {folder:'albums', name:meta.album};
+      return {folder:'albums', name: canonicalAlbumName(it.artist, meta.album)};
     }
   }
 
-  return {folder:'artists', name:it.artist};
+  return {folder:'artists', name: canonicalArtistName(it.artist)};
 }
 function artThumbHtml(itemType, it){
   if(!itemType) return '';
@@ -659,7 +700,7 @@ function countryRowsFor(scrobbles){
     const top = Object.entries(byArtist[key]).sort((a,b)=>b[1]-a[1])[0];
     return {
       country: displayName[key], iso: isoForCountry(displayName[key]),
-      count: totals[key], topArtist: top[0], topArtistCount: top[1]
+      count: totals[key], topArtist: canonicalArtistName(top[0]), topArtistCount: top[1]
     };
   }).sort((a,b)=>b.count-a.count);
 }
@@ -709,15 +750,20 @@ function computeNew(scrobbles, type, periodType, periodKey){
 }
 
 // turns computeNew()'s flat "artist|||thing" keyed newItems into display-ready rows
+// (artist/album/track labels resolved to library_data.json canonical spelling)
 function discoveryRows(newResult, type){
   return newResult.newItems.map(it=>{
-    if(type==='artist') return {artist:it.key, count:it.count};
+    if(type==='artist') return {artist: canonicalArtistName(it.key), count:it.count};
     if(type==='album'){
       const d = albumDisplay(it.key);
       return { artist: d.artist, album: d.album, key: it.key, count: it.count };
     }
     const [artist, rest] = it.key.split('|||');
-    return {artist, track:rest, count:it.count};
+    return {
+      artist: canonicalArtistName(artist),
+      track: canonicalTrackName(artist, rest),
+      count: it.count
+    };
   });
 }
 
@@ -735,12 +781,15 @@ function computeStats(scrobbles, periodType, periodKey){
     busiestDay: busiestDay(scrobbles),
     busiestHour: busiestHour(hourArr),
     totalSeconds: totalSecondsFor(scrobbles),
-    topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:k,count:c})),
+    topArtists: topN(scrobbles, r=>r.artist, 5, (k,c)=>({artist:canonicalArtistName(k),count:c})),
     topAlbums: topN(scrobbles, r=>albumKey(r), 5, (k,c)=>{
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     }),
-    topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; }),
+    topTracks: topN(scrobbles, r=>r.artist+'|||'+r.track, 5, (k,c)=>{
+      const [artist,track]=k.split('|||');
+      return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
+    }),
     newArtists, newAlbums, newTracks,
     discoveries: {
       artists: discoveryRows(newArtists,'artist'),
@@ -1068,8 +1117,11 @@ function renderOverview(){
   s.forEach(r=>{ albumKeys.add(albumKey(r)); trackKeys.add(r.artist+'|||'+r.track); });
   const uniqueAlbums = albumKeys.size, uniqueTracks = trackKeys.size;
 
-  const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:k,count:c}));
-  const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{ const [artist,track]=k.split('|||'); return {artist,track,count:c}; });
+  const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:canonicalArtistName(k),count:c}));
+  const topTracks = topN(s, r=>r.artist+'|||'+r.track, 5, (k,c)=>{
+    const [artist,track]=k.split('|||');
+    return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
+  });
   const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
     const d = albumDisplay(k);
     return { artist: d.artist, album: d.album, key: k, count: c };
@@ -1394,7 +1446,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       // Each bar is one calendar day of the month → click opens Library → Scrobbles filtered to that day.
       onClick: (evt, elements) => {
         if(!elements.length) return;
-        const day = elements[0].index + 1; // 0-based index → day-of-month
+        const day = elements[0].index + 1;
         const dateStr = monthKey + '-' + String(day).padStart(2,'0');
         goToLibraryScrobblesByDate(dateStr);
       },
@@ -1632,7 +1684,7 @@ function renderReport(){
 
   const first = cur.firstScrobble;
   document.getElementById('firstTrackCallout').innerHTML = first
-    ? `First scrobble of this period: <b>${first.track}</b> by <b>${first.artist}</b> on ${fmtDateNice(first.dateStr)}.`
+    ? `First scrobble of this period: <b>${canonicalTrackName(first.artist, first.track)}</b> by <b>${canonicalArtistName(first.artist)}</b> on ${fmtDateNice(first.dateStr)}.`
     : '';
 
   // ---- day of week (cur vs prev) ----
@@ -1660,7 +1712,6 @@ function renderReport(){
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } },
       onClick: weekDayDates ? (evt, elements) => {
-        // Only the current-period dataset (index 0) is a single concrete day.
         if(!elements.length || elements[0].datasetIndex !== 0) return;
         const dateStr = weekDayDates[elements[0].index];
         if(dateStr) goToLibraryScrobblesByDate(dateStr);
@@ -1916,7 +1967,11 @@ function renderLibraryTab(){
     notice.innerHTML = `Showing tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
-    scope = ENRICHED.filter(r=>(r.artist+'|||'+r.track)===LIBRARY_STATE.filterTrackKey);
+    // Match by normalized artist+track so canonical display labels still filter
+    // correctly against scrobble strings that may differ in casing.
+    const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
+    const nfa = normArtist(fa), nft = normTrack(ft);
+    scope = ENRICHED.filter(r=>r.na===nfa && r.nt===nft);
     notice.style.display = 'block';
     notice.innerHTML = `Showing scrobbles of <b>${LIBRARY_STATE.filterTrackLabel}</b> &nbsp;·&nbsp; click to clear`;
     notice.onclick = clearLibraryFilter;
@@ -1931,7 +1986,7 @@ function renderLibraryTab(){
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
-    const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:k, count:c}));
+    const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
     renderLibraryStatGrid('artists', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -1979,7 +2034,11 @@ function renderLibraryTab(){
   } else if(LIBRARY_STATE.subTab==='tracks'){
     const rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
       const [artist,track] = k.split('|||');
-      return { artist, track, count: c };
+      return {
+        artist: canonicalArtistName(artist),
+        track: canonicalTrackName(artist, track),
+        count: c
+      };
     });
     renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
@@ -2012,7 +2071,7 @@ function renderLibraryTab(){
       <li>
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         ${artThumbHtml('track', it)}
-        <div class="rank-main"><div class="rank-title">${it.track}</div><div class="rank-sub">${it.artist}</div></div>
+        <div class="rank-main"><div class="rank-title">${canonicalTrackName(it.artist, it.track)}</div><div class="rank-sub">${canonicalArtistName(it.artist)}</div></div>
         <span class="rank-count">${fmtDateTime(it.date)}</span>
       </li>`).join('');
     bindArtThumbs(listEl);

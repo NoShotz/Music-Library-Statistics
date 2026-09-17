@@ -1551,7 +1551,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
         `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
-        `<div style="opacity:0.75;">top artist: ${m.topArtist}</div>`;
+        `<div style="opacity:0.75;">Top Artist: ${m.topArtist}</div>`;
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });

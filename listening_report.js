@@ -1366,8 +1366,6 @@ function initTabs(){
         // same thing when the tab itself is switched into view.
         renderReport();
       } else if(tab==='library'){
-        // Re-render so any filters cleared on the previous leave take effect
-        // (otherwise the old filtered DOM would still be visible).
         renderLibraryTab();
       } else if(MAP_REFS['overview']){
         MAP_REFS['overview'].updateSize();
@@ -1584,8 +1582,6 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
 }
 
 function renderReport(){
-  // Scroll to top on every period change (year/month/week type or timeframe)
-  // so the user starts at the controls + stats instead of remaining mid-page.
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const type = STATE.reportType, key = STATE.reportKey;
@@ -1847,10 +1843,6 @@ function clearLibrarySearch(){
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      // Switching sub-tabs directly (as opposed to drilling down via a row
-      // click, which sets subTab itself) always resets any active filter --
-      // a filter is only meaningful as a scoped view reached by clicking through.
-      // Search query is kept so you can refine across sub-tabs.
       LIBRARY_STATE.subTab = btn.dataset.subtab;
       LIBRARY_STATE.filterArtist = null;
       LIBRARY_STATE.filterAlbumKey = null;
@@ -1868,7 +1860,7 @@ function initLibraryTab(){
     searchEl.addEventListener('input', ()=>{
       LIBRARY_STATE.searchQuery = searchEl.value;
       LIBRARY_STATE.page = 0;
-      LIBRARY_STATE._searchTyping = true; // don't scroll-to-top on each keystroke
+      LIBRARY_STATE._searchTyping = true;
       renderLibraryTab();
     });
   }
@@ -1994,8 +1986,6 @@ function renderLibraryStatGrid(itemLabel, itemCount, scrobbleTotal){
 }
 
 // Case-insensitive substring match used by the Library search bar.
-// Returns true when q is empty (show everything) or when any of the given
-// haystack strings contains the query.
 function libraryMatchesSearch(q, ...haystacks){
   if(!q) return true;
   const nq = q.toLowerCase().trim();
@@ -2008,8 +1998,6 @@ function renderLibraryTab(){
     b.classList.toggle('active', b.dataset.subtab===LIBRARY_STATE.subTab);
   });
 
-  // Keep the search input in sync (e.g. after leaving/returning clears it)
-  // and update the placeholder to match the active sub-tab.
   const searchEl = document.getElementById('librarySearch');
   if(searchEl){
     if(searchEl.value !== LIBRARY_STATE.searchQuery) searchEl.value = LIBRARY_STATE.searchQuery;
@@ -2039,8 +2027,6 @@ function renderLibraryTab(){
     filtered = true;
     noticeParts.push(`tracks from <b>${LIBRARY_STATE.filterAlbumLabel}</b>`);
   } else if(LIBRARY_STATE.subTab==='scrobbles' && LIBRARY_STATE.filterTrackKey){
-    // Match by normalized artist+track so canonical display labels still filter
-    // correctly against scrobble strings that may differ in casing.
     const [fa, ft] = LIBRARY_STATE.filterTrackKey.split('|||');
     const nfa = normArtist(fa), nft = normTrack(ft);
     scope = ENRICHED.filter(r=>r.na===nfa && r.nt===nft);
@@ -2051,7 +2037,13 @@ function renderLibraryTab(){
   }
 
   if(q){
-    noticeParts.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+    // Search-only: "Showing artists matching …" / with a drill-down: "… · matching …"
+    if(noticeParts.length === 0){
+      const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
+      noticeParts.push(`${kind} matching <b>${q.replace(/</g,'&lt;')}</b>`);
+    } else {
+      noticeParts.push(`matching <b>${q.replace(/</g,'&lt;')}</b>`);
+    }
   }
 
   if(noticeParts.length){
@@ -2145,9 +2137,6 @@ function renderLibraryTab(){
       });
     });
   } else {
-    // scrobbles -- individual play events, latest first, not aggregated (no
-    // further drill-down; each row is already the most granular unit there is).
-    // No second stat card here: item count and scrobble total are the same number.
     let rows = scope.slice().sort((a,b)=>b.date-a.date);
     // Match raw scrobble strings only — avoid canonical* lookups which walk
     // the whole library for every row and made this tab laggy on ~14k items.
@@ -2164,10 +2153,6 @@ function renderLibraryTab(){
     bindArtThumbs(listEl);
   }
 
-  // Scroll to top after any library filter / sub-tab / pagination change
-  // so the user lands at the filter notice + stats instead of remaining
-  // mid-list from the previous view. Skip when only the search query changed
-  // so typing doesn't yank the page around.
   if(!LIBRARY_STATE._searchTyping){
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

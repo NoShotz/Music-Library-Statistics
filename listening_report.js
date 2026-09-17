@@ -1843,6 +1843,7 @@ function clearLibraryFilter(){
 // Same tab-switch as clicking the "Library" tab button by hand -- shared by
 // goToLibrary() and goToLibraryScrobblesByDate().
 function switchToLibraryTab(){
+  window.scrollTo(xCoord, yCoord);
   document.getElementById('tab-overview').style.display = 'none';
   document.getElementById('tab-report').style.display = 'none';
   document.getElementById('tab-library').style.display = 'block';

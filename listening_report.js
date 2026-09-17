@@ -1383,9 +1383,11 @@ function initReportControls(){
   STATE.reportType = 'year';
   STATE.reportKey = PERIOD_INDEXES.year[PERIOD_INDEXES.year.length-1];
 
-  document.querySelectorAll('.seg-btn').forEach(btn=>{
+  // Only the Year/Month/Week buttons (data-type) — not the Library sub-nav
+  // buttons which share the .seg-btn class but use data-subtab instead.
+  document.querySelectorAll('.seg-btn[data-type]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      document.querySelectorAll('.seg-btn[data-type]').forEach(b=>b.classList.toggle('active', b===btn));
       STATE.reportType = btn.dataset.type;
       const list = PERIOD_INDEXES[STATE.reportType];
       STATE.reportKey = list[list.length-1];

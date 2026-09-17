@@ -1849,6 +1849,31 @@ function resetLibraryFilters(){
   LIBRARY_STATE.subTab = 'artists';
 }
 
+// Date bounds for the Report tab's currently selected year/month/week.
+function reportPeriodDateBounds(){
+  const type = STATE.reportType, key = STATE.reportKey;
+  if(!type || !key) return null;
+  if(type === 'year'){
+    return { from: key + '-01-01', to: key + '-12-31' };
+  }
+  if(type === 'month'){
+    const [y, m] = key.split('-').map(Number);
+    // Day 0 of next month = last day of this month (UTC)
+    const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    return {
+      from: key + '-01',
+      to: key + '-' + String(lastDay).padStart(2, '0')
+    };
+  }
+  if(type === 'week'){
+    // key is the Monday YYYY-MM-DD; week runs Mon–Sun
+    const start = new Date(key + 'T00:00:00Z');
+    const end = new Date(start.getTime() + 6 * 86400000);
+    return { from: key, to: ymd(end) };
+  }
+  return null;
+}
+
 function libraryDateBounds(){
   if(LIBRARY_STATE.datePreset === 'all' || !LIBRARY_STATE.datePreset) return null;
   if(LIBRARY_STATE.datePreset === 'custom'){
@@ -1984,6 +2009,18 @@ function goToLibrary(itemType, item){
   clearLibrarySearch();
   LIBRARY_STATE.page = 0;
 
+  // Carry over the date context from the tab the user clicked on:
+  // Overview → all time; Report → the year/month/week currently selected.
+  const onReport = document.getElementById('tab-report') &&
+    document.getElementById('tab-report').style.display !== 'none';
+  if(onReport){
+    const b = reportPeriodDateBounds();
+    if(b) setLibraryCustomDateRange(b.from, b.to);
+    else clearLibraryDateRange();
+  } else {
+    clearLibraryDateRange();
+  }
+
   if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
     LIBRARY_STATE.filterArtist = item.artist;
@@ -2098,9 +2135,8 @@ function renderLibraryTab(){
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
-  // Keep sub-tab names lowercase in the callout — only proper nouns (artist /
-  // album / track titles, formatted dates) are capitalized.
   const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles'}[LIBRARY_STATE.subTab] || 'results';
+  // Sub-tab words stay lowercase; only proper nouns are capitalized.
 
   let scope = ENRICHED, filtered = false;
 
@@ -2141,8 +2177,6 @@ function renderLibraryTab(){
 
   const hasAny = datePhrase || filterPhrase || q;
   if(hasAny){
-    // Natural sentence: "Showing albums from Jun 28, 2016 – Sep 16, 2026 by Kiss"
-    // / "Showing scrobbles matching YYZ" — sub-tab word stays lowercase.
     let head = `Showing ${kind}`;
     if(datePhrase) head += ` ${datePhrase}`;
     const tail = [];

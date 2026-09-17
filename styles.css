@@ -385,6 +385,23 @@
   .lib-page-info{
     font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted);
   }
+  .lib-search-wrap{
+    margin:0 0 16px;
+  }
+  .lib-search{
+    width:100%;
+    max-width:420px;
+    background:var(--surface);
+    color:var(--text);
+    border:1px solid var(--hair);
+    padding:10px 14px;
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+    border-radius:0;
+    outline:none;
+  }
+  .lib-search::placeholder{ color:var(--muted-2); }
+  .lib-search:focus{ border-color:var(--gold-dim); }
 
   .cmp{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:400; }
   .cmp.up{ color:var(--green); }

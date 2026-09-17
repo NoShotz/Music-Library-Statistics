@@ -1339,8 +1339,8 @@ function initTabs(){
       document.getElementById('tab-library').style.display = tab==='library' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
-      // Leaving the Library tab clears any active filter so returning later
-      // always starts from the unfiltered Artists list.
+      // Leaving the Library tab clears any active filter / search so returning
+      // later always starts from the unfiltered Artists list.
       if(tab !== 'library'){
         LIBRARY_STATE.filterArtist = null;
         LIBRARY_STATE.filterAlbumKey = null;
@@ -1348,8 +1348,11 @@ function initTabs(){
         LIBRARY_STATE.filterTrackKey = null;
         LIBRARY_STATE.filterTrackLabel = null;
         LIBRARY_STATE.filterDate = null;
+        LIBRARY_STATE.searchQuery = '';
         LIBRARY_STATE.page = 0;
         LIBRARY_STATE.subTab = 'artists';
+        const searchEl = document.getElementById('librarySearch');
+        if(searchEl) searchEl.value = '';
       }
 
       if(tab==='report'){
@@ -1833,7 +1836,7 @@ function renderReport(){
 // rows) so it stays correct for soundtrack/various-artists albums, where an
 // artist's own scrobbles can belong to an album credited to "Various Artists".
 const LIBRARY_PAGE_SIZE = 50;
-const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, filterDate: null, page: 0 };
+const LIBRARY_STATE = { subTab: 'artists', filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null, filterTrackKey: null, filterTrackLabel: null, filterDate: null, searchQuery: '', page: 0 };
 
 function initLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(btn=>{
@@ -1841,6 +1844,7 @@ function initLibraryTab(){
       // Switching sub-tabs directly (as opposed to drilling down via a row
       // click, which sets subTab itself) always resets any active filter --
       // a filter is only meaningful as a scoped view reached by clicking through.
+      // Search query is kept so you can refine across sub-tabs.
       LIBRARY_STATE.subTab = btn.dataset.subtab;
       LIBRARY_STATE.filterArtist = null;
       LIBRARY_STATE.filterAlbumKey = null;
@@ -1852,6 +1856,16 @@ function initLibraryTab(){
       renderLibraryTab();
     });
   });
+
+  const searchEl = document.getElementById('librarySearch');
+  if(searchEl){
+    searchEl.addEventListener('input', ()=>{
+      LIBRARY_STATE.searchQuery = searchEl.value;
+      LIBRARY_STATE.page = 0;
+      LIBRARY_STATE._searchTyping = true; // don't scroll-to-top on each keystroke
+      renderLibraryTab();
+    });
+  }
 }
 
 function clearLibraryFilter(){
@@ -1970,13 +1984,38 @@ function renderLibraryStatGrid(itemLabel, itemCount, scrobbleTotal){
   ).join('');
 }
 
+// Case-insensitive substring match used by the Library search bar.
+// Returns true when q is empty (show everything) or when any of the given
+// haystack strings contains the query.
+function libraryMatchesSearch(q, ...haystacks){
+  if(!q) return true;
+  const nq = q.toLowerCase().trim();
+  if(!nq) return true;
+  return haystacks.some(h => h && String(h).toLowerCase().includes(nq));
+}
+
 function renderLibraryTab(){
   document.querySelectorAll('#librarySubNav .seg-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.subtab===LIBRARY_STATE.subTab);
   });
 
+  // Keep the search input in sync (e.g. after leaving/returning clears it)
+  // and update the placeholder to match the active sub-tab.
+  const searchEl = document.getElementById('librarySearch');
+  if(searchEl){
+    if(searchEl.value !== LIBRARY_STATE.searchQuery) searchEl.value = LIBRARY_STATE.searchQuery;
+    const placeholders = {
+      artists: 'Search artists…',
+      albums: 'Search albums or artists…',
+      tracks: 'Search tracks or artists…',
+      scrobbles: 'Search scrobbles…'
+    };
+    searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
+  }
+
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
+  const q = LIBRARY_STATE.searchQuery;
 
   let scope = ENRICHED, filtered = false;
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
@@ -2012,7 +2051,8 @@ function renderLibraryTab(){
   }
 
   if(LIBRARY_STATE.subTab==='artists'){
-    const rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
+    let rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
+    rows = rows.filter(it => libraryMatchesSearch(q, it.artist));
     renderLibraryStatGrid('artists', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2033,10 +2073,11 @@ function renderLibraryTab(){
       });
     });
   } else if(LIBRARY_STATE.subTab==='albums'){
-    const rows = topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
+    let rows = topN(scope, r=>albumKey(r), Infinity, (k,c)=>{
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     });
+    rows = rows.filter(it => libraryMatchesSearch(q, it.album, it.artist));
     renderLibraryStatGrid('albums', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2058,7 +2099,7 @@ function renderLibraryTab(){
       });
     });
   } else if(LIBRARY_STATE.subTab==='tracks'){
-    const rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
+    let rows = topN(scope, r=>r.artist+'|||'+r.track, Infinity, (k,c)=>{
       const [artist,track] = k.split('|||');
       return {
         artist: canonicalArtistName(artist),
@@ -2066,6 +2107,7 @@ function renderLibraryTab(){
         count: c
       };
     });
+    rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist));
     renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2090,7 +2132,12 @@ function renderLibraryTab(){
     // scrobbles -- individual play events, latest first, not aggregated (no
     // further drill-down; each row is already the most granular unit there is).
     // No second stat card here: item count and scrobble total are the same number.
-    const rows = scope.slice().sort((a,b)=>b.date-a.date);
+    let rows = scope.slice().sort((a,b)=>b.date-a.date);
+    rows = rows.filter(it => libraryMatchesSearch(q,
+      canonicalTrackName(it.artist, it.track),
+      canonicalArtistName(it.artist),
+      it.album
+    ));
     renderLibraryStatGrid('scrobbles', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2105,8 +2152,12 @@ function renderLibraryTab(){
 
   // Scroll to top after any library filter / sub-tab / pagination change
   // so the user lands at the filter notice + stats instead of remaining
-  // mid-list from the previous view.
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // mid-list from the previous view. Skip when only the search query changed
+  // so typing doesn't yank the page around.
+  if(!LIBRARY_STATE._searchTyping){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  LIBRARY_STATE._searchTyping = false;
 }
 
 boot();

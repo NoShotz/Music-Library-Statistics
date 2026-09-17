@@ -1339,6 +1339,19 @@ function initTabs(){
       document.getElementById('tab-library').style.display = tab==='library' ? 'block' : 'none';
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
 
+      // Leaving the Library tab clears any active filter so returning later
+      // always starts from the unfiltered Artists list.
+      if(tab !== 'library'){
+        LIBRARY_STATE.filterArtist = null;
+        LIBRARY_STATE.filterAlbumKey = null;
+        LIBRARY_STATE.filterAlbumLabel = null;
+        LIBRARY_STATE.filterTrackKey = null;
+        LIBRARY_STATE.filterTrackLabel = null;
+        LIBRARY_STATE.filterDate = null;
+        LIBRARY_STATE.page = 0;
+        LIBRARY_STATE.subTab = 'artists';
+      }
+
       if(tab==='report'){
         // The Report tab (and its map) is first built at boot while this tab is
         // still display:none, so jsVectorMap measures a zero-height container
@@ -1349,6 +1362,10 @@ function initTabs(){
         // which is why switching year/month/week "fixes" it. So just do the
         // same thing when the tab itself is switched into view.
         renderReport();
+      } else if(tab==='library'){
+        // Re-render so any filters cleared on the previous leave take effect
+        // (otherwise the old filtered DOM would still be visible).
+        renderLibraryTab();
       } else if(MAP_REFS['overview']){
         MAP_REFS['overview'].updateSize();
       }

@@ -2015,7 +2015,7 @@ function renderLibraryTab(){
 
   const notice = document.getElementById('libraryFilterNotice');
   const listEl = document.getElementById('libraryList');
-  const q = LIBRARY_STATE.searchQuery;
+  const q = (LIBRARY_STATE.searchQuery || '').trim();
 
   let scope = ENRICHED, filtered = false;
   if(LIBRARY_STATE.subTab==='albums' && LIBRARY_STATE.filterArtist){
@@ -2052,7 +2052,7 @@ function renderLibraryTab(){
 
   if(LIBRARY_STATE.subTab==='artists'){
     let rows = topN(scope, r=>r.artist, Infinity, (k,c)=>({artist:canonicalArtistName(k), count:c}));
-    rows = rows.filter(it => libraryMatchesSearch(q, it.artist));
+    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.artist));
     renderLibraryStatGrid('artists', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2077,7 +2077,7 @@ function renderLibraryTab(){
       const d = albumDisplay(k);
       return { artist: d.artist, album: d.album, key: k, count: c };
     });
-    rows = rows.filter(it => libraryMatchesSearch(q, it.album, it.artist));
+    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.album, it.artist));
     renderLibraryStatGrid('albums', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2107,7 +2107,7 @@ function renderLibraryTab(){
         count: c
       };
     });
-    rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist));
+    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist));
     renderLibraryStatGrid('tracks', rows.length, filtered ? scope.length : null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`
@@ -2133,11 +2133,9 @@ function renderLibraryTab(){
     // further drill-down; each row is already the most granular unit there is).
     // No second stat card here: item count and scrobble total are the same number.
     let rows = scope.slice().sort((a,b)=>b.date-a.date);
-    rows = rows.filter(it => libraryMatchesSearch(q,
-      canonicalTrackName(it.artist, it.track),
-      canonicalArtistName(it.artist),
-      it.album
-    ));
+    // Match raw scrobble strings only — avoid canonical* lookups which walk
+    // the whole library for every row and made this tab laggy on ~14k items.
+    if(q) rows = rows.filter(it => libraryMatchesSearch(q, it.track, it.artist, it.album));
     renderLibraryStatGrid('scrobbles', rows.length, null);
     const {pageRows, start} = paginateLibraryRows(rows);
     listEl.innerHTML = pageRows.map((it,i)=>`

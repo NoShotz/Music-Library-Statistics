@@ -241,18 +241,17 @@
   <!-- ============================================================ -->
   <div class="wrap" id="tab-library" style="display:none;">
 
-    <div class="seg" id="librarySubNav" style="margin:28px 0 24px;">
-      <button class="seg-btn active" data-subtab="artists">Artists</button>
-      <button class="seg-btn" data-subtab="albums">Albums</button>
-      <button class="seg-btn" data-subtab="tracks">Tracks</button>
-      <button class="seg-btn" data-subtab="scrobbles">Scrobbles</button>
+    <div class="lib-toolbar">
+      <div class="seg" id="librarySubNav">
+        <button class="seg-btn active" data-subtab="artists">Artists</button>
+        <button class="seg-btn" data-subtab="albums">Albums</button>
+        <button class="seg-btn" data-subtab="tracks">Tracks</button>
+        <button class="seg-btn" data-subtab="scrobbles">Scrobbles</button>
+      </div>
+      <input type="search" id="librarySearch" class="lib-search" placeholder="Search…" autocomplete="off" spellcheck="false">
     </div>
 
     <div class="callout pending" id="libraryFilterNotice" style="display:none; cursor:pointer;"></div>
-
-    <div class="lib-search-wrap">
-      <input type="search" id="librarySearch" class="lib-search" placeholder="Search…" autocomplete="off" spellcheck="false">
-    </div>
     
     <div class="stat-grid compact" id="libraryStatGrid" style="margin-top:24px;margin-bottom:24px;"></div>
 

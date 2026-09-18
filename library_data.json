@@ -5795,6 +5795,16 @@
           ]
         },
         {
+          "album": "Revolver",
+          "year": 1966,
+          "tracks": [
+            {
+              "title": "Yellow Submarine",
+              "length": "2:38"
+            }
+          ]
+        },
+        {
           "album": "Magical Mystery Tour",
           "year": 1967,
           "tracks": [

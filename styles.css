@@ -340,13 +340,7 @@
     margin:20px 0 8px;
   }
   .lib-filter-art .art-thumb{
-    width:285.2px;
-    height:285.2px;
-    flex:0 0 285.2px;
-    object-fit:cover;
-    background:var(--surface-2);
-    border:1px solid var(--hair);
-    box-shadow:0 12px 32px rgba(0,0,0,0.4);
+    width:285.2px;height:285.2px;flex:0 0 285.2px;
   }
 
   .fact-grid{

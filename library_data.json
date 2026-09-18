@@ -2453,6 +2453,22 @@
       ]
     },
     {
+      "artist": "Harry Styles",
+      "artistCountry": "England;United Kingdom",
+      "albums": [
+        {
+          "album": "Harry Styles",
+          "year": 2017,
+          "tracks": [
+            {
+              "title": "Sign Of The Times",
+              "length": "5:40"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "Headstones",
       "artistCountry": "Canada",
       "albums": [

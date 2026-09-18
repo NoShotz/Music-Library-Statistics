@@ -2133,12 +2133,15 @@ function paginateLibraryRows(rows){
   return { pageRows: rows.slice(start, start+LIBRARY_PAGE_SIZE), start };
 }
 
-// Renders the stat card(s) above the list: item count always, plus a second
-// "scrobbles" card showing the total plays behind everything currently visible
-// whenever a filter is active (that total is exactly scope.length, since scope
-// is already the raw scrobbles narrowed to the filter -- no separate sum needed).
-function renderLibraryStatGrid(itemLabel, itemCount, scrobbleTotal){
+// Renders the stat card(s) above the list: item count always, an optional
+// list of extra cards a sub-tab wants to show (e.g. albums' track count once
+// scoped to one artist -- see LIBRARY_SUBTAB_CONFIG.albums.extraStats below),
+// and a "scrobbles" card showing the total plays behind everything currently
+// visible whenever a filter is active (that total is exactly scope.length,
+// since scope is already the raw scrobbles narrowed to the filter).
+function renderLibraryStatGrid(itemLabel, itemCount, extraCards, scrobbleTotal){
   const cards = [[fmtNum(itemCount), itemLabel]];
+  if(extraCards) cards.push(...extraCards);
   if(scrobbleTotal != null) cards.push([fmtNum(scrobbleTotal), 'scrobbles']);
   document.getElementById('libraryStatGrid').innerHTML = cards.map(c=>
     `<div class="stat-card"><h3 class="stat-title">${c[1]}</h3><div class="stat-val">${c[0]}</div></div>`
@@ -2158,6 +2161,25 @@ function libraryMatchesSearch(q, ...haystacks){
 // near-identical branches in renderLibraryTab (build rows -> search filter ->
 // stat grid -> paginate -> template -> click handler) into one generic
 // renderer (renderLibraryRows) driven by this table.
+//
+// Hooks a sub-tab can define (see renderLibraryRows for how each is called):
+//   label          stat-grid title for the item-count card, e.g. 'albums'
+//   itemType       'artist' | 'album' | 'track', for art lookup + drill-down
+//   buildRows(scope)             -> the rows to display, before search filtering
+//   matchFields(it)               -> fields a text search should match against
+//   searchExtras(scope) -> it=>[] optional: extra (unshown) fields to search, e.g.
+//                                  an artist row also matching its album/track names
+//   scrobbleTotal(scope, filtered) -> value for the trailing "scrobbles" stat
+//                                     card, or null to omit it
+//   extraStats(scope, filtered)  -> [[value, label], ...] additional stat cards
+//                                   to show alongside the item count and
+//                                   scrobbles cards (in the order given) --
+//                                   e.g. albums' "tracks" count once scoped
+//                                   to one artist, below
+//   title(it) / sub(it) / count(it) -> the row's title/subtitle/right-hand text
+//   onClick(it)                   -> sets LIBRARY_STATE filters + subTab to
+//                                     drill into `it`; omit to make rows
+//                                     non-clickable (used by 'scrobbles')
 const LIBRARY_SUBTAB_CONFIG = {
   artists: {
     label: 'artists',
@@ -2208,6 +2230,15 @@ const LIBRARY_SUBTAB_CONFIG = {
       return it => byKey[it.key] ? [...byKey[it.key]] : [];
     },
     matchFields: it => [it.album, it.artist],
+    // Extra stat card(s) beyond the default item-count/scrobbles pair, shown
+    // in LIBRARY_STATE.subTab's own stat grid (see renderLibraryStatGrid).
+    // Only meaningful once the albums list is scoped to one artist (a mixed
+    // list of albums from many artists has no single "how many tracks" to show).
+    extraStats(scope){
+      if(!LIBRARY_STATE.filterArtist) return null;
+      const trackCount = new Set(scope.map(r=>trackKey(r.artist, r.track))).size;
+      return [[fmtNum(trackCount), 'tracks']];
+    },
     scrobbleTotal: (scope, filtered) => filtered ? scope.length : null,
     title: it => it.album,
     sub: it => it.artist,
@@ -2282,7 +2313,7 @@ function renderLibraryRows(scope, q, filtered){
     });
   }
 
-  renderLibraryStatGrid(cfg.label, rows.length, cfg.scrobbleTotal(scope, filtered));
+  renderLibraryStatGrid(cfg.label, rows.length, cfg.extraStats ? cfg.extraStats(scope, filtered) : null, cfg.scrobbleTotal(scope, filtered));
   const {pageRows, start} = paginateLibraryRows(rows);
   const listEl = document.getElementById('libraryList');
   listEl.innerHTML = pageRows.map((it,i)=>`

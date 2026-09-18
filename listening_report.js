@@ -2433,6 +2433,32 @@ function renderLibraryTab(){
     notice.onclick = null;
   }
 
+  // Larger art for the most specific active drill-down filter, above the stats.
+  // Prefer track → album → artist so the art matches the deepest scope.
+  const artEl = document.getElementById('libraryFilterArt');
+  if(artEl){
+    let artHtml = '';
+    if(LIBRARY_STATE.filterTrackKey){
+      const [fa, ft] = splitKey(LIBRARY_STATE.filterTrackKey);
+      artHtml = artThumbHtml('track', { artist: fa, track: ft });
+    } else if(LIBRARY_STATE.filterAlbumKey){
+      const d = albumDisplay(LIBRARY_STATE.filterAlbumKey);
+      artHtml = artThumbHtml('album', { artist: d.artist, album: d.album });
+    } else if(LIBRARY_STATE.filterArtist){
+      artHtml = artThumbHtml('artist', { artist: LIBRARY_STATE.filterArtist });
+    }
+    if(artHtml){
+      artEl.style.display = 'flex';
+      // artThumbHtml uses the list-size .art-thumb class; strip it so the
+      // larger .lib-filter-art img rule applies instead.
+      artEl.innerHTML = artHtml; // keeps .art-thumb for bindArtThumbs; size via .lib-filter-art img
+      bindArtThumbs(artEl);
+    } else {
+      artEl.style.display = 'none';
+      artEl.innerHTML = '';
+    }
+  }
+
   renderLibraryRows(scope, q, filtered);
 
   if(!LIBRARY_STATE._searchTyping){

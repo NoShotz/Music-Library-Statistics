@@ -334,6 +334,21 @@
   }
   .callout.pending[id="libraryFilterNotice"]:hover{ color:var(--text); }
 
+  .lib-filter-art{
+    display:flex;
+    justify-content:center;
+    margin:20px 0 8px;
+  }
+  .lib-filter-art .art-thumb{
+    width:160px;
+    height:160px;
+    flex:0 0 160px;
+    object-fit:cover;
+    background:var(--surface-2);
+    border:1px solid var(--hair);
+    box-shadow:0 12px 32px rgba(0,0,0,0.4);
+  }
+
   .fact-grid{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:16px;

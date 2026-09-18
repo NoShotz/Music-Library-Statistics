@@ -262,8 +262,6 @@ function canonicalArtistName(artistName){ return canonicalName('artist', artistN
 function canonicalAlbumName(artistName, albumName){ return canonicalName('album', artistName, albumName); }
 function canonicalTrackName(artistName, trackName){ return canonicalName('track', artistName, trackName); }
 
-// Release year from library_data.json for an album (scoped to artist first,
-// then any artist -- same fallback as findCanonicalAlbum for soundtracks).
 function albumYear(artistName, albumName){
   if(!LIBRARY || !Array.isArray(LIBRARY.artists) || !albumName) return null;
   const target = normAlbum(albumName);
@@ -283,7 +281,6 @@ function albumYear(artistName, albumName){
   }
   return null;
 }
-// "Love Gun (1977)" when year is known, otherwise plain album title.
 function formatAlbumTitle(artistName, albumName){
   if(!albumName) return '';
   const y = albumYear(artistName, albumName);
@@ -623,7 +620,8 @@ function renderChartSideStat(elId, groups){
 // state" row instead (used for the Report tab's discovery lists; the
 // Overview tab's all-time top-5 lists never pass one, since they should
 // never actually be empty).
-function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg){
+// optional detailFn: third line under the subtitle (album on track rows)
+function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn){
   const el = document.getElementById(elId);
   if(!items.length && emptyMsg){
     el.innerHTML = `
@@ -637,16 +635,20 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg){
       </li>`;
     return;
   }
-  el.innerHTML = items.map((it,i)=>`
+  el.innerHTML = items.map((it,i)=>{
+    const detail = detailFn ? detailFn(it) : '';
+    return `
       <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
         ${artThumbHtml(itemType, it)}
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
           <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
+          ${detail ? `<div class="rank-detail">${detail}</div>` : ''}
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
+      </li>`;
+  }).join('');
   bindArtThumbs(el);
   if(itemType){
     el.querySelectorAll('.lib-row').forEach(row=>{
@@ -861,9 +863,11 @@ function discoveryRows(newResult, type){
       return { artist: d.artist, album: d.album, key: it.key, count: it.count };
     }
     const [artist, rest] = splitKey(it.key);
+    const meta = TRACK_META && TRACK_META[normTrackKey(artist, rest)];
     return {
       artist: canonicalArtistName(artist),
       track: canonicalTrackName(artist, rest),
+      album: (meta && meta.album) || '',
       count: it.count
     };
   });
@@ -890,7 +894,13 @@ function computeStats(scrobbles, periodType, periodKey){
     }),
     topTracks: topN(scrobbles, r=>trackKey(r.artist, r.track), 5, (k,c)=>{
       const [artist,track]=splitKey(k);
-      return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
+      const meta = TRACK_META && TRACK_META[normTrackKey(artist, track)];
+      return {
+        artist: canonicalArtistName(artist),
+        track: canonicalTrackName(artist, track),
+        album: (meta && meta.album) || '',
+        count: c
+      };
     }),
     newArtists, newAlbums, newTracks,
     discoveries: {
@@ -1222,7 +1232,13 @@ function renderOverview(){
   const topArtists = topN(s, r=>r.artist, 5, (k,c)=>({artist:canonicalArtistName(k),count:c}));
   const topTracks = topN(s, r=>trackKey(r.artist, r.track), 5, (k,c)=>{
     const [artist,track]=splitKey(k);
-    return {artist:canonicalArtistName(artist), track:canonicalTrackName(artist,track), count:c};
+    const meta = TRACK_META && TRACK_META[normTrackKey(artist, track)];
+    return {
+      artist: canonicalArtistName(artist),
+      track: canonicalTrackName(artist, track),
+      album: (meta && meta.album) || '',
+      count: c
+    };
   });
   const topAlbums = topN(s, r=>albumKey(r), 5, (k,c)=>{
     const d = albumDisplay(k);
@@ -1382,7 +1398,7 @@ function paintOverview(DATA){
   }
 
   renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
-  renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track');
+  renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
   renderRankedList('albumList', DATA.top_albums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
 
   renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
@@ -1717,13 +1733,13 @@ function renderReport(){
 
   // ---- top lists + new stats ----
   renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', 'artist');
-  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track');
+  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
   renderRankedList('reportAlbumList', cur.topAlbums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
   renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'artist', 'No new artists discovered this period.');
-  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.');
+  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.', d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
   renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', 'No new albums discovered this period.');
 
   setText('reportNewArtistsDesc',
@@ -2301,6 +2317,7 @@ const LIBRARY_SUBTAB_CONFIG = {
     scrobbleTotal: (scope, filtered) => filtered ? scope.length : null,
     title: it => it.track,
     sub: it => it.artist,
+    detail: it => it.album ? formatAlbumTitle(it.artist, it.album) : '',
     count: it => fmtNum(it.count),
     onClick(it){
       LIBRARY_STATE.filterTrackKey = trackKey(it.artist, it.track);
@@ -2319,6 +2336,7 @@ const LIBRARY_SUBTAB_CONFIG = {
     scrobbleTotal: () => null,
     title: it => canonicalTrackName(it.artist, it.track),
     sub: it => canonicalArtistName(it.artist),
+    detail: it => it.album ? formatAlbumTitle(it.artist, it.album) : '',
     count: it => fmtDateTime(it.date)
   }
 };
@@ -2344,13 +2362,20 @@ function renderLibraryRows(scope, q, filtered){
   renderLibraryStatGrid(cfg.label, rows.length, cfg.extraStats ? cfg.extraStats(scope, filtered) : null, cfg.scrobbleTotal(scope, filtered));
   const {pageRows, start} = paginateLibraryRows(rows);
   const listEl = document.getElementById('libraryList');
-  listEl.innerHTML = pageRows.map((it,i)=>`
+  listEl.innerHTML = pageRows.map((it,i)=>{
+    const detail = cfg.detail ? cfg.detail(it) : '';
+    return `
       <li${clickable ? ` class="lib-row" data-idx="${start+i}"` : ''}>
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         ${artThumbHtml(cfg.itemType, it)}
-        <div class="rank-main"><div class="rank-title">${cfg.title(it)}</div><div class="rank-sub">${cfg.sub(it)}</div></div>
+        <div class="rank-main">
+          <div class="rank-title">${cfg.title(it)}</div>
+          <div class="rank-sub">${cfg.sub(it)}</div>
+          ${detail ? `<div class="rank-detail">${detail}</div>` : ''}
+        </div>
         <span class="rank-count">${cfg.count(it)}</span>
-      </li>`).join('');
+      </li>`;
+  }).join('');
   bindArtThumbs(listEl);
 
   if(clickable){

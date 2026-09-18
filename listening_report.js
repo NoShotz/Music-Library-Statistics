@@ -262,6 +262,34 @@ function canonicalArtistName(artistName){ return canonicalName('artist', artistN
 function canonicalAlbumName(artistName, albumName){ return canonicalName('album', artistName, albumName); }
 function canonicalTrackName(artistName, trackName){ return canonicalName('track', artistName, trackName); }
 
+// Release year from library_data.json for an album (scoped to artist first,
+// then any artist -- same fallback as findCanonicalAlbum for soundtracks).
+function albumYear(artistName, albumName){
+  if(!LIBRARY || !Array.isArray(LIBRARY.artists) || !albumName) return null;
+  const target = normAlbum(albumName);
+  const na = artistName ? normArtist(artistName) : null;
+  if(na){
+    for(const artistData of LIBRARY.artists){
+      if(normArtist(artistData.artist) !== na) continue;
+      for(const albumData of (artistData.albums || [])){
+        if(normAlbum(albumData.album) === target && albumData.year) return albumData.year;
+      }
+    }
+  }
+  for(const artistData of LIBRARY.artists){
+    for(const albumData of (artistData.albums || [])){
+      if(normAlbum(albumData.album) === target && albumData.year) return albumData.year;
+    }
+  }
+  return null;
+}
+// "Love Gun (1977)" when year is known, otherwise plain album title.
+function formatAlbumTitle(artistName, albumName){
+  if(!albumName) return '';
+  const y = albumYear(artistName, albumName);
+  return y != null ? `${albumName} (${y})` : albumName;
+}
+
 // Lazily-built, memoized na -> {artist, album} for that artist's most-
 // scrobbled album, used to fall back an artist's thumbnail to their top
 // album's art when the artist doesn't have their own image on disk.
@@ -1355,7 +1383,7 @@ function paintOverview(DATA){
 
   renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
   renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track');
-  renderRankedList('albumList', DATA.top_albums, d=>d.album, d=>d.artist, 'album');
+  renderRankedList('albumList', DATA.top_albums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
 
   renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
 
@@ -1690,13 +1718,13 @@ function renderReport(){
   // ---- top lists + new stats ----
   renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', 'artist');
   renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track');
-  renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist, 'album');
+  renderRankedList('reportAlbumList', cur.topAlbums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
   renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'artist', 'No new artists discovered this period.');
   renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.');
-  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'album', 'No new albums discovered this period.');
+  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', 'No new albums discovered this period.');
 
   setText('reportNewArtistsDesc',
     `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +
@@ -2070,7 +2098,7 @@ function goToLibrary(itemType, item){
   } else if(itemType==='album'){
     LIBRARY_STATE.subTab = 'tracks';
     LIBRARY_STATE.filterAlbumKey = item.key;
-    LIBRARY_STATE.filterAlbumLabel = item.album;
+    LIBRARY_STATE.filterAlbumLabel = formatAlbumTitle(item.artist, item.album);
     // Also scope to the album's artist when known (keeps filter if user switches sub-tabs)
     if(item.artist && item.artist !== 'Various Artists'){
       LIBRARY_STATE.filterArtist = item.artist;
@@ -2240,12 +2268,12 @@ const LIBRARY_SUBTAB_CONFIG = {
       return [[fmtNum(trackCount), 'tracks']];
     },
     scrobbleTotal: (scope, filtered) => filtered ? scope.length : null,
-    title: it => it.album,
+    title: it => formatAlbumTitle(it.artist, it.album),
     sub: it => it.artist,
     count: it => fmtNum(it.count),
     onClick(it){
       LIBRARY_STATE.filterAlbumKey = it.key;
-      LIBRARY_STATE.filterAlbumLabel = it.album;
+      LIBRARY_STATE.filterAlbumLabel = formatAlbumTitle(it.artist, it.album);
       LIBRARY_STATE.subTab = 'tracks';
     }
   },
@@ -2431,32 +2459,6 @@ function renderLibraryTab(){
   } else {
     notice.style.display = 'none';
     notice.onclick = null;
-  }
-
-  // Larger art for the most specific active drill-down filter, above the stats.
-  // Prefer track → album → artist so the art matches the deepest scope.
-  const artEl = document.getElementById('libraryFilterArt');
-  if(artEl){
-    let artHtml = '';
-    if(LIBRARY_STATE.filterTrackKey){
-      const [fa, ft] = splitKey(LIBRARY_STATE.filterTrackKey);
-      artHtml = artThumbHtml('track', { artist: fa, track: ft });
-    } else if(LIBRARY_STATE.filterAlbumKey){
-      const d = albumDisplay(LIBRARY_STATE.filterAlbumKey);
-      artHtml = artThumbHtml('album', { artist: d.artist, album: d.album });
-    } else if(LIBRARY_STATE.filterArtist){
-      artHtml = artThumbHtml('artist', { artist: LIBRARY_STATE.filterArtist });
-    }
-    if(artHtml){
-      artEl.style.display = 'flex';
-      // artThumbHtml uses the list-size .art-thumb class; strip it so the
-      // larger .lib-filter-art img rule applies instead.
-      artEl.innerHTML = artHtml; // keeps .art-thumb for bindArtThumbs; size via .lib-filter-art img
-      bindArtThumbs(artEl);
-    } else {
-      artEl.style.display = 'none';
-      artEl.innerHTML = '';
-    }
   }
 
   renderLibraryRows(scope, q, filtered);

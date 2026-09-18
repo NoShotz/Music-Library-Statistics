@@ -551,7 +551,14 @@ function prevPeriodKey(type, key){
 function topN(scrobbles, keyFn, n, mapFn){
   const counts = {};
   scrobbles.forEach(r=>{ const k=keyFn(r); counts[k]=(counts[k]||0)+1; });
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,c])=>mapFn(k,c));
+  // Primary: scrobble count desc. Ties: alphabetical by display name
+  // (title after ||| for track/album keys, full key for artists).
+  return Object.entries(counts).sort((a,b)=>{
+    if(b[1] !== a[1]) return b[1]-a[1];
+    const nameA = a[0].includes('|||') ? a[0].split('|||').pop() : a[0];
+    const nameB = b[0].includes('|||') ? b[0].split('|||').pop() : b[0];
+    return String(nameA).localeCompare(String(nameB), undefined, {sensitivity:'base'});
+  }).slice(0,n).map(([k,c])=>mapFn(k,c));
 }
 
 function weekdayPattern(scrobbles){

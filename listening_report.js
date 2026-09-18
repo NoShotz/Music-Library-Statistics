@@ -563,6 +563,45 @@ function renderChartSideStat(elId, groups){
     : `<div class="cs-label">No scrobbles in this period.</div>`;
 }
 
+// Shared ranked-list renderer used by both the Overview and Report tabs: a
+// numbered <li> per item with a rank number, art thumbnail, title/subtitle,
+// and a count -- clickable through to the Library tab whenever itemType is
+// given. If emptyMsg is provided and items is empty, shows a single "empty
+// state" row instead (used for the Report tab's discovery lists; the
+// Overview tab's all-time top-5 lists never pass one, since they should
+// never actually be empty).
+function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg){
+  const el = document.getElementById(elId);
+  if(!items.length && emptyMsg){
+    el.innerHTML = `
+      <li>
+        <span class="rank-num">&nbsp;</span>
+        <div class="rank-main">
+          <div class="rank-title" style="color:var(--muted-2);">${emptyMsg}</div>
+          <div class="rank-sub">&nbsp;</div>
+        </div>
+        <span class="rank-count">&nbsp;</span>
+      </li>`;
+    return;
+  }
+  el.innerHTML = items.map((it,i)=>`
+      <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
+        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
+        ${artThumbHtml(itemType, it)}
+        <div class="rank-main">
+          <div class="rank-title">${mainFn(it)}</div>
+          <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
+        </div>
+        <span class="rank-count">${fmtNum(it.count)}</span>
+      </li>`).join('');
+  bindArtThumbs(el);
+  if(itemType){
+    el.querySelectorAll('.lib-row').forEach(row=>{
+      row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
+    });
+  }
+}
+
 function averageKnownLength(){
   if(!TRACK_META) return 0;
   const lens = Object.values(TRACK_META).map(m=>m.length_sec).filter(Boolean);
@@ -1289,27 +1328,9 @@ function paintOverview(DATA){
     });
   }
 
-  function renderList(elId, items, mainFn, subFn, itemType){
-    document.getElementById(elId).innerHTML = items.map((it,i)=>`
-      <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
-        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
-        ${artThumbHtml(itemType, it)}
-        <div class="rank-main">
-          <div class="rank-title">${mainFn(it)}</div>
-          <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
-        </div>
-        <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
-    bindArtThumbs(document.getElementById(elId));
-    if(itemType){
-      document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
-        row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
-      });
-    }
-  }
-  renderList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
-  renderList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track');
-  renderList('albumList', DATA.top_albums, d=>d.album, d=>d.artist, 'album');
+  renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
+  renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track');
+  renderRankedList('albumList', DATA.top_albums, d=>d.album, d=>d.artist, 'album');
 
   renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
 
@@ -1642,45 +1663,15 @@ function renderReport(){
   }
 
   // ---- top lists + new stats ----
-  function renderRankedList(elId, items, mainFn, subFn, emptyMsg, itemType){
-    if(!items.length && emptyMsg){
-      document.getElementById(elId).innerHTML = `
-        <li>
-          <span class="rank-num">&nbsp;</span>
-          <div class="rank-main">
-            <div class="rank-title" style="color:var(--muted-2);">${emptyMsg}</div>
-            <div class="rank-sub">&nbsp;</div>
-          </div>
-          <span class="rank-count">&nbsp;</span>
-        </li>`;
-      return;
-    }
-    document.getElementById(elId).innerHTML = items.map((it,i)=>`
-      <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
-        <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
-        ${artThumbHtml(itemType, it)}
-        <div class="rank-main">
-          <div class="rank-title">${mainFn(it)}</div>
-          <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
-        </div>
-        <span class="rank-count">${fmtNum(it.count)}</span>
-      </li>`).join('');
-    bindArtThumbs(document.getElementById(elId));
-    if(itemType){
-      document.getElementById(elId).querySelectorAll('.lib-row').forEach(row=>{
-        row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
-      });
-    }
-  }
-  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', null, 'artist');
-  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, null, 'track');
-  renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist, null, 'album');
+  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', 'artist');
+  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track');
+  renderRankedList('reportAlbumList', cur.topAlbums, d=>d.album, d=>d.artist, 'album');
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
-  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'No new artists discovered this period.', 'artist');
-  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'No new tracks discovered this period.', 'track');
-  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'No new albums discovered this period.', 'album');
+  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'artist', 'No new artists discovered this period.');
+  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.');
+  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>d.album, d=>d.artist, 'album', 'No new albums discovered this period.');
 
   setText('reportNewArtistsDesc',
     `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +

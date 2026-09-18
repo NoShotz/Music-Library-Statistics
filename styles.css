@@ -336,7 +336,7 @@
 
   .lib-filter-art{
     display:flex;
-    justify-content:center;
+    justify-content:flex-start;
     margin:20px 0 8px;
   }
   .lib-filter-art .art-thumb{

@@ -620,7 +620,8 @@ function renderChartSideStat(elId, groups){
 // state" row instead (used for the Report tab's discovery lists; the
 // Overview tab's all-time top-5 lists never pass one, since they should
 // never actually be empty).
-// optional detailFn: third line under the subtitle (album on track rows)
+// detailFn: optional third line (album on track rows). Always rendered so
+// artist/album/track rows share the same height.
 function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn){
   const el = document.getElementById(elId);
   if(!items.length && emptyMsg){
@@ -630,13 +631,14 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <div class="rank-main">
           <div class="rank-title" style="color:var(--muted-2);">${emptyMsg}</div>
           <div class="rank-sub">&nbsp;</div>
+          <div class="rank-detail">&nbsp;</div>
         </div>
         <span class="rank-count">&nbsp;</span>
       </li>`;
     return;
   }
   el.innerHTML = items.map((it,i)=>{
-    const detail = detailFn ? detailFn(it) : '';
+    const detail = detailFn ? (detailFn(it) || '') : '';
     return `
       <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
         <span class="rank-num">${String(i+1).padStart(2,'0')}</span>
@@ -644,7 +646,7 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <div class="rank-main">
           <div class="rank-title">${mainFn(it)}</div>
           <div class="rank-sub">${subFn(it) || '&nbsp;'}</div>
-          ${detail ? `<div class="rank-detail">${detail}</div>` : ''}
+          <div class="rank-detail">${detail || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`;
@@ -2363,15 +2365,15 @@ function renderLibraryRows(scope, q, filtered){
   const {pageRows, start} = paginateLibraryRows(rows);
   const listEl = document.getElementById('libraryList');
   listEl.innerHTML = pageRows.map((it,i)=>{
-    const detail = cfg.detail ? cfg.detail(it) : '';
+    const detail = cfg.detail ? (cfg.detail(it) || '') : '';
     return `
       <li${clickable ? ` class="lib-row" data-idx="${start+i}"` : ''}>
         <span class="rank-num">${String(start+i+1).padStart(3,'0')}</span>
         ${artThumbHtml(cfg.itemType, it)}
         <div class="rank-main">
           <div class="rank-title">${cfg.title(it)}</div>
-          <div class="rank-sub">${cfg.sub(it)}</div>
-          ${detail ? `<div class="rank-detail">${detail}</div>` : ''}
+          <div class="rank-sub">${cfg.sub(it) || '&nbsp;'}</div>
+          <div class="rank-detail">${detail || '&nbsp;'}</div>
         </div>
         <span class="rank-count">${cfg.count(it)}</span>
       </li>`;
@@ -2486,8 +2488,6 @@ function renderLibraryTab(){
     notice.onclick = null;
   }
 
-  // Larger art for the most specific active drill-down filter, above the stats.
-  // Prefer track → album → artist so the art matches the deepest scope.
   const artEl = document.getElementById('libraryFilterArt');
   if(artEl){
     let artHtml = '';

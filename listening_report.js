@@ -213,37 +213,50 @@ function canonicalName(kind, artistName, name){
   if(!LIBRARY || !Array.isArray(LIBRARY.artists)){
     return kind==='artist' ? artistName : name;
   }
-  if(kind==='artist'){
-    const na = normArtist(artistName);
-    for(const artistData of LIBRARY.artists){
-      if(normArtist(artistData.artist) === na) return artistData.artist;
-    }
-    return artistName;
-  }
+  if(kind==='artist') return findCanonicalArtist(artistName);
+  if(kind==='album') return findCanonicalAlbum(artistName, name);
+  return findCanonicalTrack(artistName, name);
+}
+function findCanonicalArtist(artistName){
   const na = normArtist(artistName);
-  const target = kind==='album' ? normAlbum(name) : normTrack(name);
-  // 1) scoped to the given artist
+  for(const artistData of LIBRARY.artists){
+    if(normArtist(artistData.artist) === na) return artistData.artist;
+  }
+  return artistName;
+}
+// 1) scoped to the given artist, then 2) any artist -- the unscoped pass
+// covers Various Artists / shared soundtracks, where the scrobble's artist
+// may not be the album's library owner. Tracks have no such fallback (below):
+// two different artists sharing a track title is common and not "the same"
+// track, so a track match always stays scoped to its artist.
+function findCanonicalAlbum(artistName, albumName){
+  const na = normArtist(artistName);
+  const target = normAlbum(albumName);
   for(const artistData of LIBRARY.artists){
     if(normArtist(artistData.artist) !== na) continue;
     for(const albumData of (artistData.albums || [])){
-      if(kind==='album'){
-        if(normAlbum(albumData.album) === target) return albumData.album;
-      } else {
-        for(const t of (albumData.tracks || [])){
-          if(normTrack(t.title) === target) return t.title;
-        }
+      if(normAlbum(albumData.album) === target) return albumData.album;
+    }
+  }
+  for(const artistData of LIBRARY.artists){
+    for(const albumData of (artistData.albums || [])){
+      if(normAlbum(albumData.album) === target) return albumData.album;
+    }
+  }
+  return albumName;
+}
+function findCanonicalTrack(artistName, trackName){
+  const na = normArtist(artistName);
+  const target = normTrack(trackName);
+  for(const artistData of LIBRARY.artists){
+    if(normArtist(artistData.artist) !== na) continue;
+    for(const albumData of (artistData.albums || [])){
+      for(const t of (albumData.tracks || [])){
+        if(normTrack(t.title) === target) return t.title;
       }
     }
   }
-  // 2) album only: search every artist (covers Various Artists / shared soundtracks)
-  if(kind==='album'){
-    for(const artistData of LIBRARY.artists){
-      for(const albumData of (artistData.albums || [])){
-        if(normAlbum(albumData.album) === target) return albumData.album;
-      }
-    }
-  }
-  return name;
+  return trackName;
 }
 function canonicalArtistName(artistName){ return canonicalName('artist', artistName); }
 function canonicalAlbumName(artistName, albumName){ return canonicalName('album', artistName, albumName); }
@@ -305,6 +318,21 @@ function artThumbHtml(itemType, it){
 // artist thumbnails specifically, if the artist has no image of their own,
 // falls back to their most-scrobbled album's art (jpg -> png) before finally
 // giving up and showing a blank placeholder.
+// Tries each candidate URL in order (each is only computed when its turn
+// comes up, since the album-art fallback below needs a lookup that's wasted
+// work whenever the thumbnail's own image loads fine), falling back to a
+// blank placeholder once every candidate has failed to load.
+function loadFirstAvailable(img, urlFns){
+  let i = 0;
+  const tryNext = () => {
+    if(i >= urlFns.length){ img.src = ART_BLANK_PX; img.onerror = null; return; }
+    const url = urlFns[i++]();
+    if(url == null){ tryNext(); return; }
+    img.onerror = tryNext;
+    img.src = url;
+  };
+  tryNext();
+}
 function bindArtThumbs(container){
   if(!container) return;
   container.querySelectorAll('.art-thumb[data-art-name]').forEach(img=>{
@@ -314,25 +342,22 @@ function bindArtThumbs(container){
     img.removeAttribute('data-art-name'); // guards against re-binding if this container gets bound twice
     const base = 'images/' + folder + '/' + encodeURIComponent(safe);
 
-    function giveUp(){ img.src = ART_BLANK_PX; img.onerror = null; }
-
-    function tryAlbumFallback(){
-      const top = folder==='artists' ? getArtistTopAlbum(rawName) : null;
-      if(!top){ giveUp(); return; }
-      const albSafe = sanitizeArtFilename(canonicalAlbumName(top.artist, top.album));
-      const albBase = 'images/albums/' + encodeURIComponent(albSafe);
-      img.src = albBase + '.jpg';
-      img.onerror = function(){
-        img.onerror = giveUp;
-        img.src = albBase + '.png';
-      };
-    }
-
-    img.src = base + '.jpg';
-    img.onerror = function(){
-      img.onerror = tryAlbumFallback;
-      img.src = base + '.png';
+    // Computed once, lazily, on first use by either fallback URL below.
+    let topAlbumBase; // undefined = not yet computed; null = no fallback available
+    const topAlbumUrl = ext => {
+      if(topAlbumBase === undefined){
+        const top = folder==='artists' ? getArtistTopAlbum(rawName) : null;
+        topAlbumBase = top ? 'images/albums/' + encodeURIComponent(sanitizeArtFilename(canonicalAlbumName(top.artist, top.album))) : null;
+      }
+      return topAlbumBase ? topAlbumBase + ext : null;
     };
+
+    loadFirstAvailable(img, [
+      () => base + '.jpg',
+      () => base + '.png',
+      () => topAlbumUrl('.jpg'),
+      () => topAlbumUrl('.png'),
+    ]);
   });
 }
 function fmtDateNice(dateStr){

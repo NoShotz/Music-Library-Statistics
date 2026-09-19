@@ -1134,6 +1134,112 @@ function renderHeatmap(containerId, heat, opts){
       });
     }
   });
+
+  attachCustomScrollbars(el);
+}
+
+// ---------- custom heatmap scrollbars ----------
+// Firefox only lets CSS pick two scrollbar colours, so instead of fighting the
+// native bar we hide it (scrollbar-width:none keeps wheel/touch/keyboard
+// scrolling working) and draw our own pill-shaped tracks in a small grid
+// wrapper around the .heatmap-box. Because the tracks are real grid cells next
+// to the box (not overlays), they never cover the heatmap or its pinned labels.
+// Looks identical in every browser; styles live in styles.css (.hm-*).
+const HM_SB_INSET = 2;    // px gap between track edge and thumb (matches CSS top/left)
+const HM_SB_MIN_THUMB = 28;
+
+function attachCustomScrollbars(box){
+  if(!box) return;
+  if(box._hmScroll){ box._hmScroll.update(); return; }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'hm-wrap';
+  box.parentNode.insertBefore(wrap, box);
+  wrap.appendChild(box);
+  box.classList.add('hm-custom');
+
+  const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+  const isX = axis => axis === 'x';
+  const view  = axis => isX(axis) ? box.clientWidth  : box.clientHeight;
+  const total = axis => isX(axis) ? box.scrollWidth  : box.scrollHeight;
+  const getScroll = axis => isX(axis) ? box.scrollLeft : box.scrollTop;
+  const setScroll = (axis,v) => { if(isX(axis)) box.scrollLeft = v; else box.scrollTop = v; };
+
+  function makeBar(axis){
+    const track = document.createElement('div');
+    track.className = 'hm-track hm-track-' + axis;
+    track.setAttribute('aria-hidden', 'true');
+    track.hidden = true;
+    const thumb = document.createElement('div');
+    thumb.className = 'hm-thumb';
+    track.appendChild(thumb);
+
+    // thumb geometry for the current scroll state
+    function measure(){
+      const trackLen = isX(axis) ? track.clientWidth : track.clientHeight;
+      const avail = Math.max(0, trackLen - HM_SB_INSET*2);
+      const v = view(axis), t = total(axis);
+      const len = clamp(avail * v / Math.max(t,1), Math.min(HM_SB_MIN_THUMB, avail), avail);
+      return {avail, len, maxScroll: Math.max(0, t - v)};
+    }
+    function layout(){
+      if(track.hidden) return;
+      const m = measure();
+      const off = m.maxScroll > 0 ? (getScroll(axis) / m.maxScroll) * (m.avail - m.len) : 0;
+      thumb.style[isX(axis) ? 'width' : 'height'] = m.len + 'px';
+      thumb.style.transform = isX(axis) ? `translateX(${off}px)` : `translateY(${off}px)`;
+    }
+
+    // click the track to jump there; drag anywhere to scrub
+    let drag = null;
+    track.addEventListener('pointerdown', e => {
+      if(e.button !== 0) return;
+      e.preventDefault();
+      track.setPointerCapture(e.pointerId);
+      const m = measure();
+      if(e.target !== thumb && m.avail > m.len){
+        const rect = track.getBoundingClientRect();
+        const p = isX(axis) ? e.clientX - rect.left : e.clientY - rect.top;
+        const ratio = clamp((p - HM_SB_INSET - m.len/2) / (m.avail - m.len), 0, 1);
+        setScroll(axis, ratio * m.maxScroll);
+      }
+      drag = {start: isX(axis) ? e.clientX : e.clientY, scroll: getScroll(axis), m: measure()};
+      track.classList.add('dragging');
+    });
+    track.addEventListener('pointermove', e => {
+      if(!drag || drag.m.avail <= drag.m.len) return;
+      const delta = (isX(axis) ? e.clientX : e.clientY) - drag.start;
+      setScroll(axis, drag.scroll + delta * (drag.m.maxScroll / (drag.m.avail - drag.m.len)));
+    });
+    const endDrag = () => { drag = null; track.classList.remove('dragging'); };
+    track.addEventListener('pointerup', endDrag);
+    track.addEventListener('pointercancel', endDrag);
+
+    return {track, layout};
+  }
+
+  const barX = makeBar('x'), barY = makeBar('y');
+  wrap.append(barX.track, barY.track);
+
+  function update(){
+    if(!box.clientWidth || !box.clientHeight) return; // tab hidden; the ResizeObserver re-fires when shown
+    const cs = getComputedStyle(box);
+    const canX = cs.overflowX === 'auto' || cs.overflowX === 'scroll';
+    const canY = cs.overflowY === 'auto' || cs.overflowY === 'scroll';
+    barX.track.hidden = !(canX && box.scrollWidth  > box.clientWidth  + 1);
+    barY.track.hidden = !(canY && box.scrollHeight > box.clientHeight + 1);
+    barX.layout();
+    barY.layout();
+  }
+
+  let raf = 0;
+  const schedule = () => { if(!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); };
+  box.addEventListener('scroll', () => { barX.layout(); barY.layout(); }, {passive:true});
+  new ResizeObserver(schedule).observe(box);
+  new MutationObserver(schedule).observe(box, {childList:true}); // heatmap re-rendered / swapped for a chart
+
+  box._hmScroll = {update};
+  update();
 }
 
 // ---------- listening clock (radial 24-hour bar chart) ----------

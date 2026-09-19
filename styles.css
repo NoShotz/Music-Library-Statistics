@@ -226,6 +226,28 @@
     .heatmap-box::-webkit-scrollbar-thumb:hover{background:var(--gold);}
     .heatmap-box::-webkit-scrollbar-corner{background:transparent;}
   }
+  /* Custom heatmap scrollbars (built by attachCustomScrollbars in the JS).
+     The wrapper is a 2x2 grid: box | vertical track, horizontal track | corner. */
+  .hm-wrap{
+    flex:1;min-width:0;height:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:minmax(0,1fr) auto;
+  }
+  .hm-wrap > .heatmap-box{grid-column:1;grid-row:1;min-width:0;min-height:0;}
+  .heatmap-box.hm-custom{scrollbar-width:none;}
+  .heatmap-box.hm-custom::-webkit-scrollbar{display:none;width:0;height:0;}
+  .hm-track{position:relative;background:var(--surface-2);border-radius:999px;touch-action:none;}
+  .hm-track[hidden]{display:none;}
+  .hm-track-x{grid-column:1;grid-row:2;height:10px;margin-top:6px;}
+  .hm-track-y{grid-column:2;grid-row:1;width:10px;margin-left:6px;}
+  .hm-thumb{
+    position:absolute;top:2px;left:2px;border-radius:999px;
+    background:var(--gold-dim);transition:background .15s;
+  }
+  .hm-track-x .hm-thumb{height:6px;}
+  .hm-track-y .hm-thumb{width:6px;}
+  .hm-track:hover .hm-thumb,.hm-track.dragging .hm-thumb{background:var(--gold);}
   .heatmap-row.col-label-row.sticky-top{
     position:sticky;top:0;background:var(--surface);z-index:2;
   }

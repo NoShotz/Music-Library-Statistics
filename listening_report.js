@@ -1041,7 +1041,7 @@ function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 const HEATMAP_ROW_LABEL_WIDTH = 52;
 const HEATMAP_LABEL_ROW_HEIGHT = 16;
 const HEATMAP_GAP = 3;
-const HEATMAP_FIXED_CELL = 16; // used when both axes scroll (years x days) -- see scrollXY
+const HEATMAP_FIXED_CELL = 26.75; // used when both axes scroll (years x days) -- see scrollXY
 
 function renderHeatmap(containerId, heat, opts){
   opts = opts || {};

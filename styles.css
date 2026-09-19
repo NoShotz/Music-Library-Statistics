@@ -165,26 +165,6 @@
   .card p.desc{
     font-size:13px;color:var(--muted-2);margin:0 0 18px;
   }
-  /* Chart cards: fixed outer height; chart area fills the rest */
-  .card:has(.chart-box),
-  .card:has(.map-box),
-  .card:has(.heatmap-box){
-    height:464px;
-    display:flex;
-    flex-direction:column;
-  }
-  .card:has(.chart-box) .chart-box,
-  .card:has(.map-box) .map-box,
-  .card:has(.heatmap-box) .heatmap-box,
-  .card:has(.clock-row) .clock-row{
-    flex:1 1 auto;
-    min-height:0;
-    height:auto;
-  }
-  .card:has(.clock-row) .chart-box,
-  .card:has(.clock-row) .heatmap-box{
-    height:100%;
-  }
   .site-footer{
     margin-top:48px;padding:20px 0 8px;border-top:1px solid var(--hair);
     text-align:center;font-size:12.5px;color:var(--muted);line-height:1.6;
@@ -198,6 +178,35 @@
     width:100%;height:280px;overflow-x:auto;overflow-y:hidden;
     display:flex;align-items:center;justify-content:center;
   }
+
+  /* Chart cards are fixed 464px; the chart/map/heatmap area fills leftover space
+     under the title (overrides the fixed heights above). */
+  .card:has(> .chart-box),
+  .card:has(> .map-box),
+  .card:has(> .heatmap-box),
+  .card:has(> .clock-row){
+    height:464px;
+    display:flex;
+    flex-direction:column;
+  }
+  .card:has(> .chart-box) > .chart-box,
+  .card:has(> .map-box) > .map-box,
+  .card:has(> .heatmap-box) > .heatmap-box,
+  .card:has(> .clock-row) > .clock-row{
+    flex:1 1 0;
+    min-height:0;
+    height:auto !important;
+  }
+  .card:has(> .clock-row) > .clock-row .chart-box,
+  .card:has(> .clock-row) > .clock-row .heatmap-box{
+    height:100% !important;
+    min-height:0;
+  }
+  .card:has(> .map-box) > .map-box,
+  .card:has(> .chart-box) > .chart-box{
+    width:100%;
+  }
+
   .heatmap-box.scroll{
     align-items:flex-start;overflow-y:auto;
   }

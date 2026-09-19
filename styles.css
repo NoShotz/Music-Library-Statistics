@@ -173,9 +173,8 @@
     display:flex;align-items:center;justify-content:center;
   }
 
-    /* Chart cards are 464px tall. Chart/map/heatmap areas get an explicit
-     remaining height so Chart.js and jsvectormap always have a real pixel size
-     (flex height:0/auto was collapsing or leaving them content-sized). */
+  /* Chart cards: 464px outer height. Chart/map area uses an explicit remaining
+     height so Chart.js and jsvectormap always get a real pixel size. */
   .card:has(> .chart-box),
   .card:has(> .map-box),
   .card:has(> .heatmap-box),
@@ -187,13 +186,19 @@
   .card:has(> .map-box) > .map-box,
   .card:has(> .heatmap-box) > .heatmap-box,
   .card:has(> .clock-row) > .clock-row{
-    height:calc(464px - 48px - 30px) !important; /* card padding + title */
+    height:calc(464px - 48px - 30px) !important; /* padding + title */
   }
   .card:has(> .clock-row) > .clock-row .chart-box,
   .card:has(> .clock-row) > .clock-row .heatmap-box{
     height:100% !important;
   }
 
+  .site-footer{
+    margin-top:48px;padding:20px 0 8px;border-top:1px solid var(--hair);
+    text-align:center;font-size:12.5px;color:var(--muted);line-height:1.6;
+  }
+  .site-footer a{color:var(--teal);text-decoration:none;}
+  .site-footer a:hover{color:var(--gold);text-decoration:underline;}
   .heatmap-box.scroll{
     align-items:flex-start;overflow-y:auto;
   }

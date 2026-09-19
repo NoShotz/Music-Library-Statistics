@@ -1154,7 +1154,7 @@ function renderListeningClock(containerId, statElId, hourCounts){
     const center = h*15;
     const v = hourCounts[h] || 0;
     const rOuter = rInner + (v/max) * (rOuterMax - rInner);
-    const fill = v>0 ? heatmapColor(v/max) : '#241d16';
+    const fill = v>0 ? '#d6a24c' : '#241d16'; // solid gold, matching decade bars
     const path = annularSectorPath(cx,cy, rInner, Math.max(rInner+2, rOuter), center-7.5+gapDeg/2, center+7.5-gapDeg/2);
     bars += `<path class="clock-bar" d="${path}" fill="${fill}" data-hour="${h}" data-count="${v}"></path>`;
 
@@ -1528,15 +1528,13 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
     const d = Number(r.dateStr.split('-')[2]);
     counts[d-1]++;
   });
-  const max = Math.max(1, ...counts);
-
   CHART_REFS.subPeriod = new Chart(document.getElementById('subPeriodBarChart'), {
     type:'bar',
     data:{
       labels: counts.map((_,i)=>String(i+1)),
       datasets:[{
         data: counts,
-        backgroundColor: counts.map(v => v>0 ? heatmapColor(v/max) : '#241d16'),
+        backgroundColor: '#d6a24c', // solid gold, matching decade bars
         borderRadius:2, barPercentage:0.75, categoryPercentage:0.9
       }]
     },

@@ -1638,6 +1638,11 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     onLoaded(){ bindMapTooltips(containerId, meta, totalScrobbles); }
   });
   bindMapTooltips(containerId, meta, totalScrobbles); // belt-and-suspenders, in case onLoaded already fired
+  // Card flex layout may not have resolved size on the same tick the map is
+  // created -- force a resize once layout has been computed.
+  requestAnimationFrame(()=>{
+    try { if(MAP_REFS[refKey] && MAP_REFS[refKey].updateSize) MAP_REFS[refKey].updateSize(); } catch(e){}
+  });
 }
 
 // Wires up our shared .chart-tooltip (same fade/anchor/caret behavior as the

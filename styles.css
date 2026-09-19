@@ -179,8 +179,9 @@
     display:flex;align-items:center;justify-content:center;
   }
 
-  /* Chart cards are fixed 464px; the chart/map/heatmap area fills leftover space
-     under the title (overrides the fixed heights above). */
+  /* Chart cards: outer card is 464px; chart/map area fills the rest.
+     height:0 + flex:1 forces allocation from the card, not from chart content
+     (needed so Chart.js / jsvectormap expand into the free space). */
   .card:has(> .chart-box),
   .card:has(> .map-box),
   .card:has(> .heatmap-box),
@@ -195,16 +196,12 @@
   .card:has(> .clock-row) > .clock-row{
     flex:1 1 0;
     min-height:0;
-    height:auto !important;
+    height:0 !important;
   }
   .card:has(> .clock-row) > .clock-row .chart-box,
   .card:has(> .clock-row) > .clock-row .heatmap-box{
     height:100% !important;
     min-height:0;
-  }
-  .card:has(> .map-box) > .map-box,
-  .card:has(> .chart-box) > .chart-box{
-    width:100%;
   }
 
   .heatmap-box.scroll{

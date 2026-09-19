@@ -1,4 +1,18 @@
-const LOCAL_UTC_OFFSET_HOURS = -4; // Eastern (adjust if needed)
+// All dates/times in the report are shown in this fixed IANA timezone, no matter
+// where the browser/machine happens to be. Change it here if you move.
+const REPORT_TIMEZONE = 'America/Toronto';
+const _tzParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: REPORT_TIMEZONE, hourCycle: 'h23',
+  year:'numeric', month:'numeric', day:'numeric', hour:'numeric', minute:'numeric', second:'numeric'
+});
+// UTC offset (in hours, e.g. -4 in summer / -5 in winter for Toronto) that
+// REPORT_TIMEZONE has at the instant `ms`. DST-aware per timestamp.
+function utcOffsetHoursAt(ms){
+  const p = {};
+  for(const {type, value} of _tzParts.formatToParts(new Date(ms))) p[type] = value;
+  const wallAsUtc = Date.UTC(+p.year, +p.month-1, +p.day, +p.hour, +p.minute, +p.second);
+  return (wallAsUtc - Math.floor(ms/1000)*1000) / 3600000;
+}
 
 let SCROBBLES = null;      // raw scrobbles from lastfm_data.json
 let ENRICHED = null;       // scrobbles + derived local-date fields, sorted ascending
@@ -178,7 +192,7 @@ function albumDisplay(key){
 }
 
 function localDate(ms){
-  return new Date(ms + LOCAL_UTC_OFFSET_HOURS*3600*1000);
+  return new Date(ms + utcOffsetHoursAt(ms)*3600*1000);
 }
 function ymd(d){
   return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
@@ -392,8 +406,8 @@ function fmtDateNice(dateStr){
 }
 // Full local date+time for a scrobble's raw epoch-ms timestamp, e.g. "Aug 19, 2026, 3:45 PM".
 // Follows the same convention as the rest of the file: localDate() shifts the
-// Date's internal value by LOCAL_UTC_OFFSET_HOURS, then UTC getters read it back
-// out as if they were local getters (avoids the runtime's own system timezone).
+// Date's internal value by the REPORT_TIMEZONE offset at that instant, then UTC
+// getters read it back out as wall-clock values (independent of the system timezone).
 function fmtDateTime(ms){
   const ld = localDate(ms);
   const dateStr = ld.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
@@ -436,7 +450,7 @@ function fmtDurationWords(totalSeconds){
 function fmtDayMonth(dateStr){
   if(!dateStr) return '';
   const d = new Date(dateStr+'T00:00:00Z');
-  return d.getUTCDate() + ' ' + d.toLocaleDateString('en-US',{month:'short'});
+  return d.getUTCDate() + ' ' + d.toLocaleDateString('en-US',{month:'short', timeZone:'UTC'});
 }
 function isLeapYear(y){ return (y%4===0 && y%100!==0) || y%400===0; }
 function mondayOf(dateStr){
@@ -1226,7 +1240,8 @@ function renderOverview(){
   const s = ENRICHED;
   const n = s.length;
   const firstMs = s[0].date, lastMs = s[n-1].date;
-  const spanDays = Math.round((lastMs-firstMs)/86400000);
+  const firstDay = s[0].dateStr, lastDay = s[n-1].dateStr;
+  const spanDays = Math.round((Date.parse(lastDay+'T00:00:00Z') - Date.parse(firstDay+'T00:00:00Z'))/86400000);
 
   const stats = computeStats(s, 'year', String(s[0].year)); // periodType/key unused for new% at all-time scale but harmless
   // all-time "new" doesn't mean much, so recompute unique counts / top lists directly instead:
@@ -1289,8 +1304,8 @@ function renderOverview(){
 
   paintOverview({
     total_scrobbles:n, unique_artists:uniqueArtists, unique_albums:uniqueAlbums, unique_tracks:uniqueTracks,
-    first_date: ymd(new Date(firstMs)),
-    last_date: ymd(new Date(lastMs)), span_days: spanDays, active_days: activeDays,
+    first_date: firstDay,
+    last_date: lastDay, span_days: spanDays, active_days: activeDays,
     longest_streak: longestStreak, yearly, top_artists: topArtists, top_tracks: topTracks,
     top_albums: topAlbums, hour_of_day: hourOfDay, day_of_week: dayOfWeek, discovery,
     country_rows: countryRows, total_hours: totalHours, total_seconds: totalSeconds,

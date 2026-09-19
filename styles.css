@@ -202,15 +202,30 @@
   .heatmap-box.scroll{
     align-items:flex-start;overflow-y:auto;
   }
-  .heatmap-box.scroll::-webkit-scrollbar{width:8px;}
-  .heatmap-box.scroll::-webkit-scrollbar-track{background:transparent;}
-  .heatmap-box.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
   .heatmap-box.scroll-xy{
     justify-content:flex-start;align-items:flex-start;overflow-y:auto;
   }
-  .heatmap-box.scroll-xy::-webkit-scrollbar{width:8px;height:8px;}
-  .heatmap-box.scroll-xy::-webkit-scrollbar-track{background:transparent;}
-  .heatmap-box.scroll-xy::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px;}
+
+  /* Themed scrollbars for every heatmap (Overview + Reports).
+     Firefox uses the standard properties; Chrome/Edge/Safari get the richer
+     ::-webkit-scrollbar version below (rounded, inset thumb, hover colour). */
+  .heatmap-box{
+    scrollbar-width:thin;
+    scrollbar-color:var(--gold-dim) var(--surface-2);
+  }
+  @supports selector(::-webkit-scrollbar){
+    .heatmap-box{scrollbar-width:auto;scrollbar-color:auto;}
+    .heatmap-box::-webkit-scrollbar{width:12px;height:12px;}
+    .heatmap-box::-webkit-scrollbar-track{
+      background:var(--surface-2);border-radius:999px;
+    }
+    .heatmap-box::-webkit-scrollbar-thumb{
+      background:var(--gold-dim);border-radius:999px;
+      border:3px solid var(--surface-2); /* insets the thumb inside the track */
+    }
+    .heatmap-box::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+    .heatmap-box::-webkit-scrollbar-corner{background:transparent;}
+  }
   .heatmap-row.col-label-row.sticky-top{
     position:sticky;top:0;background:var(--surface);z-index:2;
   }

@@ -165,12 +165,6 @@
   .card p.desc{
     font-size:13px;color:var(--muted-2);margin:0 0 18px;
   }
-  .site-footer{
-    margin-top:48px;padding:20px 0 8px;border-top:1px solid var(--hair);
-    text-align:center;font-size:12.5px;color:var(--muted);line-height:1.6;
-  }
-  .site-footer a{color:var(--teal);text-decoration:none;}
-  .site-footer a:hover{color:var(--gold);text-decoration:underline;}
   .chart-box{position:relative;height:280px;}
   .chart-box.tall{height:340px;}
   .map-box{position:relative;height:380px;}
@@ -179,29 +173,25 @@
     display:flex;align-items:center;justify-content:center;
   }
 
-  /* Chart cards: outer card is 464px; chart/map area fills the rest.
-     height:0 + flex:1 forces allocation from the card, not from chart content
-     (needed so Chart.js / jsvectormap expand into the free space). */
+    /* Chart cards are 464px tall. Chart/map/heatmap areas get an explicit
+     remaining height so Chart.js and jsvectormap always have a real pixel size
+     (flex height:0/auto was collapsing or leaving them content-sized). */
   .card:has(> .chart-box),
   .card:has(> .map-box),
   .card:has(> .heatmap-box),
   .card:has(> .clock-row){
     height:464px;
-    display:flex;
-    flex-direction:column;
+    box-sizing:border-box;
   }
   .card:has(> .chart-box) > .chart-box,
   .card:has(> .map-box) > .map-box,
   .card:has(> .heatmap-box) > .heatmap-box,
   .card:has(> .clock-row) > .clock-row{
-    flex:1 1 0;
-    min-height:0;
-    height:0 !important;
+    height:calc(464px - 48px - 30px) !important; /* card padding + title */
   }
   .card:has(> .clock-row) > .clock-row .chart-box,
   .card:has(> .clock-row) > .clock-row .heatmap-box{
     height:100% !important;
-    min-height:0;
   }
 
   .heatmap-box.scroll{

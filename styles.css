@@ -1,18 +1,19 @@
 :root{
-    /* ---- Palette (raw colors — named by appearance only) ---- */
+    /* ---- Palette (raw colors — named by appearance only, never by role) ---- */
     --near-black:#0c0906;
     --black-brown:#15110d;
     --dark-brown:#1f1912;
     --medium-brown:#292019;
     --warm-brown:#3a2f24;
     --deep-brown:#241d16;
+    --smoky-brown:#1a1510;
     --umber:#5c4a30;
     --dark-umber:#332a1f;
-    --vinyl-brown:#1a1510;
     --ochre:#d6a24c;
     --ochre-light:#e8bc6e;
     --ochre-dim:#8a6c3a;
     --ochre-soft:rgba(214,162,76,0.35);
+    --ochre-bright:#f89e0d;
     --teal:#5a9a94;
     --crimson:#c0392b;
     --crimson-soft:rgba(192,57,43,0.12);
@@ -22,7 +23,7 @@
     --sage:#7fae7a;
     --olive-gray:#5a6a5a;
 
-    /* ---- Semantic tokens (only these are used in rules / JS) ---- */
+    /* ---- Semantic tokens (role/feature → palette). Rules and JS use only these. ---- */
     --color-page-bg: var(--black-brown);
     --color-surface: var(--dark-brown);
     --color-surface-raised: var(--medium-brown);
@@ -44,7 +45,7 @@
     --color-stat-value: var(--ochre);
     --color-hero-num: var(--ochre);
     --color-vinyl-groove-dark: var(--near-black);
-    --color-vinyl-groove-light: var(--vinyl-brown);
+    --color-vinyl-groove-light: var(--smoky-brown);
     --color-vinyl-spindle: var(--near-black);
 
     --color-daily-scrobble-bars: var(--ochre);
@@ -53,6 +54,7 @@
     --color-listening-clock-bars: var(--ochre);
     --color-listening-clock-empty: var(--deep-brown);
     --color-listening-clock-ring: var(--deep-brown);
+    --color-chart-bar-hover: var(--ochre-bright);
     --color-decade-bars: var(--ochre);
     --color-discovery-bars: var(--ochre-soft);
     --color-heatmap-low: var(--deep-brown);
@@ -343,8 +345,8 @@
   .map-box .jvm-region{cursor:pointer;}
   .clock-svg{overflow:visible;}
   .clock-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:var(--color-text-faint);}
-  .clock-bar{cursor:pointer;transition:filter 0.1s;}
-  .clock-bar:hover{filter:brightness(1.2);}
+  .clock-bar{cursor:pointer;transition:fill 0.1s;}
+  .clock-bar[data-count]:not([data-count="0"]):hover{fill:var(--color-chart-bar-hover);}
   .clock-row{display:flex;align-items:center;gap:16px;}
   .clock-row .chart-box{flex:1;min-width:0;}
   .clock-row .heatmap-box{flex:1;min-width:0;}

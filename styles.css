@@ -22,8 +22,7 @@
     --sage:#7fae7a;
     --olive-gray:#5a6a5a;
 
-    /* ---- Semantic tokens (feature/role → palette). CSS rules and JS
-         should only reference these, never raw palette names. ---- */
+    /* ---- Semantic tokens (only these are used in rules / JS) ---- */
     --color-page-bg: var(--black-brown);
     --color-surface: var(--dark-brown);
     --color-surface-raised: var(--medium-brown);
@@ -35,10 +34,15 @@
     --color-accent-dim: var(--ochre-dim);
     --color-accent-soft: var(--ochre-soft);
     --color-accent-highlight: var(--ochre-light);
-    --color-secondary: var(--color-secondary);
+    --color-secondary: var(--teal);
     --color-positive: var(--sage);
     --color-negative: var(--crimson);
     --color-negative-soft: var(--crimson-soft);
+    --color-rank-count: var(--teal);
+    --color-rank-num: var(--ochre-dim);
+    --color-fact-num: var(--teal);
+    --color-stat-value: var(--ochre);
+    --color-hero-num: var(--ochre);
     --color-vinyl-groove-dark: var(--near-black);
     --color-vinyl-groove-light: var(--vinyl-brown);
     --color-vinyl-spindle: var(--near-black);
@@ -131,7 +135,7 @@
     font-size:88px;
     line-height:0.85;
     letter-spacing:.01em;
-    color:var(--color-accent);
+    color:var(--color-hero-num);
     margin:0;
   }
   .hero-sub{
@@ -199,7 +203,7 @@
   }
   .stat-val{
     font-family:'Bebas Neue',sans-serif;
-    font-size:38px;color:var(--color-accent);line-height:1;
+    font-size:38px;color:var(--color-stat-value);line-height:1;
     display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
   }
   .stat-lbl{
@@ -423,7 +427,7 @@
   .ranked li.lib-row:hover{background:var(--color-surface-raised);}
   .rank-num{
     font-family:'JetBrains Mono',monospace;
-    font-size:13px;color:var(--color-accent-dim);width:22px;flex:0 0 22px;
+    font-size:13px;color:var(--color-rank-num);width:22px;flex:0 0 22px;
   }
   .rank-main{flex:1;min-width:0;}
   .rank-title{font-size:14.5px;color:var(--color-text);font-weight:500;}
@@ -431,7 +435,7 @@
   .rank-detail{font-size:12.5px;color:var(--color-text-faint);}
   .rank-count{
     font-family:'JetBrains Mono',monospace;
-    font-size:13px;color:var(--color-secondary);white-space:nowrap;
+    font-size:13px;color:var(--color-rank-count);white-space:nowrap;
   }
 
   /* ---------- CALLOUT ---------- */
@@ -466,7 +470,7 @@
     background:var(--color-surface-raised);
     padding:18px 20px;border:1px solid var(--color-border);
   }
-  .fact .fact-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--color-secondary);white-space:nowrap;}
+  .fact .fact-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--color-fact-num);white-space:nowrap;}
   .fact .fact-lbl{font-size:12.5px;color:var(--color-text-muted);margin-top:6px;line-height:1.45;}
 
   footer{

@@ -15,7 +15,7 @@ function utcOffsetHoursAt(ms){
 }
 
 // ---------- theme colors from CSS custom properties ----------
-// All colors live in styles.css (:root palette + --color-* semantic tokens).
+// Only semantic --color-* tokens (defined in styles.css). Never raw palette names.
 function cssVar(name){
   let v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   for(let i=0; i<6 && v.startsWith('var('); i++){

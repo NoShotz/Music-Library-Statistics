@@ -1909,7 +1909,7 @@ function renderReport(){
     type:'bar',
     data:{ labels: dowLabels, datasets:[
       { label: periodLabel(type,key), data: cur.weekday, backgroundColor:'#d6a24c', borderRadius:2, barPercentage:0.6 },
-      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:'rgba(90,154,148,0.3)', borderRadius:2, barPercentage:0.6 }
+      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:'rgba(214,162,76,0.35)', borderRadius:2, barPercentage:0.6 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },

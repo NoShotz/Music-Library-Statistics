@@ -20,13 +20,13 @@
     --target-line:#5a6a5a;
 
     /* ---- Semantic tokens (feature → palette) ---- */
+    --color-daily-scrobble-bars: var(--gold);
     --color-weekly-scrobble-bars: var(--gold);
     --color-weekly-scrobble-bars-prev: var(--gold-soft);
     --color-listening-clock-bars: var(--gold);
     --color-listening-clock-empty: var(--chart-empty);
     --color-listening-clock-ring: var(--chart-empty);
     --color-decade-bars: var(--gold);
-    --color-month-daily-bars: var(--gold);
     --color-discovery-bars: var(--gold-soft);
     --color-heatmap-low: var(--chart-empty);
     --color-heatmap-high: var(--gold);

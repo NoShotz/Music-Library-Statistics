@@ -18,7 +18,6 @@ function utcOffsetHoursAt(ms){
 // All colors live in styles.css (:root palette + --color-* semantic tokens).
 function cssVar(name){
   let v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // Follow nested var(--token) chains (semantic → palette).
   for(let i=0; i<6 && v.startsWith('var('); i++){
     const m = v.match(/^var\(\s*(--[^,\s)]+)\s*(?:,\s*([^)]+))?\)/);
     if(!m) break;
@@ -1689,7 +1688,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       labels: counts.map((_,i)=>String(i+1)),
       datasets:[{
         data: counts,
-        backgroundColor: cssColor('--color-month-daily-bars'),
+        backgroundColor: cssColor('--color-daily-scrobble-bars'),
         borderRadius:2, barPercentage:0.75, categoryPercentage:0.9
       }]
     },

@@ -60,7 +60,7 @@
     --color-heatmap-low: var(--deep-brown);
     --color-heatmap-high: var(--ochre);
     --color-heatmap-empty: var(--deep-brown);
-	--color-heatmap-hover: var(--ochre-bright)
+	--color-heatmap-hover: var(--ochre-bright);
     --color-map-low: var(--umber);
     --color-map-high: var(--ochre);
     --color-map-empty: var(--dark-umber);

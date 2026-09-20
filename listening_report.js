@@ -1536,7 +1536,7 @@ function paintOverview(DATA){
   new Chart(document.getElementById('dowChart'), {
     type:'bar',
     data:{ labels: DATA.day_of_week.map(d=>d.day.slice(0,3)),
-      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: TEAL, borderRadius:3, barPercentage:0.6 }] },
+      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: GOLD, borderRadius:3, barPercentage:0.6 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } } }
   });
@@ -1908,7 +1908,7 @@ function renderReport(){
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
-      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:'#5a9a94', borderRadius:2, barPercentage:0.6 },
+      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:'#d6a24c', borderRadius:2, barPercentage:0.6 },
       { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:'rgba(90,154,148,0.3)', borderRadius:2, barPercentage:0.6 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,

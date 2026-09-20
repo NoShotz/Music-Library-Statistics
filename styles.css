@@ -19,8 +19,7 @@
     --map-empty:#332a1f;
     --target-line:#5a6a5a;
 
-    /* ---- Semantic tokens (assign palette colors to features) ---- */
-    --color-daily-scrobble-bars: var(--gold);
+    /* ---- Semantic tokens (feature → palette) ---- */
     --color-weekly-scrobble-bars: var(--gold);
     --color-weekly-scrobble-bars-prev: var(--gold-soft);
     --color-listening-clock-bars: var(--gold);

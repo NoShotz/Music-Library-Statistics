@@ -15,36 +15,32 @@ function utcOffsetHoursAt(ms){
 }
 
 // ---------- theme colors from CSS custom properties ----------
-// Palette + semantic --color-* tokens live in styles.css. JS only reads them.
-function cssVar(name, fallback=''){
+// All colors live in styles.css (:root palette + --color-* semantic tokens).
+function cssVar(name){
   let v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // Follow nested var(--token) references (semantic tokens → palette).
+  // Follow nested var(--token) chains (semantic → palette).
   for(let i=0; i<6 && v.startsWith('var('); i++){
     const m = v.match(/^var\(\s*(--[^,\s)]+)\s*(?:,\s*([^)]+))?\)/);
     if(!m) break;
     const next = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
-    v = next || (m[2]||'').trim() || fallback;
+    v = next || (m[2] || '').trim();
   }
-  return v || fallback;
+  return v;
 }
-function cssColor(name, fallback){
-  const raw = cssVar(name, fallback);
-  // Normalize to a concrete color string Chart.js / SVG can use.
+function cssColor(name){
+  const raw = cssVar(name);
+  if(!raw) return '';
   try {
-    const probe = document.createElement('div');
-    probe.style.color = raw;
-    // detach probe: use canvas instead (no DOM needed)
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.fillStyle = '#000';
     ctx.fillStyle = raw;
     const resolved = String(ctx.fillStyle);
     if(resolved && resolved !== '#000000') return resolved;
   } catch(e){}
-  return raw || fallback;
+  return raw;
 }
-// Resolve a CSS color token to [r,g,b] for heatmap/map interpolation.
-function cssColorRgb(name, fallbackHex){
-  const raw = cssColor(name, fallbackHex);
+function cssColorRgb(name){
+  const raw = cssColor(name);
   const hex = String(raw).match(/^#([0-9a-fA-F]{6})$/);
   if(hex){
     const n = parseInt(hex[1], 16);
@@ -52,9 +48,7 @@ function cssColorRgb(name, fallbackHex){
   }
   const rgb = String(raw).match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
   if(rgb) return [+rgb[1], +rgb[2], +rgb[3]];
-  const fb = (fallbackHex||'#000000').replace('#','');
-  const n = parseInt(fb, 16);
-  return [(n>>16)&255, (n>>8)&255, n&255];
+  return [0,0,0];
 }
 
 
@@ -1045,8 +1039,8 @@ function buildYearsHeatmap(scrobbles){
 }
 
 function heatmapColor(t){
-  const low = cssColorRgb('--color-heatmap-low', '#241d16');
-  const high = cssColorRgb('--color-heatmap-high', '#d6a24c');
+  const low = cssColorRgb('--color-heatmap-low');
+  const high = cssColorRgb('--color-heatmap-high');
   const c = low.map((lo,i)=>Math.round(lo + (high[i]-lo)*t));
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
@@ -1318,7 +1312,7 @@ function renderListeningClock(containerId, statElId, hourCounts){
     const center = h*15;
     const v = hourCounts[h] || 0;
     const rOuter = rInner + (v/max) * (rOuterMax - rInner);
-    const fill = v>0 ? cssColor('--color-listening-clock-bars', '#d6a24c') : cssColor('--color-listening-clock-empty', '#241d16');
+    const fill = v>0 ? cssColor('--color-listening-clock-bars') : cssColor('--color-listening-clock-empty');
     const path = annularSectorPath(cx,cy, rInner, Math.max(rInner+2, rOuter), center-7.5+gapDeg/2, center+7.5-gapDeg/2);
     bars += `<path class="clock-bar" d="${path}" fill="${fill}" data-hour="${h}" data-count="${v}"></path>`;
 
@@ -1330,8 +1324,8 @@ function renderListeningClock(containerId, statElId, hourCounts){
   }
 
   el.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" class="clock-svg">`+
-    `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="${cssColor('--color-listening-clock-ring','#241d16')}" stroke-width="1"></circle>`+
-    `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="${cssColor('--color-listening-clock-ring','#241d16')}" stroke-width="1" stroke-dasharray="2,3"></circle>`+
+    `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="${cssColor('--color-listening-clock-ring')}" stroke-width="1"></circle>`+
+    `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="${cssColor('--color-listening-clock-ring')}" stroke-width="1" stroke-dasharray="2,3"></circle>`+
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
@@ -1464,31 +1458,25 @@ function renderOverview(){
 }
 
 function paintOverview(DATA){
-  Chart.defaults.color = cssColor('--color-chart-ticks', '#a4937f');
+  Chart.defaults.color = cssColor('--color-chart-ticks');
   Chart.defaults.font.family = "'Work Sans', sans-serif";
   Chart.defaults.font.size = 11.5;
-  Chart.defaults.borderColor = cssColor('--color-chart-border', '#3a2f24');
+  Chart.defaults.borderColor = cssColor('--color-chart-border');
 
   // Match Chart.js's built-in tooltips to the look of our custom hover tooltips
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  Chart.defaults.plugins.tooltip.backgroundColor = cssColor('--color-chart-tooltip-bg', '#292019');
-  Chart.defaults.plugins.tooltip.titleColor = cssColor('--color-chart-tooltip-text', '#f2e8d8');
-  Chart.defaults.plugins.tooltip.bodyColor = cssColor('--color-chart-tooltip-text', '#f2e8d8');
-  Chart.defaults.plugins.tooltip.borderColor = cssColor('--color-chart-tooltip-border', '#3a2f24');
+  Chart.defaults.plugins.tooltip.backgroundColor = cssColor('--color-chart-tooltip-bg');
+  Chart.defaults.plugins.tooltip.titleColor = cssColor('--color-chart-tooltip-text');
+  Chart.defaults.plugins.tooltip.bodyColor = cssColor('--color-chart-tooltip-text');
+  Chart.defaults.plugins.tooltip.borderColor = cssColor('--color-chart-tooltip-border');
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.cornerRadius = 6;
   Chart.defaults.plugins.tooltip.padding = {top:8, bottom:8, left:12, right:12};
   Chart.defaults.plugins.tooltip.titleFont = {family:"'Work Sans', sans-serif", size:13, weight:'600'};
   Chart.defaults.plugins.tooltip.bodyFont = {family:"'Work Sans', sans-serif", size:13, weight:'400'};
   Chart.defaults.plugins.tooltip.displayColors = false;
-
-  const GOLD = cssColor('--color-decade-bars', '#d6a24c');
-  const GOLD_DIM = cssColor('--color-discovery-bars', 'rgba(214,162,76,0.35)');
-  const TEAL = cssColor('--teal', '#5a9a94');
-  const CHART_GRID = cssColor('--color-chart-grid', '#241d16');
-  const WEEKLY_BARS = cssColor('--color-weekly-scrobble-bars', GOLD);
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
   const years = (DATA.span_days/365.25).toFixed(1);
@@ -1540,12 +1528,12 @@ function paintOverview(DATA){
       type:'line',
       data:{ labels: DATA.can.yearlyCanadian.map(d=>d.year),
         datasets:[
-          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: cssColor('--color-canadian-line','#c0392b'), backgroundColor:cssColor('--color-canadian-fill','rgba(192,57,43,0.12)'), fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line','#c0392b') },
-          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:cssColor('--color-canadian-target','#5a6a5a'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
+          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: cssColor('--color-canadian-line'), backgroundColor:cssColor('--color-canadian-fill'), fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line') },
+          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:cssColor('--color-canadian-target'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
         ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.datasetIndex===0 ? c.parsed.y+'% Canadian' : '35% target' } } },
-        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
+        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
     });
     const co = document.getElementById('canCallout');
     co.style.display = 'block';
@@ -1566,10 +1554,10 @@ function paintOverview(DATA){
     new Chart(document.getElementById('decadeChart'), {
       type:'bar',
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
-        datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: GOLD, borderRadius:2, barPercentage:0.65 }] },
+        datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:CHART_GRID} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } } }
     });
   }
 
@@ -1582,9 +1570,9 @@ function paintOverview(DATA){
   new Chart(document.getElementById('dowChart'), {
     type:'bar',
     data:{ labels: DATA.day_of_week.map(d=>d.day.slice(0,3)),
-      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: WEEKLY_BARS, borderRadius:3, barPercentage:0.6 }] },
+      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: cssColor('--color-weekly-scrobble-bars'), borderRadius:3, barPercentage:0.6 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
   {
     const bestDay = busiestWeekday(DATA.day_of_week.map(d=>d.count));
@@ -1597,9 +1585,9 @@ function paintOverview(DATA){
   new Chart(document.getElementById('discoveryChart'), {
     type:'bar',
     data:{ labels: DATA.discovery.map(d=>d.year),
-      datasets:[{ data: DATA.discovery.map(d=>d.count), backgroundColor: GOLD_DIM, borderRadius:2, barPercentage:0.7 }] },
+      datasets:[{ data: DATA.discovery.map(d=>d.count), backgroundColor: cssColor('--color-discovery-bars'), borderRadius:2, barPercentage:0.7 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
 }
 
@@ -1701,7 +1689,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       labels: counts.map((_,i)=>String(i+1)),
       datasets:[{
         data: counts,
-        backgroundColor: cssColor('--color-month-daily-bars', '#d6a24c'),
+        backgroundColor: cssColor('--color-month-daily-bars'),
         borderRadius:2, barPercentage:0.75, categoryPercentage:0.9
       }]
     },
@@ -1713,7 +1701,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       },
       scales:{
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
-        y:{ grid:{color:cssColor('--color-chart-grid','#241d16')}, beginAtZero:true, ticks:{ precision:0 } }
+        y:{ grid:{color:cssColor('--color-chart-grid')}, beginAtZero:true, ticks:{ precision:0 } }
       },
       // Each bar is one calendar day of the month → click opens Library → Scrobbles filtered to that day.
       onClick: (evt, elements) => {
@@ -1735,8 +1723,8 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
 const MAP_BUCKET_COUNT = 10;
 
 function lerpColor(t){
-  const low = cssColorRgb('--color-map-low', '#5c4a30');
-  const high = cssColorRgb('--color-map-high', '#d6a24c');
+  const low = cssColorRgb('--color-map-low');
+  const high = cssColorRgb('--color-map-high');
   const c = low.map((lo,i)=>Math.round(lo + (high[i]-lo)*t));
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
@@ -1792,7 +1780,7 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     zoomOnScroll: false,
     showTooltip: false, // replaced by our own shared tooltip (see bindMapTooltips) so it matches every other tooltip on the site
     regionStyle: {
-      initial: { fill:cssColor('--color-map-empty','#332a1f'), fillOpacity:1, stroke:cssColor('--color-map-stroke','#15110d'), strokeWidth:0.6 },
+      initial: { fill:cssColor('--color-map-empty'), fillOpacity:1, stroke:cssColor('--color-map-stroke'), strokeWidth:0.6 },
       hover: { fillOpacity:1, cursor:'pointer' }
     },
     series: {
@@ -1859,7 +1847,6 @@ function renderReport(){
   }
   document.getElementById('reportEmpty').style.display = 'none';
   document.getElementById('reportBody').style.display = 'block';
-  const CHART_GRID = cssColor('--color-chart-grid', '#241d16');
 
   // ---- main stat grid ----
   const uniqueArtistsCur = cur.newArtists.uniqueCount, uniqueArtistsPrev = prev.newArtists.uniqueCount;
@@ -1955,12 +1942,12 @@ function renderReport(){
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
-      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars','#d6a24c'), borderRadius:2, barPercentage:0.6 },
-      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars-prev','rgba(214,162,76,0.35)'), borderRadius:2, barPercentage:0.6 }
+      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars'), borderRadius:2, barPercentage:0.6 },
+      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars-prev'), borderRadius:2, barPercentage:0.6 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } },
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
       onClick: weekDayDates ? (evt, elements) => {
         if(!elements.length || elements[0].datasetIndex !== 0) return;
         const dateStr = weekDayDates[elements[0].index];
@@ -2010,10 +1997,10 @@ function renderReport(){
     CHART_REFS.decade = new Chart(document.getElementById('reportDecadeChart'), {
       type:'bar',
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
-        datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars','#d6a24c'), borderRadius:2, barPercentage:0.65 }] },
+        datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:CHART_GRID} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } } }
     });
   } else {
     document.getElementById('reportDecadeCard').style.display = 'none';

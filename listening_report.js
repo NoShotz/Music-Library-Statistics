@@ -14,6 +14,50 @@ function utcOffsetHoursAt(ms){
   return (wallAsUtc - Math.floor(ms/1000)*1000) / 3600000;
 }
 
+// ---------- theme colors from CSS custom properties ----------
+// Palette + semantic --color-* tokens live in styles.css. JS only reads them.
+function cssVar(name, fallback=''){
+  let v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  // Follow nested var(--token) references (semantic tokens → palette).
+  for(let i=0; i<6 && v.startsWith('var('); i++){
+    const m = v.match(/^var\(\s*(--[^,\s)]+)\s*(?:,\s*([^)]+))?\)/);
+    if(!m) break;
+    const next = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+    v = next || (m[2]||'').trim() || fallback;
+  }
+  return v || fallback;
+}
+function cssColor(name, fallback){
+  const raw = cssVar(name, fallback);
+  // Normalize to a concrete color string Chart.js / SVG can use.
+  try {
+    const probe = document.createElement('div');
+    probe.style.color = raw;
+    // detach probe: use canvas instead (no DOM needed)
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillStyle = raw;
+    const resolved = String(ctx.fillStyle);
+    if(resolved && resolved !== '#000000') return resolved;
+  } catch(e){}
+  return raw || fallback;
+}
+// Resolve a CSS color token to [r,g,b] for heatmap/map interpolation.
+function cssColorRgb(name, fallbackHex){
+  const raw = cssColor(name, fallbackHex);
+  const hex = String(raw).match(/^#([0-9a-fA-F]{6})$/);
+  if(hex){
+    const n = parseInt(hex[1], 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  }
+  const rgb = String(raw).match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if(rgb) return [+rgb[1], +rgb[2], +rgb[3]];
+  const fb = (fallbackHex||'#000000').replace('#','');
+  const n = parseInt(fb, 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+
+
 let SCROBBLES = null;      // raw scrobbles from lastfm_data.json
 let ENRICHED = null;       // scrobbles + derived local-date fields, sorted ascending
 let LIBRARY = null;        // null until library_data.json loads successfully
@@ -1000,10 +1044,10 @@ function buildYearsHeatmap(scrobbles){
   return { rowLabels: years.map(String), colLabels, matrix, cellMeta, cellDate };
 }
 
-const HEATMAP_LOW = [0x24,0x1d,0x16];   // near the card background -- "0 scrobbles"
-const HEATMAP_HIGH = [0xd6,0xa2,0x4c];  // gold -- matches the rest of the site's high-value color
 function heatmapColor(t){
-  const c = HEATMAP_LOW.map((lo,i)=>Math.round(lo + (HEATMAP_HIGH[i]-lo)*t));
+  const low = cssColorRgb('--color-heatmap-low', '#241d16');
+  const high = cssColorRgb('--color-heatmap-high', '#d6a24c');
+  const c = low.map((lo,i)=>Math.round(lo + (high[i]-lo)*t));
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
@@ -1274,7 +1318,7 @@ function renderListeningClock(containerId, statElId, hourCounts){
     const center = h*15;
     const v = hourCounts[h] || 0;
     const rOuter = rInner + (v/max) * (rOuterMax - rInner);
-    const fill = v>0 ? '#d6a24c' : '#241d16'; // solid gold, matching decade bars
+    const fill = v>0 ? cssColor('--color-listening-clock-bars', '#d6a24c') : cssColor('--color-listening-clock-empty', '#241d16');
     const path = annularSectorPath(cx,cy, rInner, Math.max(rInner+2, rOuter), center-7.5+gapDeg/2, center+7.5-gapDeg/2);
     bars += `<path class="clock-bar" d="${path}" fill="${fill}" data-hour="${h}" data-count="${v}"></path>`;
 
@@ -1286,8 +1330,8 @@ function renderListeningClock(containerId, statElId, hourCounts){
   }
 
   el.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" class="clock-svg">`+
-    `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="#241d16" stroke-width="1"></circle>`+
-    `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="#241d16" stroke-width="1" stroke-dasharray="2,3"></circle>`+
+    `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="${cssColor('--color-listening-clock-ring','#241d16')}" stroke-width="1"></circle>`+
+    `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="${cssColor('--color-listening-clock-ring','#241d16')}" stroke-width="1" stroke-dasharray="2,3"></circle>`+
     bars + labels + `</svg>`;
 
   el.querySelectorAll('.clock-bar').forEach(bar=>{
@@ -1420,19 +1464,19 @@ function renderOverview(){
 }
 
 function paintOverview(DATA){
-  Chart.defaults.color = '#a4937f';
+  Chart.defaults.color = cssColor('--color-chart-ticks', '#a4937f');
   Chart.defaults.font.family = "'Work Sans', sans-serif";
   Chart.defaults.font.size = 11.5;
-  Chart.defaults.borderColor = '#3a2f24';
+  Chart.defaults.borderColor = cssColor('--color-chart-border', '#3a2f24');
 
   // Match Chart.js's built-in tooltips to the look of our custom hover tooltips
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  Chart.defaults.plugins.tooltip.backgroundColor = '#292019'; // var(--surface-2)
-  Chart.defaults.plugins.tooltip.titleColor = '#f2e8d8';      // var(--text)
-  Chart.defaults.plugins.tooltip.bodyColor = '#f2e8d8';       // var(--text)
-  Chart.defaults.plugins.tooltip.borderColor = '#3a2f24';     // var(--hair)
+  Chart.defaults.plugins.tooltip.backgroundColor = cssColor('--color-chart-tooltip-bg', '#292019');
+  Chart.defaults.plugins.tooltip.titleColor = cssColor('--color-chart-tooltip-text', '#f2e8d8');
+  Chart.defaults.plugins.tooltip.bodyColor = cssColor('--color-chart-tooltip-text', '#f2e8d8');
+  Chart.defaults.plugins.tooltip.borderColor = cssColor('--color-chart-tooltip-border', '#3a2f24');
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.cornerRadius = 6;
   Chart.defaults.plugins.tooltip.padding = {top:8, bottom:8, left:12, right:12};
@@ -1440,9 +1484,11 @@ function paintOverview(DATA){
   Chart.defaults.plugins.tooltip.bodyFont = {family:"'Work Sans', sans-serif", size:13, weight:'400'};
   Chart.defaults.plugins.tooltip.displayColors = false;
 
-  const GOLD = '#d6a24c';
-  const GOLD_DIM = 'rgba(214,162,76,0.35)';
-  const TEAL = '#5a9a94';
+  const GOLD = cssColor('--color-decade-bars', '#d6a24c');
+  const GOLD_DIM = cssColor('--color-discovery-bars', 'rgba(214,162,76,0.35)');
+  const TEAL = cssColor('--teal', '#5a9a94');
+  const CHART_GRID = cssColor('--color-chart-grid', '#241d16');
+  const WEEKLY_BARS = cssColor('--color-weekly-scrobble-bars', GOLD);
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
   const years = (DATA.span_days/365.25).toFixed(1);
@@ -1494,12 +1540,12 @@ function paintOverview(DATA){
       type:'line',
       data:{ labels: DATA.can.yearlyCanadian.map(d=>d.year),
         datasets:[
-          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: '#c0392b', backgroundColor:'rgba(192,57,43,0.12)', fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: '#c0392b' },
-          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:'#5a6a5a', borderDash:[4,4], pointRadius:0, borderWidth:1 }
+          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: cssColor('--color-canadian-line','#c0392b'), backgroundColor:cssColor('--color-canadian-fill','rgba(192,57,43,0.12)'), fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line','#c0392b') },
+          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:cssColor('--color-canadian-target','#5a6a5a'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
         ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.datasetIndex===0 ? c.parsed.y+'% Canadian' : '35% target' } } },
-        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
+        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
     });
     const co = document.getElementById('canCallout');
     co.style.display = 'block';
@@ -1523,7 +1569,7 @@ function paintOverview(DATA){
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: GOLD, borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:'#241d16'} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:CHART_GRID} }, y:{ grid:{display:false} } } }
     });
   }
 
@@ -1536,9 +1582,9 @@ function paintOverview(DATA){
   new Chart(document.getElementById('dowChart'), {
     type:'bar',
     data:{ labels: DATA.day_of_week.map(d=>d.day.slice(0,3)),
-      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: GOLD, borderRadius:3, barPercentage:0.6 }] },
+      datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: WEEKLY_BARS, borderRadius:3, barPercentage:0.6 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } } }
   });
   {
     const bestDay = busiestWeekday(DATA.day_of_week.map(d=>d.count));
@@ -1553,7 +1599,7 @@ function paintOverview(DATA){
     data:{ labels: DATA.discovery.map(d=>d.year),
       datasets:[{ data: DATA.discovery.map(d=>d.count), backgroundColor: GOLD_DIM, borderRadius:2, barPercentage:0.7 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } } }
   });
 }
 
@@ -1655,7 +1701,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       labels: counts.map((_,i)=>String(i+1)),
       datasets:[{
         data: counts,
-        backgroundColor: '#d6a24c', // solid gold, matching decade bars
+        backgroundColor: cssColor('--color-month-daily-bars', '#d6a24c'),
         borderRadius:2, barPercentage:0.75, categoryPercentage:0.9
       }]
     },
@@ -1667,7 +1713,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       },
       scales:{
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
-        y:{ grid:{color:'#241d16'}, beginAtZero:true, ticks:{ precision:0 } }
+        y:{ grid:{color:cssColor('--color-chart-grid','#241d16')}, beginAtZero:true, ticks:{ precision:0 } }
       },
       // Each bar is one calendar day of the month → click opens Library → Scrobbles filtered to that day.
       onClick: (evt, elements) => {
@@ -1686,12 +1732,12 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
 // ---- manual color scale (see renderCountryMap comment for why this is
 // computed by hand instead of handed to jsvectormap's built-in scale/
 // normalizeFunction) ----
-const MAP_COLOR_LOW = [0x5c,0x4a,0x30];   // #5c4a30
-const MAP_COLOR_HIGH = [0xd6,0xa2,0x4c];  // #d6a24c
 const MAP_BUCKET_COUNT = 10;
 
 function lerpColor(t){
-  const c = MAP_COLOR_LOW.map((lo,i)=>Math.round(lo + (MAP_COLOR_HIGH[i]-lo)*t));
+  const low = cssColorRgb('--color-map-low', '#5c4a30');
+  const high = cssColorRgb('--color-map-high', '#d6a24c');
+  const c = low.map((lo,i)=>Math.round(lo + (high[i]-lo)*t));
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
@@ -1746,7 +1792,7 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     zoomOnScroll: false,
     showTooltip: false, // replaced by our own shared tooltip (see bindMapTooltips) so it matches every other tooltip on the site
     regionStyle: {
-      initial: { fill:'#332a1f', fillOpacity:1, stroke:'#15110d', strokeWidth:0.6 },
+      initial: { fill:cssColor('--color-map-empty','#332a1f'), fillOpacity:1, stroke:cssColor('--color-map-stroke','#15110d'), strokeWidth:0.6 },
       hover: { fillOpacity:1, cursor:'pointer' }
     },
     series: {
@@ -1813,6 +1859,7 @@ function renderReport(){
   }
   document.getElementById('reportEmpty').style.display = 'none';
   document.getElementById('reportBody').style.display = 'block';
+  const CHART_GRID = cssColor('--color-chart-grid', '#241d16');
 
   // ---- main stat grid ----
   const uniqueArtistsCur = cur.newArtists.uniqueCount, uniqueArtistsPrev = prev.newArtists.uniqueCount;
@@ -1908,12 +1955,12 @@ function renderReport(){
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
-      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:'#d6a24c', borderRadius:2, barPercentage:0.6 },
-      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:'rgba(214,162,76,0.35)', borderRadius:2, barPercentage:0.6 }
+      { label: periodLabel(type,key), data: cur.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars','#d6a24c'), borderRadius:2, barPercentage:0.6 },
+      { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars-prev','rgba(214,162,76,0.35)'), borderRadius:2, barPercentage:0.6 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'#241d16'} } },
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:CHART_GRID} } },
       onClick: weekDayDates ? (evt, elements) => {
         if(!elements.length || elements[0].datasetIndex !== 0) return;
         const dateStr = weekDayDates[elements[0].index];
@@ -1963,10 +2010,10 @@ function renderReport(){
     CHART_REFS.decade = new Chart(document.getElementById('reportDecadeChart'), {
       type:'bar',
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
-        datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:'#d6a24c', borderRadius:2, barPercentage:0.65 }] },
+        datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars','#d6a24c'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:'#241d16'} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:CHART_GRID} }, y:{ grid:{display:false} } } }
     });
   } else {
     document.getElementById('reportDecadeCard').style.display = 'none';

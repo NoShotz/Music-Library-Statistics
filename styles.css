@@ -1,16 +1,49 @@
 :root{
+    /* ---- Palette (raw colors) ---- */
     --bg:#15110d;
     --surface:#1f1912;
     --surface-2:#292019;
     --hair:#3a2f24;
     --gold:#d6a24c;
     --gold-dim:#8a6c3a;
+    --gold-soft:rgba(214,162,76,0.35);
     --teal:#5a9a94;
     --red:#c0392b;
+    --red-soft:rgba(192,57,43,0.12);
     --text:#f2e8d8;
     --muted:#a4937f;
     --muted-2:#7a6c5c;
     --green:#7fae7a;
+    --chart-empty:#241d16;
+    --map-low:#5c4a30;
+    --map-empty:#332a1f;
+    --target-line:#5a6a5a;
+
+    /* ---- Semantic tokens (assign palette colors to features) ---- */
+    --color-daily-scrobble-bars: var(--gold);
+    --color-weekly-scrobble-bars: var(--gold);
+    --color-weekly-scrobble-bars-prev: var(--gold-soft);
+    --color-listening-clock-bars: var(--gold);
+    --color-listening-clock-empty: var(--chart-empty);
+    --color-listening-clock-ring: var(--chart-empty);
+    --color-decade-bars: var(--gold);
+    --color-month-daily-bars: var(--gold);
+    --color-discovery-bars: var(--gold-soft);
+    --color-heatmap-low: var(--chart-empty);
+    --color-heatmap-high: var(--gold);
+    --color-map-low: var(--map-low);
+    --color-map-high: var(--gold);
+    --color-map-empty: var(--map-empty);
+    --color-map-stroke: var(--bg);
+    --color-canadian-line: var(--red);
+    --color-canadian-fill: var(--red-soft);
+    --color-canadian-target: var(--target-line);
+    --color-chart-grid: var(--chart-empty);
+    --color-chart-ticks: var(--muted);
+    --color-chart-border: var(--hair);
+    --color-chart-tooltip-bg: var(--surface-2);
+    --color-chart-tooltip-text: var(--text);
+    --color-chart-tooltip-border: var(--hair);
   }
   *{box-sizing:border-box;}
   body{
@@ -275,7 +308,7 @@
   .heatmap-row.col-label-row{height:16px;flex:0 0 16px;}
   .heatmap-cell{
     flex:0 0 var(--cell);width:var(--cell);height:var(--cell);border-radius:2px;
-    background:#241d16;cursor:default;
+    background:var(--chart-empty);cursor:default;
   }
   .heatmap-cell.clickable{cursor:pointer;}
   .heatmap-cell.clickable:hover{outline:1px solid var(--gold-dim);}

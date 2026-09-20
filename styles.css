@@ -60,6 +60,7 @@
     --color-heatmap-low: var(--deep-brown);
     --color-heatmap-high: var(--ochre);
     --color-heatmap-empty: var(--deep-brown);
+	--color-heatmap-hover: var(--ochre-bright)
     --color-map-low: var(--umber);
     --color-map-high: var(--ochre);
     --color-map-empty: var(--dark-umber);
@@ -340,7 +341,7 @@
     background:var(--color-heatmap-empty);cursor:default;
   }
   .heatmap-cell.clickable{cursor:pointer;}
-  .heatmap-cell.clickable:hover{outline:1px solid var(--color-accent-dim);}
+  .heatmap-cell.clickable:hover{outline:1px solid var(--color-heatmap-hover);}
   .heatmap-cell.empty{background:transparent;cursor:default;}
   .map-box .jvm-region{cursor:pointer;}
   .clock-svg{overflow:visible;}

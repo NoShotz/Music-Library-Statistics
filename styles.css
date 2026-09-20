@@ -497,6 +497,7 @@
   }
   .seg-btn + .seg-btn{ border-left:1px solid var(--color-border); }
   .seg-btn.active{ background:var(--color-surface-raised);border-color:var(--color-accent-dim);color:var(--color-accent); }
+  .seg-btn:hover{ color:var(--text); }
   .period-nav{ display:flex; align-items:center; gap:10px; }
   .nav-arrow{
     background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text);

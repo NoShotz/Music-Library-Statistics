@@ -810,6 +810,13 @@ function isoForCountry(name){
 function primaryCountry(countryStr){
   return countryStr.split(';')[0].trim();
 }
+// True when the artist's country (via COUNTRY_BY_ARTIST) maps to the given ISO2 code.
+function artistMatchesCountryIso(na, iso){
+  if(!iso || !COUNTRY_BY_ARTIST) return false;
+  const country = COUNTRY_BY_ARTIST[na];
+  if(country === undefined) return false;
+  return isoForCountry(primaryCountry(country)) === iso;
+}
 
 // Canadian-content stats for a set of scrobbles -- lifetime %, match rate, etc.
 function canadianStatsFor(scrobbles){
@@ -1815,11 +1822,18 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
         `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
-        `<div style="opacity:0.75;">Top Artist: ${m.topArtist}</div>`;
+        `<div style="opacity:0.75;">Top Artist: ${m.topArtist}</div>` +
+        `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
     path.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
+    path.addEventListener('click', ()=>{
+      const m = meta[path.getAttribute('data-code')];
+      if(!m || !m.iso) return;
+      hideTooltip(getHeatmapTooltip());
+      goToLibraryByCountry(m.iso, m.country);
+    });
   });
 }
 
@@ -2048,6 +2062,7 @@ const LIBRARY_STATE = {
   subTab: 'artists',
   filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null,
   filterTrackKey: null, filterTrackLabel: null,
+  filterCountryIso: null, filterCountryLabel: null,
   searchQuery: '',
   datePreset: 'all', dateFrom: null, dateTo: null,
   page: 0
@@ -2079,6 +2094,8 @@ function resetLibraryFilters(){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterCountryIso = null;
+  LIBRARY_STATE.filterCountryLabel = null;
   clearLibrarySearch();
   clearLibraryDateRange();
   LIBRARY_STATE.page = 0;
@@ -2260,6 +2277,8 @@ function goToLibrary(itemType, item){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterCountryIso = null;
+  LIBRARY_STATE.filterCountryLabel = null;
   clearLibrarySearch();
   LIBRARY_STATE.page = 0;
 
@@ -2302,10 +2321,40 @@ function goToLibraryScrobblesByDate(dateStr){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterCountryIso = null;
+  LIBRARY_STATE.filterCountryLabel = null;
   clearLibrarySearch();
   setLibraryCustomDateRange(dateStr, dateStr);
   LIBRARY_STATE.subTab = 'scrobbles';
   LIBRARY_STATE.page = 0;
+
+  switchToLibraryTab();
+  renderLibraryTab();
+}
+
+// Overview/Reports country-map click → Library scoped to that country.
+// Overview keeps all-time dates; Reports uses the active year/month/week range.
+function goToLibraryByCountry(iso, countryLabel){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
+  clearLibrarySearch();
+  LIBRARY_STATE.filterCountryIso = iso || null;
+  LIBRARY_STATE.filterCountryLabel = countryLabel || iso || null;
+  LIBRARY_STATE.subTab = 'artists';
+  LIBRARY_STATE.page = 0;
+
+  const onReport = document.getElementById('tab-report') &&
+    document.getElementById('tab-report').style.display !== 'none';
+  if(onReport){
+    const b = reportPeriodDateBounds();
+    if(b) setLibraryCustomDateRange(b.from, b.to);
+    else clearLibraryDateRange();
+  } else {
+    clearLibraryDateRange();
+  }
 
   switchToLibraryTab();
   renderLibraryTab();
@@ -2620,8 +2669,16 @@ function renderLibraryTab(){
   }
 
   // Apply every drill-down filter that is valid for the current sub-tab.
-  // Artist → albums/tracks/scrobbles; album → tracks/scrobbles; track → scrobbles.
+  // Country (from map) applies on every sub-tab; artist → albums/tracks/scrobbles;
+  // album → tracks/scrobbles; track → scrobbles.
   const filterParts = [];
+  if(LIBRARY_STATE.filterCountryIso){
+    const iso = LIBRARY_STATE.filterCountryIso;
+    scope = scope.filter(r => artistMatchesCountryIso(r.na, iso));
+    filtered = true;
+    const label = LIBRARY_STATE.filterCountryLabel || iso;
+    filterParts.push(`in <b>${label}</b>`);
+  }
   if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);
     scope = scope.filter(r=>normArtist(r.artist)===na);

@@ -880,7 +880,7 @@ function countryRowsFor(scrobbles){
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
   const counts = {};
-  const byAlbum = {};
+  const byAlbum = {}; // decade -> albumKey -> scrobble count
   scrobbles.forEach(r=>{
     const meta = TRACK_META[joinKey(r.na, r.nt)];
     if(meta && meta.year){
@@ -902,7 +902,13 @@ function decadeRowsFor(scrobbles){
       topAlbum = d.album;
       topArtist = d.artist;
     }
-    return { decade: dec, count: counts[dec], topAlbum, topArtist, topAlbumCount: topCount > 0 ? topCount : null };
+    return {
+      decade: dec,
+      count: counts[dec],
+      topAlbum,
+      topArtist,
+      topAlbumCount: topCount > 0 ? topCount : null
+    };
   });
 }
 // Scrobble's track release year falls in [decade, decade+9] (from TRACK_META / library_data).
@@ -1113,6 +1119,8 @@ function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
 // Chart.js → shared .chart-tooltip (title 600, body, secondary @0.75, footer @0.6/12px).
+// Same element and hierarchy as country map / heatmap / clock tooltips.
+// Decade charts use the same path: label / afterLabel / footer callbacks supply content.
 function chartJsExternalTooltip(context){
   const tt = getHeatmapTooltip();
   const tip = context.tooltip;
@@ -1133,10 +1141,12 @@ function chartJsExternalTooltip(context){
     html += `<div style="font-weight:600;${mb}">${t}</div>`;
   });
   bodyLines.forEach((line, i) => {
+    if(!line) return;
     const style = i === 0 ? '' : ' style="opacity:0.75;"';
     html += `<div${style}>${line}</div>`;
   });
   footers.forEach(f => {
+    if(!f) return;
     html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
   });
   tt.innerHTML = html;
@@ -1534,10 +1544,10 @@ function paintOverview(DATA){
   Chart.defaults.font.size = 11.5;
   Chart.defaults.borderColor = cssColor('--color-chart-border');
 
-  // Match Chart.js's built-in tooltips to the look of our custom hover tooltips
-  // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
-  // than leaving Chart.js's generic black default -- same colors, font, corner
-  // radius and padding, and no color-swatch box since ours don't have one either.
+  // Match Chart.js tooltips to our custom hover tooltips (heatmap/clock/map,
+  // styled via .chart-tooltip) rather than Chart.js's generic black default.
+  // Content still comes from per-chart tooltip.callbacks; rendering uses the
+  // shared .chart-tooltip element so every chart matches map/heatmap/clock.
   Chart.defaults.plugins.tooltip.enabled = false;
   Chart.defaults.plugins.tooltip.external = chartJsExternalTooltip;
   Chart.defaults.plugins.tooltip.displayColors = false;

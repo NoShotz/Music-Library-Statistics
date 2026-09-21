@@ -2410,7 +2410,7 @@ function goToLibraryByDecade(decade){
   LIBRARY_STATE.filterCountryLabel = null;
   clearLibrarySearch();
   LIBRARY_STATE.filterDecade = (decade == null ? null : Number(decade));
-  LIBRARY_STATE.subTab = 'artists';
+  LIBRARY_STATE.subTab = 'albums';
   LIBRARY_STATE.page = 0;
 
   const onReport = document.getElementById('tab-report') &&

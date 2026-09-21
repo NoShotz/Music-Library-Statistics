@@ -880,7 +880,7 @@ function countryRowsFor(scrobbles){
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
   const counts = {};
-  const byAlbum = {}; // decade -> albumKey -> scrobble count
+  const byAlbum = {};
   scrobbles.forEach(r=>{
     const meta = TRACK_META[joinKey(r.na, r.nt)];
     if(meta && meta.year){
@@ -902,13 +902,7 @@ function decadeRowsFor(scrobbles){
       topAlbum = d.album;
       topArtist = d.artist;
     }
-    return {
-      decade: dec,
-      count: counts[dec],
-      topAlbum,
-      topArtist,
-      topAlbumCount: topCount > 0 ? topCount : null
-    };
+    return { decade: dec, count: counts[dec], topAlbum, topArtist, topAlbumCount: topCount > 0 ? topCount : null };
   });
 }
 // Scrobble's track release year falls in [decade, decade+9] (from TRACK_META / library_data).
@@ -1118,7 +1112,40 @@ function positionTooltipAtPoint(tt, x, y){
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
-// Decade bars: same HTML structure/opacity as country-map tooltips.
+// Chart.js → shared .chart-tooltip (same opacity hierarchy as map/heatmap/clock).
+function chartJsExternalTooltip(context){
+  const tt = getHeatmapTooltip();
+  const tip = context.tooltip;
+  if(!tip || tip.opacity === 0){
+    hideTooltip(tt);
+    return;
+  }
+  const titles = tip.title || [];
+  const bodyLines = (tip.body || []).flatMap(b => b.lines || []);
+  const footers = tip.footer || [];
+  if(!titles.length && !bodyLines.length && !footers.length){
+    hideTooltip(tt);
+    return;
+  }
+  let html = '';
+  titles.forEach((t, i) => {
+    const mb = (i === titles.length - 1 && (bodyLines.length || footers.length)) ? 'margin-bottom:2px;' : '';
+    html += `<div style="font-weight:600;${mb}">${t}</div>`;
+  });
+  bodyLines.forEach((line, i) => {
+    const style = i === 0 ? '' : ' style="opacity:0.75;"';
+    html += `<div${style}>${line}</div>`;
+  });
+  footers.forEach(f => {
+    html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
+  });
+  tt.innerHTML = html;
+  const rect = context.chart.canvas.getBoundingClientRect();
+  positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
+  showTooltip(tt);
+}
+
+// Decade-specific content (top album + %) using the same shared tooltip element.
 function decadeTooltipHtml(row, totalScrobbles){
   if(!row) return '';
   const pct = totalScrobbles ? Math.round(row.count/totalScrobbles*1000)/10 : null;
@@ -1140,8 +1167,7 @@ function decadeChartExternalTooltip(rows, totalScrobbles){
       hideTooltip(tt);
       return;
     }
-    const row = rows[tip.dataPoints[0].dataIndex];
-    tt.innerHTML = decadeTooltipHtml(row, totalScrobbles);
+    tt.innerHTML = decadeTooltipHtml(rows[tip.dataPoints[0].dataIndex], totalScrobbles);
     const rect = context.chart.canvas.getBoundingClientRect();
     positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
     showTooltip(tt);
@@ -1226,8 +1252,14 @@ function renderHeatmap(containerId, heat, opts){
     cell.addEventListener('mouseenter', ()=>{
       const tt = getHeatmapTooltip();
       const count = Number(cell.dataset.count);
-      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
-        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
+      const total = opts.totalScrobbles;
+      const pct = total ? Math.round(count/total*1000)/10 : null;
+      let html = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
+        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
+      if(opts.dateClickable && cell.dataset.rawDate){
+        html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
+      }
+      tt.innerHTML = html;
       positionTooltipAtElement(tt, cell);
       showTooltip(tt);
     });
@@ -1533,15 +1565,10 @@ function paintOverview(DATA){
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  Chart.defaults.plugins.tooltip.backgroundColor = cssColor('--color-chart-tooltip-bg');
-  Chart.defaults.plugins.tooltip.titleColor = cssColor('--color-chart-tooltip-text');
-  Chart.defaults.plugins.tooltip.bodyColor = cssColor('--color-chart-tooltip-text');
-  Chart.defaults.plugins.tooltip.borderColor = cssColor('--color-chart-tooltip-border');
-  Chart.defaults.plugins.tooltip.borderWidth = 1;
-  Chart.defaults.plugins.tooltip.cornerRadius = 6;
-  Chart.defaults.plugins.tooltip.padding = {top:8, bottom:8, left:12, right:12};
-  Chart.defaults.plugins.tooltip.titleFont = {family:"'Work Sans', sans-serif", size:13, weight:'600'};
-  Chart.defaults.plugins.tooltip.bodyFont = {family:"'Work Sans', sans-serif", size:13, weight:'400'};
+  // Per-chart callbacks still supply title/body/footer text; rendering goes
+  // through the shared .chart-tooltip so every Chart.js chart matches map/heatmap.
+  Chart.defaults.plugins.tooltip.enabled = false;
+  Chart.defaults.plugins.tooltip.external = chartJsExternalTooltip;
   Chart.defaults.plugins.tooltip.displayColors = false;
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
@@ -1581,7 +1608,7 @@ function paintOverview(DATA){
     `<div class="fact"><h3 class="stat-title">${f[1]}</h3><div class="fact-num">${f[0]}</div></div>`
   ).join('');
 
-  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true, dateClickable:true});
+  renderHeatmap('yearsHeatmap', buildYearsHeatmap(ENRICHED), {scrollXY:true, dateClickable:true, totalScrobbles: DATA.total_scrobbles});
   renderChartSideStat('yearsHeatmapBusiest', DATA.busiest_day ? [
     {label:'Busiest day', value:fmtDateNice(DATA.busiest_day.date)},
     {label:'Scrobbles on busiest day', value:fmtNum(DATA.busiest_day.count)}
@@ -1964,7 +1991,7 @@ function renderReport(){
     destroyChart('subPeriod');
     document.getElementById('subPeriodTitle').textContent = 'Daily Scrobbles';
     setText('subPeriodDesc', periodLabel(type,key));
-    renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles), {dateClickable:true});
+    renderHeatmap('subPeriodHeatmap', buildYearHeatmap(Number(key), curScrobbles), {dateClickable:true, totalScrobbles: cur.n});
     renderChartSideStat('subPeriodBusiest', cur.busiestDay ? [
       {label:'Busiest day', value:fmtDayMonth(cur.busiestDay.date)},
       {label:'Scrobbles on busiest day', value:fmtNum(cur.busiestDay.count)}

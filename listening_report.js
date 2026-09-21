@@ -1113,7 +1113,6 @@ function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
 // Chart.js → shared .chart-tooltip (title 600, body, secondary @0.75, footer @0.6/12px).
-// Same element and hierarchy as country map / heatmap / clock tooltips.
 function chartJsExternalTooltip(context){
   const tt = getHeatmapTooltip();
   const tip = context.tooltip;
@@ -1539,7 +1538,6 @@ function paintOverview(DATA){
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  // Callbacks still supply title/body/footer text; rendering uses shared .chart-tooltip.
   Chart.defaults.plugins.tooltip.enabled = false;
   Chart.defaults.plugins.tooltip.external = chartJsExternalTooltip;
   Chart.defaults.plugins.tooltip.displayColors = false;

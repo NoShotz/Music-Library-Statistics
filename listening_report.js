@@ -1120,7 +1120,7 @@ function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
 // Chart.js → shared .chart-tooltip (title 600, body, secondary @0.75, footer @0.6/12px).
 // Same element and hierarchy as country map / heatmap / clock tooltips.
-// Decade charts use the same path: label / afterLabel / footer callbacks supply content.
+// label callbacks may return a string or string[]; afterLabel/footer feed in the same way.
 function chartJsExternalTooltip(context){
   const tt = getHeatmapTooltip();
   const tip = context.tooltip;
@@ -1129,8 +1129,9 @@ function chartJsExternalTooltip(context){
     return;
   }
   const titles = tip.title || [];
-  const bodyLines = (tip.body || []).flatMap(b => b.lines || []);
-  const footers = tip.footer || [];
+  // Flatten body lines; Chart.js stores each callback result as {lines: string[]}
+  const bodyLines = (tip.body || []).flatMap(b => b.lines || []).filter(Boolean);
+  const footers = (tip.footer || []).filter(Boolean);
   if(!titles.length && !bodyLines.length && !footers.length){
     hideTooltip(tt);
     return;
@@ -1141,12 +1142,10 @@ function chartJsExternalTooltip(context){
     html += `<div style="font-weight:600;${mb}">${t}</div>`;
   });
   bodyLines.forEach((line, i) => {
-    if(!line) return;
     const style = i === 0 ? '' : ' style="opacity:0.75;"';
     html += `<div${style}>${line}</div>`;
   });
   footers.forEach(f => {
-    if(!f) return;
     html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
   });
   tt.innerHTML = html;
@@ -1631,16 +1630,17 @@ function paintOverview(DATA){
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+          // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
           label: c => {
+            const row = DATA.decade[c.dataIndex];
             const total = DATA.total_scrobbles;
             const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = DATA.decade[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+            const lines = [fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '')];
+            if(row && row.topAlbum){
+              const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+              lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
+            }
+            return lines;
           },
           footer: () => 'Click to view in Library'
         } } },
@@ -2129,15 +2129,15 @@ function renderReport(){
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{
           label: c => {
+            const row = cur.decades[c.dataIndex];
             const total = cur.n;
             const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = cur.decades[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+            const lines = [fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '')];
+            if(row && row.topAlbum){
+              const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+              lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
+            }
+            return lines;
           },
           footer: () => 'Click to view in Library'
         } } },

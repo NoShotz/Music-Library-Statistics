@@ -500,13 +500,13 @@
   .seg-btn:hover{ color:var(--text); }
   .period-nav{ display:flex; align-items:center; gap:10px; }
   .nav-arrow{
-    background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text);
+    background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text-muted);
     width:34px;height:34px; font-size:16px; cursor:pointer; line-height:1;
   }
   .nav-arrow:disabled{ opacity:.3; cursor:default; }
   .nav-arrow:not(:disabled):hover{ color:var(--text); }
   #periodSelect{
-    background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border);
+    background:var(--color-surface); color:var(--color-text-muted); border:1px solid var(--color-border);
     padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12.5px;
     min-width:160px;
   }

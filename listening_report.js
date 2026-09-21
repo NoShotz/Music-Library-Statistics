@@ -2085,10 +2085,11 @@ function renderReport(){
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{ callbacks:{
+        title: items => items[0] ? items[0].label+' · '+items[0].dataset.label : '',
         label: c => {
           const total = c.datasetIndex === 0 ? cur.n : (prev && prev.n);
           const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
-          return (c.dataset.label ? c.dataset.label+': ' : '') + fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+          return fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
         },
         footer: () => weekDayDates ? 'Click to view in Library' : ''
       } } },

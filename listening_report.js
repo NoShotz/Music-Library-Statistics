@@ -889,6 +889,13 @@ function decadeRowsFor(scrobbles){
   });
   return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>({decade:dec, count:counts[dec]}));
 }
+// Scrobble's track release year falls in [decade, decade+9] (from TRACK_META / library_data).
+function scrobbleMatchesDecade(r, decade){
+  if(decade == null || !TRACK_META) return false;
+  const meta = TRACK_META[joinKey(r.na, r.nt)];
+  if(!meta || meta.year == null) return false;
+  return Math.floor(Number(meta.year)/10)*10 === Number(decade);
+}
 
 function computeNew(scrobbles, type, periodType, periodKey){
   const firstMap = type==='artist' ? GLOBAL_FIRST.firstArtist
@@ -1564,7 +1571,16 @@ function paintOverview(DATA){
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
+        onClick: (evt, elements) => {
+          if(!elements.length) return;
+          const row = DATA.decade[elements[0].index];
+          if(row) goToLibraryByDecade(row.decade);
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        }
+      }
     });
   }
 
@@ -2018,7 +2034,16 @@ function renderReport(){
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
-        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } } }
+        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
+        onClick: (evt, elements) => {
+          if(!elements.length) return;
+          const row = cur.decades[elements[0].index];
+          if(row) goToLibraryByDecade(row.decade);
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        }
+      }
     });
   } else {
     document.getElementById('reportDecadeCard').style.display = 'none';
@@ -2068,6 +2093,7 @@ const LIBRARY_STATE = {
   filterArtist: null, filterAlbumKey: null, filterAlbumLabel: null,
   filterTrackKey: null, filterTrackLabel: null,
   filterCountryIso: null, filterCountryLabel: null,
+  filterDecade: null,
   searchQuery: '',
   datePreset: 'all', dateFrom: null, dateTo: null,
   page: 0
@@ -2101,6 +2127,7 @@ function resetLibraryFilters(){
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterCountryIso = null;
   LIBRARY_STATE.filterCountryLabel = null;
+  LIBRARY_STATE.filterDecade = null;
   clearLibrarySearch();
   clearLibraryDateRange();
   LIBRARY_STATE.page = 0;
@@ -2284,6 +2311,7 @@ function goToLibrary(itemType, item){
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterCountryIso = null;
   LIBRARY_STATE.filterCountryLabel = null;
+  LIBRARY_STATE.filterDecade = null;
   clearLibrarySearch();
   LIBRARY_STATE.page = 0;
 
@@ -2328,6 +2356,7 @@ function goToLibraryScrobblesByDate(dateStr){
   LIBRARY_STATE.filterTrackLabel = null;
   LIBRARY_STATE.filterCountryIso = null;
   LIBRARY_STATE.filterCountryLabel = null;
+  LIBRARY_STATE.filterDecade = null;
   clearLibrarySearch();
   setLibraryCustomDateRange(dateStr, dateStr);
   LIBRARY_STATE.subTab = 'scrobbles';
@@ -2347,9 +2376,40 @@ function goToLibraryByCountry(iso, countryLabel){
   LIBRARY_STATE.filterAlbumLabel = null;
   LIBRARY_STATE.filterTrackKey = null;
   LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterDecade = null;
   clearLibrarySearch();
   LIBRARY_STATE.filterCountryIso = iso || null;
   LIBRARY_STATE.filterCountryLabel = countryLabel || iso || null;
+  LIBRARY_STATE.subTab = 'artists';
+  LIBRARY_STATE.page = 0;
+
+  const onReport = document.getElementById('tab-report') &&
+    document.getElementById('tab-report').style.display !== 'none';
+  if(onReport){
+    const b = reportPeriodDateBounds();
+    if(b) setLibraryCustomDateRange(b.from, b.to);
+    else clearLibraryDateRange();
+  } else {
+    clearLibraryDateRange();
+  }
+
+  switchToLibraryTab();
+  renderLibraryTab();
+}
+
+// Overview/Reports "Music by decade" bar click → Library scoped to that release decade.
+// Overview = all time; Reports = active year/month/week. Decade is the 10-year
+// bucket of the track's release year from library_data.json (via TRACK_META).
+function goToLibraryByDecade(decade){
+  LIBRARY_STATE.filterArtist = null;
+  LIBRARY_STATE.filterAlbumKey = null;
+  LIBRARY_STATE.filterAlbumLabel = null;
+  LIBRARY_STATE.filterTrackKey = null;
+  LIBRARY_STATE.filterTrackLabel = null;
+  LIBRARY_STATE.filterCountryIso = null;
+  LIBRARY_STATE.filterCountryLabel = null;
+  clearLibrarySearch();
+  LIBRARY_STATE.filterDecade = (decade == null ? null : Number(decade));
   LIBRARY_STATE.subTab = 'artists';
   LIBRARY_STATE.page = 0;
 
@@ -2685,6 +2745,12 @@ function renderLibraryTab(){
     filtered = true;
     const label = LIBRARY_STATE.filterCountryLabel || iso;
     filterParts.push(`from <b>${label}</b>`);
+  }
+  if(LIBRARY_STATE.filterDecade != null){
+    const dec = LIBRARY_STATE.filterDecade;
+    scope = scope.filter(r => scrobbleMatchesDecade(r, dec));
+    filtered = true;
+    filterParts.push(`from the <b>${dec}s</b>`);
   }
   if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);

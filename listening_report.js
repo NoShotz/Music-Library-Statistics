@@ -1081,19 +1081,20 @@ function heatmapColor(t){
   return '#' + c.map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
-// Shared tooltip element reused by heatmap cells and the listening clock,
-// styled to match the country map's tooltip (and now Chart.js's, via the
-// shared .jvm-tooltip class). Positions itself above the hovered element
+// Shared tooltip element reused by every hover surface on the site: heatmap
+// cells, the listening clock, the country map (via bindMapTooltips), and
+// Chart.js (via chartJsExternalTooltip below) -- all styled through the one
+// .chart-tooltip class. Positions itself above the hovered element
 // (not the cursor) and fades in/out, matching Chart.js's native tooltip feel.
-let HEATMAP_TOOLTIP_EL = null;
-function getHeatmapTooltip(){
-  if(!HEATMAP_TOOLTIP_EL){
-    HEATMAP_TOOLTIP_EL = document.createElement('div');
-    HEATMAP_TOOLTIP_EL.className = 'chart-tooltip';
-    Object.assign(HEATMAP_TOOLTIP_EL.style, { position:'fixed', pointerEvents:'none', zIndex:'9999' });
-    document.body.appendChild(HEATMAP_TOOLTIP_EL);
+let SHARED_TOOLTIP_EL = null;
+function getSharedTooltip(){
+  if(!SHARED_TOOLTIP_EL){
+    SHARED_TOOLTIP_EL = document.createElement('div');
+    SHARED_TOOLTIP_EL.className = 'chart-tooltip';
+    Object.assign(SHARED_TOOLTIP_EL.style, { position:'fixed', pointerEvents:'none', zIndex:'9999' });
+    document.body.appendChild(SHARED_TOOLTIP_EL);
   }
-  return HEATMAP_TOOLTIP_EL;
+  return SHARED_TOOLTIP_EL;
 }
 // Anchors the tooltip centered above the hovered element's own rect. Good fit
 // for simple, geographically-whole shapes (heatmap cells, clock wedges) where
@@ -1122,7 +1123,7 @@ function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 // Same element and hierarchy as country map / heatmap / clock tooltips.
 // label callbacks may return a string or string[]; afterLabel/footer feed in the same way.
 function chartJsExternalTooltip(context){
-  const tt = getHeatmapTooltip();
+  const tt = getSharedTooltip();
   const tip = context.tooltip;
   if(!tip || tip.opacity === 0){
     hideTooltip(tt);
@@ -1230,7 +1231,7 @@ function renderHeatmap(containerId, heat, opts){
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
     cell.addEventListener('mouseenter', ()=>{
-      const tt = getHeatmapTooltip();
+      const tt = getSharedTooltip();
       const count = Number(cell.dataset.count);
       const total = opts.totalScrobbles;
       const pct = total ? Math.round(count/total*1000)/10 : null;
@@ -1243,7 +1244,7 @@ function renderHeatmap(containerId, heat, opts){
       positionTooltipAtElement(tt, cell);
       showTooltip(tt);
     });
-    cell.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
+    cell.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
     if(opts.dateClickable){
       cell.addEventListener('click', () => {
         if(cell.dataset.rawDate) goToLibraryScrobblesByDate(cell.dataset.rawDate);
@@ -1409,7 +1410,7 @@ function renderListeningClock(containerId, statElId, hourCounts){
   el.querySelectorAll('.clock-bar').forEach(bar=>{
     bar.addEventListener('mouseenter', evt=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
-      const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
+      const tt = getSharedTooltip();
       const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
       const pct = clockTotal ? Math.round(count/clockTotal*1000)/10 : null;
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
@@ -1420,7 +1421,7 @@ function renderListeningClock(containerId, statElId, hourCounts){
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
-    bar.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
+    bar.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
   });
 
   const best = busiestHour(hourCounts);
@@ -1922,7 +1923,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
     path.addEventListener('mouseenter', evt=>{
       const m = meta[path.getAttribute('data-code')];
       if(!m) return; // no scrobbles matched to this country
-      const tt = getHeatmapTooltip();
+      const tt = getSharedTooltip();
       const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
         `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
@@ -1931,11 +1932,11 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });
-    path.addEventListener('mouseleave', () => hideTooltip(getHeatmapTooltip()));
+    path.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
     path.addEventListener('click', ()=>{
       const m = meta[path.getAttribute('data-code')];
       if(!m || !m.iso) return;
-      hideTooltip(getHeatmapTooltip());
+      hideTooltip(getSharedTooltip());
       goToLibraryByCountry(m.iso, m.country);
     });
   });

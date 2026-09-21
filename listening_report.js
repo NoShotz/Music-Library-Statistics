@@ -810,12 +810,13 @@ function isoForCountry(name){
 function primaryCountry(countryStr){
   return countryStr.split(';')[0].trim();
 }
-// True when the artist's country (via COUNTRY_BY_ARTIST) maps to the given ISO2 code.
+// True when any segment of the artist's country string (semicolon-separated in
+// library_data.json, e.g. "England; United Kingdom") maps to the given ISO2.
 function artistMatchesCountryIso(na, iso){
   if(!iso || !COUNTRY_BY_ARTIST) return false;
   const country = COUNTRY_BY_ARTIST[na];
-  if(country === undefined) return false;
-  return isoForCountry(primaryCountry(country)) === iso;
+  if(country === undefined || country === null || country === '') return false;
+  return String(country).split(';').some(part => isoForCountry(part.trim()) === iso);
 }
 
 // Canadian-content stats for a set of scrobbles -- lifetime %, match rate, etc.
@@ -2333,7 +2334,9 @@ function goToLibraryScrobblesByDate(dateStr){
 }
 
 // Overview/Reports country-map click → Library scoped to that country.
-// Overview keeps all-time dates; Reports uses the active year/month/week range.
+// Overview = all time; Reports = active year/month/week. Artists with multiple
+// countries in library_data.json (semicolon-separated) match if any segment
+// resolves to the clicked ISO2 code.
 function goToLibraryByCountry(iso, countryLabel){
   LIBRARY_STATE.filterArtist = null;
   LIBRARY_STATE.filterAlbumKey = null;
@@ -2677,7 +2680,7 @@ function renderLibraryTab(){
     scope = scope.filter(r => artistMatchesCountryIso(r.na, iso));
     filtered = true;
     const label = LIBRARY_STATE.filterCountryLabel || iso;
-    filterParts.push(`in <b>${label}</b>`);
+    filterParts.push(`from <b>${label}</b>`);
   }
   if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);

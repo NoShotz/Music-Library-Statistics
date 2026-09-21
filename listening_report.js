@@ -2677,7 +2677,7 @@ function renderLibraryTab(){
     scope = scope.filter(r => artistMatchesCountryIso(r.na, iso));
     filtered = true;
     const label = LIBRARY_STATE.filterCountryLabel || iso;
-    filterParts.push(`in <b>${label}</b>`);
+    filterParts.push(`from <b>${label}</b>`);
   }
   if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);

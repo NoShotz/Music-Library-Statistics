@@ -1119,6 +1119,30 @@ function positionTooltipAtPoint(tt, x, y){
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
+// Builds the title/body/footer HTML hierarchy shared by every tooltip on the
+// site (bold title, secondary body lines at 0.75 opacity, footer at
+// 0.6 opacity/12px) from plain content, so call sites describe *what* to show
+// rather than hand-rolling the same style strings. title/lines/footer may
+// each be a single string or an array of strings; falsy entries are dropped.
+function tooltipHtml({title, lines, footer} = {}){
+  const titles = ([]).concat(title || []).filter(Boolean);
+  const bodyLines = ([]).concat(lines || []).filter(Boolean);
+  const footers = ([]).concat(footer || []).filter(Boolean);
+  let html = '';
+  titles.forEach((t, i) => {
+    const mb = (i === titles.length - 1 && (bodyLines.length || footers.length)) ? 'margin-bottom:2px;' : '';
+    html += `<div style="font-weight:600;${mb}">${t}</div>`;
+  });
+  bodyLines.forEach((line, i) => {
+    const style = i === 0 ? '' : ' style="opacity:0.75;"';
+    html += `<div${style}>${line}</div>`;
+  });
+  footers.forEach(f => {
+    html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
+  });
+  return html;
+}
+
 // Chart.js → shared .chart-tooltip (title 600, body, secondary @0.75, footer @0.6/12px).
 // Same element and hierarchy as country map / heatmap / clock tooltips.
 // label callbacks may return a string or string[]; afterLabel/footer feed in the same way.
@@ -1137,19 +1161,7 @@ function chartJsExternalTooltip(context){
     hideTooltip(tt);
     return;
   }
-  let html = '';
-  titles.forEach((t, i) => {
-    const mb = (i === titles.length - 1 && (bodyLines.length || footers.length)) ? 'margin-bottom:2px;' : '';
-    html += `<div style="font-weight:600;${mb}">${t}</div>`;
-  });
-  bodyLines.forEach((line, i) => {
-    const style = i === 0 ? '' : ' style="opacity:0.75;"';
-    html += `<div${style}>${line}</div>`;
-  });
-  footers.forEach(f => {
-    html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
-  });
-  tt.innerHTML = html;
+  tt.innerHTML = tooltipHtml({title: titles, lines: bodyLines, footer: footers});
   const rect = context.chart.canvas.getBoundingClientRect();
   positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
   showTooltip(tt);
@@ -1235,12 +1247,11 @@ function renderHeatmap(containerId, heat, opts){
       const count = Number(cell.dataset.count);
       const total = opts.totalScrobbles;
       const pct = total ? Math.round(count/total*1000)/10 : null;
-      let html = `<div style="font-weight:600;margin-bottom:2px;">${cell.dataset.date}</div>` +
-        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
-      if(opts.dateClickable && cell.dataset.rawDate){
-        html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
-      }
-      tt.innerHTML = html;
+      tt.innerHTML = tooltipHtml({
+        title: cell.dataset.date,
+        lines: `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`,
+        footer: (opts.dateClickable && cell.dataset.rawDate) ? 'Click to view in Library' : null
+      });
       positionTooltipAtElement(tt, cell);
       showTooltip(tt);
     });
@@ -1413,8 +1424,10 @@ function renderListeningClock(containerId, statElId, hourCounts){
       const tt = getSharedTooltip();
       const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
       const pct = clockTotal ? Math.round(count/clockTotal*1000)/10 : null;
-      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
-        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
+      tt.innerHTML = tooltipHtml({
+        title: clockLabel(h),
+        lines: `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`
+      });
       // Wedges are angled paths -- their axis-aligned bounding box can extend
       // well past the visible shape (worse near diagonal hours), so anchor to
       // the actual cursor entry point instead, same as the map does.
@@ -1925,10 +1938,14 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       if(!m) return; // no scrobbles matched to this country
       const tt = getSharedTooltip();
       const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
-      tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${m.country}</div>` +
-        `<div>${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>` +
-        `<div style="opacity:0.75;">Top Artist: ${m.topArtist}</div>` +
-        `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
+      tt.innerHTML = tooltipHtml({
+        title: m.country,
+        lines: [
+          `${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}`,
+          `Top Artist: ${m.topArtist}`
+        ],
+        footer: 'Click to view in Library'
+      });
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
     });

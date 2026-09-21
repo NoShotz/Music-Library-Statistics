@@ -1780,7 +1780,7 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
     showTooltip: false, // replaced by our own shared tooltip (see bindMapTooltips) so it matches every other tooltip on the site
     regionStyle: {
       initial: { fill:cssColor('--color-map-empty'), fillOpacity:1, stroke:cssColor('--color-map-stroke'), strokeWidth:0.6 },
-      hover: { fillOpacity:1, cursor:'pointer' }
+      hover: { fillOpacity:1, cursor:'pointer', stroke:cssColor('--color-heatmap-hover'), strokeWidth:1.0 }
     },
     series: {
       regions: [{

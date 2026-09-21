@@ -65,6 +65,7 @@
     --color-map-high: var(--ochre);
     --color-map-empty: var(--dark-umber);
     --color-map-stroke: var(--black-brown);
+	--color-map-hover: var(--ochre-bright);
     --color-canadian-line: var(--crimson);
     --color-canadian-fill: var(--crimson-soft);
     --color-canadian-target: var(--olive-gray);

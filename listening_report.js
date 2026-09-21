@@ -2326,16 +2326,26 @@ function paginateLibraryRows(rows){
   } else {
     pagerEl.style.display = 'flex';
     const page = LIBRARY_STATE.page;
+    const atStart = page<=0;
+    const atEnd = page>=totalPages-1;
     pagerEl.innerHTML = `
-      <button class="nav-arrow" id="libPagePrev" ${page<=0?'disabled':''}>‹</button>
+      <button class="nav-arrow" id="libPageFirst" ${atStart?'disabled':''} title="First page">«</button>
+      <button class="nav-arrow" id="libPagePrev" ${atStart?'disabled':''} title="Previous page">‹</button>
       <span class="lib-page-info">Page ${page+1} of ${totalPages} &nbsp;(${fmtNum(rows.length)} total)</span>
-      <button class="nav-arrow" id="libPageNext" ${page>=totalPages-1?'disabled':''}>›</button>
+      <button class="nav-arrow" id="libPageNext" ${atEnd?'disabled':''} title="Next page">›</button>
+      <button class="nav-arrow" id="libPageLast" ${atEnd?'disabled':''} title="Last page">»</button>
     `;
+    document.getElementById('libPageFirst').addEventListener('click', ()=>{
+      if(LIBRARY_STATE.page>0){ LIBRARY_STATE.page = 0; renderLibraryTab(); }
+    });
     document.getElementById('libPagePrev').addEventListener('click', ()=>{
       if(LIBRARY_STATE.page>0){ LIBRARY_STATE.page--; renderLibraryTab(); }
     });
     document.getElementById('libPageNext').addEventListener('click', ()=>{
       if(LIBRARY_STATE.page<totalPages-1){ LIBRARY_STATE.page++; renderLibraryTab(); }
+    });
+    document.getElementById('libPageLast').addEventListener('click', ()=>{
+      if(LIBRARY_STATE.page<totalPages-1){ LIBRARY_STATE.page = totalPages-1; renderLibraryTab(); }
     });
   }
 

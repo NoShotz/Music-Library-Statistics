@@ -880,14 +880,30 @@ function countryRowsFor(scrobbles){
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
   const counts = {};
+  const byAlbum = {};
   scrobbles.forEach(r=>{
     const meta = TRACK_META[joinKey(r.na, r.nt)];
     if(meta && meta.year){
       const dec = Math.floor(meta.year/10)*10;
       counts[dec] = (counts[dec]||0)+1;
+      const ak = albumKey(r);
+      byAlbum[dec] = byAlbum[dec] || {};
+      byAlbum[dec][ak] = (byAlbum[dec][ak]||0)+1;
     }
   });
-  return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>({decade:dec, count:counts[dec]}));
+  return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(dec=>{
+    let topKey = null, topCount = -1;
+    Object.entries(byAlbum[dec]||{}).forEach(([k,c])=>{
+      if(c > topCount){ topCount = c; topKey = k; }
+    });
+    let topAlbum = null, topArtist = null;
+    if(topKey){
+      const d = albumDisplay(topKey);
+      topAlbum = d.album;
+      topArtist = d.artist;
+    }
+    return { decade: dec, count: counts[dec], topAlbum, topArtist, topAlbumCount: topCount > 0 ? topCount : null };
+  });
 }
 // Scrobble's track release year falls in [decade, decade+9] (from TRACK_META / library_data).
 function scrobbleMatchesDecade(r, decade){
@@ -1570,7 +1586,20 @@ function paintOverview(DATA){
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+          label: c => {
+            const total = DATA.total_scrobbles;
+            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
+            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+          },
+          afterLabel: c => {
+            const row = DATA.decade[c.dataIndex];
+            if(!row || !row.topAlbum) return '';
+            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+          },
+          footer: () => 'Click to view in Library'
+        } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;
@@ -2033,7 +2062,20 @@ function renderReport(){
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.x.toLocaleString()+' scrobbles' } } },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+          label: c => {
+            const total = cur.n;
+            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
+            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+          },
+          afterLabel: c => {
+            const row = cur.decades[c.dataIndex];
+            if(!row || !row.topAlbum) return '';
+            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+          },
+          footer: () => 'Click to view in Library'
+        } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;

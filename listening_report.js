@@ -1112,6 +1112,40 @@ function positionTooltipAtPoint(tt, x, y){
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
+// Decade-bar tooltip body — same structure/opacity as the country-map tooltip
+// (title → count with % → secondary line at 0.75 → click hint at 0.6 / 12px).
+function decadeTooltipHtml(row, totalScrobbles){
+  if(!row) return '';
+  const pct = totalScrobbles ? Math.round(row.count/totalScrobbles*1000)/10 : null;
+  let html = `<div style="font-weight:600;margin-bottom:2px;">${row.decade}s</div>` +
+    `<div>${fmtNum(row.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
+  if(row.topAlbum){
+    const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+    const by = row.topArtist ? ' by '+row.topArtist : '';
+    html += `<div style="opacity:0.75;">Top album: ${title}${by}</div>`;
+  }
+  html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
+  return html;
+}
+// Chart.js external tooltip that reuses the shared .chart-tooltip element.
+function decadeChartExternalTooltip(rows, totalScrobbles){
+  return (context) => {
+    const tt = getHeatmapTooltip();
+    const tip = context.tooltip;
+    if(!tip || tip.opacity === 0 || !tip.dataPoints || !tip.dataPoints.length){
+      hideTooltip(tt);
+      return;
+    }
+    const row = rows[tip.dataPoints[0].dataIndex];
+    tt.innerHTML = decadeTooltipHtml(row, totalScrobbles);
+    const {caretX, caretY} = tip;
+    const canvas = context.chart.canvas;
+    const rect = canvas.getBoundingClientRect();
+    positionTooltipAtPoint(tt, rect.left + caretX, rect.top + caretY);
+    showTooltip(tt);
+  };
+}
+
 // Total px height that each heatmap's data rows should add up to, so the year
 // grid (12 rows) and month grid (5-6 rows) end up the same overall height even
 // though their row counts differ -- this means cell size itself must differ
@@ -1586,20 +1620,7 @@ function paintOverview(DATA){
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          label: c => {
-            const total = DATA.total_scrobbles;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = DATA.decade[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
-          },
-          footer: () => 'Click to view in Library'
-        } } },
+        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(DATA.decade, DATA.total_scrobbles) } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;
@@ -2062,20 +2083,7 @@ function renderReport(){
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          label: c => {
-            const total = cur.n;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = cur.decades[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
-          },
-          footer: () => 'Click to view in Library'
-        } } },
+        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(cur.decades, cur.n) } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;

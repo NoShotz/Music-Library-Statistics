@@ -344,7 +344,7 @@
   .map-box .jvm-region{cursor:pointer;}
   .clock-svg{overflow:visible;}
   .clock-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:var(--color-text-faint);}
-  .clock-bar{cursor:pointer;transition:fill 0.1s;}
+  .clock-bar{transition:fill 0.1s;}
   .clock-bar[data-count]:not([data-count="0"]):hover{fill:var(--color-chart-bar-hover);}
   .clock-row{display:flex;align-items:center;gap:16px;}
   .clock-row .chart-box{flex:1;min-width:0;}

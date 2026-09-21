@@ -880,7 +880,7 @@ function countryRowsFor(scrobbles){
 function decadeRowsFor(scrobbles){
   if(!TRACK_META) return null;
   const counts = {};
-  const byAlbum = {};
+  const byAlbum = {}; // decade -> albumKey -> scrobble count
   scrobbles.forEach(r=>{
     const meta = TRACK_META[joinKey(r.na, r.nt)];
     if(meta && meta.year){
@@ -902,7 +902,13 @@ function decadeRowsFor(scrobbles){
       topAlbum = d.album;
       topArtist = d.artist;
     }
-    return { decade: dec, count: counts[dec], topAlbum, topArtist, topAlbumCount: topCount > 0 ? topCount : null };
+    return {
+      decade: dec,
+      count: counts[dec],
+      topAlbum,
+      topArtist,
+      topAlbumCount: topCount > 0 ? topCount : null
+    };
   });
 }
 // Scrobble's track release year falls in [decade, decade+9] (from TRACK_META / library_data).
@@ -1112,39 +1118,34 @@ function positionTooltipAtPoint(tt, x, y){
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
-// Chart.js → same .chart-tooltip DOM + opacity hierarchy as the country map /
-// heatmap / clock tooltips (title 600, body, secondary @0.75, footer @0.6/12px).
-function chartJsExternalTooltip(context){
-  const tt = getHeatmapTooltip();
-  const tip = context.tooltip;
-  if(!tip || tip.opacity === 0){
-    hideTooltip(tt);
-    return;
+// Decade bars: same HTML structure/opacity as country-map tooltips.
+function decadeTooltipHtml(row, totalScrobbles){
+  if(!row) return '';
+  const pct = totalScrobbles ? Math.round(row.count/totalScrobbles*1000)/10 : null;
+  let html = `<div style="font-weight:600;margin-bottom:2px;">${row.decade}s</div>` +
+    `<div>${fmtNum(row.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
+  if(row.topAlbum){
+    const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+    const by = row.topArtist ? ' by '+row.topArtist : '';
+    html += `<div style="opacity:0.75;">Top album: ${title}${by}</div>`;
   }
-  const titles = tip.title || [];
-  const bodyLines = (tip.body || []).flatMap(b => b.lines || []);
-  const footers = tip.footer || [];
-  if(!titles.length && !bodyLines.length && !footers.length){
-    hideTooltip(tt);
-    return;
-  }
-  let html = '';
-  titles.forEach((t, i) => {
-    const mb = (i === titles.length - 1 && (bodyLines.length || footers.length)) ? 'margin-bottom:2px;' : '';
-    html += `<div style="font-weight:600;${mb}">${t}</div>`;
-  });
-  bodyLines.forEach((line, i) => {
-    // First body line matches map's primary count line; further lines are secondary.
-    const style = i === 0 ? '' : ' style="opacity:0.75;"';
-    html += `<div${style}>${line}</div>`;
-  });
-  footers.forEach(f => {
-    html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">${f}</div>`;
-  });
-  tt.innerHTML = html;
-  const rect = context.chart.canvas.getBoundingClientRect();
-  positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
-  showTooltip(tt);
+  html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
+  return html;
+}
+function decadeChartExternalTooltip(rows, totalScrobbles){
+  return (context) => {
+    const tt = getHeatmapTooltip();
+    const tip = context.tooltip;
+    if(!tip || tip.opacity === 0 || !tip.dataPoints || !tip.dataPoints.length){
+      hideTooltip(tt);
+      return;
+    }
+    const row = rows[tip.dataPoints[0].dataIndex];
+    tt.innerHTML = decadeTooltipHtml(row, totalScrobbles);
+    const rect = context.chart.canvas.getBoundingClientRect();
+    positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
+    showTooltip(tt);
+  };
 }
 
 // Total px height that each heatmap's data rows should add up to, so the year
@@ -1532,10 +1533,15 @@ function paintOverview(DATA){
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  // Content still comes from per-chart tooltip.callbacks; rendering uses the
-  // shared .chart-tooltip element so every chart matches map/heatmap/clock.
-  Chart.defaults.plugins.tooltip.enabled = false;
-  Chart.defaults.plugins.tooltip.external = chartJsExternalTooltip;
+  Chart.defaults.plugins.tooltip.backgroundColor = cssColor('--color-chart-tooltip-bg');
+  Chart.defaults.plugins.tooltip.titleColor = cssColor('--color-chart-tooltip-text');
+  Chart.defaults.plugins.tooltip.bodyColor = cssColor('--color-chart-tooltip-text');
+  Chart.defaults.plugins.tooltip.borderColor = cssColor('--color-chart-tooltip-border');
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.cornerRadius = 6;
+  Chart.defaults.plugins.tooltip.padding = {top:8, bottom:8, left:12, right:12};
+  Chart.defaults.plugins.tooltip.titleFont = {family:"'Work Sans', sans-serif", size:13, weight:'600'};
+  Chart.defaults.plugins.tooltip.bodyFont = {family:"'Work Sans', sans-serif", size:13, weight:'400'};
   Chart.defaults.plugins.tooltip.displayColors = false;
 
   document.getElementById('heroScrobbles').textContent = fmtNum(DATA.total_scrobbles);
@@ -1616,20 +1622,7 @@ function paintOverview(DATA){
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          label: c => {
-            const total = DATA.total_scrobbles;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = DATA.decade[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
-          },
-          footer: () => 'Click to view in Library'
-        } } },
+        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(DATA.decade, DATA.total_scrobbles) } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;
@@ -1653,14 +1646,7 @@ function paintOverview(DATA){
     type:'bar',
     data:{ labels: DATA.day_of_week.map(d=>d.day.slice(0,3)),
       datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: cssColor('--color-weekly-scrobble-bars'), borderRadius:3, barPercentage:0.6 }] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-        label: c => {
-          const total = DATA.total_scrobbles;
-          const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
-          return fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-        }
-      } } },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
   {
@@ -1675,10 +1661,7 @@ function paintOverview(DATA){
     type:'bar',
     data:{ labels: DATA.discovery.map(d=>d.year),
       datasets:[{ data: DATA.discovery.map(d=>d.count), backgroundColor: cssColor('--color-discovery-bars'), borderRadius:2, barPercentage:0.7 }] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-        label: c => fmtNum(c.parsed.y)+' new artist'+(c.parsed.y===1?'':'s')
-      } } },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
 }
@@ -2102,20 +2085,7 @@ function renderReport(){
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          label: c => {
-            const total = cur.n;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-          },
-          afterLabel: c => {
-            const row = cur.decades[c.dataIndex];
-            if(!row || !row.topAlbum) return '';
-            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
-          },
-          footer: () => 'Click to view in Library'
-        } } },
+        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(cur.decades, cur.n) } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;

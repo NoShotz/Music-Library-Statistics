@@ -1944,15 +1944,18 @@ function renderReport(){
   // Mondays/etc., so those bars stay non-clickable.
   const dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   destroyChart('dow');
-  const weekDayDates = (type==='week')
-    ? (() => {
-        const start = new Date(key+'T00:00:00Z');
-        return Array.from({length:7}, (_,i)=>{
-          const d = new Date(start.getTime() + i*86400000);
-          return ymd(d);
-        });
-      })()
-    : null;
+  // One calendar date per weekday bar for the current week and the previous
+  // week (prevKey), so both series are clickable into the Library.
+  const datesForWeekKey = (weekKey) => {
+    const start = new Date(weekKey+'T00:00:00Z');
+    return Array.from({length:7}, (_,i)=>{
+      const d = new Date(start.getTime() + i*86400000);
+      return ymd(d);
+    });
+  };
+  const weekDayDates = (type==='week') ? datesForWeekKey(key) : null;
+  const prevWeekDayDates = (type==='week' && prevKey) ? datesForWeekKey(prevKey) : null;
+  const weekClickDates = [weekDayDates, prevWeekDayDates];
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
@@ -1963,13 +1966,14 @@ function renderReport(){
       plugins:{ legend:{display:true, labels:{boxWidth:10}} },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
       onClick: weekDayDates ? (evt, elements) => {
-        if(!elements.length || elements[0].datasetIndex !== 0) return;
-        const dateStr = weekDayDates[elements[0].index];
+        if(!elements.length) return;
+        const {datasetIndex, index} = elements[0];
+        const dates = weekClickDates[datasetIndex];
+        const dateStr = dates && dates[index];
         if(dateStr) goToLibraryScrobblesByDate(dateStr);
       } : undefined,
       onHover: weekDayDates ? (evt, elements) => {
-        const overCurrent = elements.some(e => e.datasetIndex === 0);
-        evt.native.target.style.cursor = overCurrent ? 'pointer' : 'default';
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       } : undefined
     }
   });

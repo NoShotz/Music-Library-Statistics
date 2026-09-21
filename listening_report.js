@@ -235,6 +235,18 @@ function ymd(d){
   return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
 }
 function fmtNum(n){ return n.toLocaleString(); }
+// value as a percentage of total, rounded to 1 decimal place, or null if
+// total is falsy/zero. Shared by every stat, chart, and tooltip that shows
+// "X (Y%)" style figures.
+function pct1(value, total){
+  return total ? Math.round(value/total*1000)/10 : null;
+}
+// "N scrobble(s) (X%)" -- the count/percent line every tooltip on the site
+// shows (heatmap, clock, map, and every Chart.js tooltip callback).
+function scrobbleLine(count, total){
+  const pct = pct1(count, total);
+  return `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`;
+}
 
 // ---------- artist/album art ----------
 // Matches the same sanitization used to name the files on disk (Windows-
@@ -832,7 +844,7 @@ function canadianStatsFor(scrobbles){
   return {
     matched, total: scrobbles.length,
     matchRate: scrobbles.length ? matched/scrobbles.length*100 : 0,
-    pct: matched ? Math.round(canCount/matched*1000)/10 : null
+    pct: pct1(canCount, matched)
   };
 }
 
@@ -847,7 +859,7 @@ function canadianYearlyFor(scrobbles){
     if(/canada/i.test(country)) yearCan[r.year] = (yearCan[r.year]||0)+1;
   });
   return Object.keys(yearTotal).map(Number).sort((a,b)=>a-b).map(y=>({
-    year:y, pct: Math.round((yearCan[y]||0)/yearTotal[y]*1000)/10
+    year:y, pct: pct1(yearCan[y]||0, yearTotal[y])
   }));
 }
 
@@ -944,7 +956,7 @@ function computeNew(scrobbles, type, periodType, periodKey){
   return {
     uniqueCount: uniqueKeys.length,
     newCount: newKeys.length,
-    newPct: uniqueKeys.length ? Math.round(newKeys.length/uniqueKeys.length*1000)/10 : 0,
+    newPct: pct1(newKeys.length, uniqueKeys.length) ?? 0,
     topNew: topNew ? {key:topNew, count:counts[topNew]} : null,
     newItems
   };
@@ -1246,10 +1258,9 @@ function renderHeatmap(containerId, heat, opts){
       const tt = getSharedTooltip();
       const count = Number(cell.dataset.count);
       const total = opts.totalScrobbles;
-      const pct = total ? Math.round(count/total*1000)/10 : null;
       tt.innerHTML = tooltipHtml({
         title: cell.dataset.date,
-        lines: `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`,
+        lines: scrobbleLine(count, total),
         footer: (opts.dateClickable && cell.dataset.rawDate) ? 'Click to view in Library' : null
       });
       positionTooltipAtElement(tt, cell);
@@ -1423,10 +1434,9 @@ function renderListeningClock(containerId, statElId, hourCounts){
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getSharedTooltip();
       const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
-      const pct = clockTotal ? Math.round(count/clockTotal*1000)/10 : null;
       tt.innerHTML = tooltipHtml({
         title: clockLabel(h),
-        lines: `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`
+        lines: scrobbleLine(count, clockTotal)
       });
       // Wedges are angled paths -- their axis-aligned bounding box can extend
       // well past the visible shape (worse near diagonal hours), so anchor to
@@ -1647,9 +1657,7 @@ function paintOverview(DATA){
           // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
           label: c => {
             const row = DATA.decade[c.dataIndex];
-            const total = DATA.total_scrobbles;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            const lines = [fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '')];
+            const lines = [scrobbleLine(c.parsed.x, DATA.total_scrobbles)];
             if(row && row.topAlbum){
               const title = formatAlbumTitle(row.topArtist, row.topAlbum);
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
@@ -1683,11 +1691,7 @@ function paintOverview(DATA){
       datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: cssColor('--color-weekly-scrobble-bars'), borderRadius:3, barPercentage:0.6 }] },
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-        label: c => {
-          const total = DATA.total_scrobbles;
-          const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
-          return fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-        }
+        label: c => scrobbleLine(c.parsed.y, DATA.total_scrobbles)
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
@@ -1815,11 +1819,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       plugins:{
         legend:{display:false},
         tooltip:{ callbacks:{
-          label: ctx => {
-            const total = counts.reduce((a,b)=>a+b, 0);
-            const pct = total ? Math.round(ctx.parsed.y/total*1000)/10 : null;
-            return fmtNum(ctx.parsed.y) + ' scrobble' + (ctx.parsed.y===1?'':'s') + (pct!=null ? ' ('+pct+'%)' : '');
-          },
+          label: ctx => scrobbleLine(ctx.parsed.y, counts.reduce((a,b)=>a+b, 0)),
           footer: () => 'Click to view in Library'
         } }
       },
@@ -1937,11 +1937,10 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
       const m = meta[path.getAttribute('data-code')];
       if(!m) return; // no scrobbles matched to this country
       const tt = getSharedTooltip();
-      const pct = totalScrobbles ? Math.round(m.count/totalScrobbles*1000)/10 : null;
       tt.innerHTML = tooltipHtml({
         title: m.country,
         lines: [
-          `${fmtNum(m.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}`,
+          scrobbleLine(m.count, totalScrobbles),
           `Top Artist: ${m.topArtist}`
         ],
         footer: 'Click to view in Library'
@@ -2086,11 +2085,7 @@ function renderReport(){
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{ callbacks:{
         title: items => items[0] ? items[0].label+' · '+items[0].dataset.label : '',
-        label: c => {
-          const total = c.datasetIndex === 0 ? cur.n : (prev && prev.n);
-          const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
-          return fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
-        },
+        label: c => scrobbleLine(c.parsed.y, c.datasetIndex === 0 ? cur.n : (prev && prev.n)),
         footer: () => weekDayDates ? 'Click to view in Library' : ''
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
@@ -2149,9 +2144,7 @@ function renderReport(){
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{
           label: c => {
             const row = cur.decades[c.dataIndex];
-            const total = cur.n;
-            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
-            const lines = [fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '')];
+            const lines = [scrobbleLine(c.parsed.x, cur.n)];
             if(row && row.topAlbum){
               const title = formatAlbumTitle(row.topArtist, row.topAlbum);
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);

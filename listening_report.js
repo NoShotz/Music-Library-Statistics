@@ -1112,7 +1112,8 @@ function positionTooltipAtPoint(tt, x, y){
 function showTooltip(tt){ tt.classList.add('chart-tooltip-visible'); }
 function hideTooltip(tt){ tt.classList.remove('chart-tooltip-visible'); }
 
-// Chart.js → shared .chart-tooltip (same opacity hierarchy as map/heatmap/clock).
+// Chart.js → shared .chart-tooltip (title 600, body, secondary @0.75, footer @0.6/12px).
+// Same element and hierarchy as country map / heatmap / clock tooltips.
 function chartJsExternalTooltip(context){
   const tt = getHeatmapTooltip();
   const tip = context.tooltip;
@@ -1143,35 +1144,6 @@ function chartJsExternalTooltip(context){
   const rect = context.chart.canvas.getBoundingClientRect();
   positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
   showTooltip(tt);
-}
-
-// Decade-specific content (top album + %) using the same shared tooltip element.
-function decadeTooltipHtml(row, totalScrobbles){
-  if(!row) return '';
-  const pct = totalScrobbles ? Math.round(row.count/totalScrobbles*1000)/10 : null;
-  let html = `<div style="font-weight:600;margin-bottom:2px;">${row.decade}s</div>` +
-    `<div>${fmtNum(row.count)} scrobbles${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
-  if(row.topAlbum){
-    const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-    const by = row.topArtist ? ' by '+row.topArtist : '';
-    html += `<div style="opacity:0.75;">Top album: ${title}${by}</div>`;
-  }
-  html += `<div style="opacity:0.6;margin-top:4px;font-size:12px;">Click to view in Library</div>`;
-  return html;
-}
-function decadeChartExternalTooltip(rows, totalScrobbles){
-  return (context) => {
-    const tt = getHeatmapTooltip();
-    const tip = context.tooltip;
-    if(!tip || tip.opacity === 0 || !tip.dataPoints || !tip.dataPoints.length){
-      hideTooltip(tt);
-      return;
-    }
-    tt.innerHTML = decadeTooltipHtml(rows[tip.dataPoints[0].dataIndex], totalScrobbles);
-    const rect = context.chart.canvas.getBoundingClientRect();
-    positionTooltipAtPoint(tt, rect.left + tip.caretX, rect.top + tip.caretY);
-    showTooltip(tt);
-  };
 }
 
 // Total px height that each heatmap's data rows should add up to, so the year
@@ -1430,8 +1402,10 @@ function renderListeningClock(containerId, statElId, hourCounts){
     bar.addEventListener('mouseenter', evt=>{
       const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
       const tt = getHeatmapTooltip(); // reuse the same shared, site-themed tooltip
+      const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
+      const pct = clockTotal ? Math.round(count/clockTotal*1000)/10 : null;
       tt.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${clockLabel(h)}</div>`+
-        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}</div>`;
+        `<div>${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}</div>`;
       // Wedges are angled paths -- their axis-aligned bounding box can extend
       // well past the visible shape (worse near diagonal hours), so anchor to
       // the actual cursor entry point instead, same as the map does.
@@ -1565,8 +1539,7 @@ function paintOverview(DATA){
   // (the heatmap/clock/map ones, styled via the .jvm-tooltip CSS class) rather
   // than leaving Chart.js's generic black default -- same colors, font, corner
   // radius and padding, and no color-swatch box since ours don't have one either.
-  // Per-chart callbacks still supply title/body/footer text; rendering goes
-  // through the shared .chart-tooltip so every Chart.js chart matches map/heatmap.
+  // Callbacks still supply title/body/footer text; rendering uses shared .chart-tooltip.
   Chart.defaults.plugins.tooltip.enabled = false;
   Chart.defaults.plugins.tooltip.external = chartJsExternalTooltip;
   Chart.defaults.plugins.tooltip.displayColors = false;
@@ -1649,7 +1622,20 @@ function paintOverview(DATA){
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(DATA.decade, DATA.total_scrobbles) } },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+          label: c => {
+            const total = DATA.total_scrobbles;
+            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
+            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+          },
+          afterLabel: c => {
+            const row = DATA.decade[c.dataIndex];
+            if(!row || !row.topAlbum) return '';
+            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+          },
+          footer: () => 'Click to view in Library'
+        } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;
@@ -1673,7 +1659,14 @@ function paintOverview(DATA){
     type:'bar',
     data:{ labels: DATA.day_of_week.map(d=>d.day.slice(0,3)),
       datasets:[{ data: DATA.day_of_week.map(d=>d.count), backgroundColor: cssColor('--color-weekly-scrobble-bars'), borderRadius:3, barPercentage:0.6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+        label: c => {
+          const total = DATA.total_scrobbles;
+          const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
+          return fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+        }
+      } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
   {
@@ -1799,7 +1792,14 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
-        tooltip:{ callbacks:{ label: ctx => fmtNum(ctx.parsed.y) + ' scrobble' + (ctx.parsed.y===1?'':'s') } }
+        tooltip:{ callbacks:{
+          label: ctx => {
+            const total = counts.reduce((a,b)=>a+b, 0);
+            const pct = total ? Math.round(ctx.parsed.y/total*1000)/10 : null;
+            return fmtNum(ctx.parsed.y) + ' scrobble' + (ctx.parsed.y===1?'':'s') + (pct!=null ? ' ('+pct+'%)' : '');
+          },
+          footer: () => 'Click to view in Library'
+        } }
       },
       scales:{
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
@@ -2058,7 +2058,14 @@ function renderReport(){
       { label: periodLabel(type,prevKey), data: prev.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars-prev'), borderRadius:2, barPercentage:0.6 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:true, labels:{boxWidth:10}} },
+      plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{ callbacks:{
+        label: c => {
+          const total = c.datasetIndex === 0 ? cur.n : (prev && prev.n);
+          const pct = total ? Math.round(c.parsed.y/total*1000)/10 : null;
+          return (c.dataset.label ? c.dataset.label+': ' : '') + fmtNum(c.parsed.y)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+        },
+        footer: () => weekDayDates ? 'Click to view in Library' : ''
+      } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
       onClick: weekDayDates ? (evt, elements) => {
         if(!elements.length) return;
@@ -2112,7 +2119,20 @@ function renderReport(){
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ enabled:false, external: decadeChartExternalTooltip(cur.decades, cur.n) } },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+          label: c => {
+            const total = cur.n;
+            const pct = total ? Math.round(c.parsed.x/total*1000)/10 : null;
+            return fmtNum(c.parsed.x)+' scrobbles'+(pct!=null ? ' ('+pct+'%)' : '');
+          },
+          afterLabel: c => {
+            const row = cur.decades[c.dataIndex];
+            if(!row || !row.topAlbum) return '';
+            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+            return row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title;
+          },
+          footer: () => 'Click to view in Library'
+        } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
           if(!elements.length) return;

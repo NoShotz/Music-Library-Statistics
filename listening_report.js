@@ -1222,7 +1222,18 @@ function chartJsExternalTooltip(context){
   const titles = tip.title || [];
   // Flatten body lines; Chart.js stores each callback result as {lines: string[]}
   const bodyLines = (tip.body || []).flatMap(b => b.lines || []).filter(Boolean);
-  const footers = (tip.footer || []).filter(Boolean);
+  let footers = (tip.footer || []).filter(Boolean);
+  // When the chart was wired with libraryLink(), options.resolveTarget is the
+  // same function onClick uses — auto-append the library footer so callbacks
+  // never have to remember it (and can never disagree with clickability).
+  if(!footers.length && tip.dataPoints && tip.dataPoints.length){
+    const resolve = context.chart.options && context.chart.options.resolveTarget;
+    if(typeof resolve === 'function'){
+      const dp = tip.dataPoints[0];
+      const f = libraryFooter(resolve(dp.datasetIndex, dp.dataIndex));
+      if(f) footers = [f];
+    }
+  }
   if(!titles.length && !bodyLines.length && !footers.length){
     hideTooltip(tt);
     return;
@@ -1308,23 +1319,18 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
-    const clickTarget = (opts.dateClickable && cell.dataset.rawDate) ? cell.dataset.rawDate : null;
-    cell.addEventListener('mouseenter', ()=>{
-      const tt = getSharedTooltip();
-      const count = Number(cell.dataset.count);
-      const total = opts.totalScrobbles;
-      tt.innerHTML = tooltipHtml({
-        title: cell.dataset.date,
-        lines: scrobbleLine(count, total),
-        footer: libraryFooter(clickTarget)
-      });
-      positionTooltipAtElement(tt, cell);
-      showTooltip(tt);
+    bindHoverTooltip(cell, {
+      resolve(){
+        const count = Number(cell.dataset.count);
+        return {
+          title: cell.dataset.date,
+          lines: scrobbleLine(count, opts.totalScrobbles),
+          clickTarget: (opts.dateClickable && cell.dataset.rawDate) || null
+        };
+      },
+      position(tt){ positionTooltipAtElement(tt, cell); },
+      navigate: goToLibraryScrobblesByDate
     });
-    cell.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
-    if(clickTarget){
-      cell.addEventListener('click', () => goToLibraryScrobblesByDate(clickTarget));
-    }
   });
 
   attachCustomScrollbars(el);
@@ -1482,22 +1488,21 @@ function renderListeningClock(containerId, statElId, hourCounts){
     `<circle cx="${cx}" cy="${cy}" r="${rOuterMax}" fill="none" stroke="${cssColor('--color-listening-clock-ring')}" stroke-width="1" stroke-dasharray="2,3"></circle>`+
     bars + labels + `</svg>`;
 
+  const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    bar.addEventListener('mouseenter', evt=>{
-      const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
-      const tt = getSharedTooltip();
-      const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
-      tt.innerHTML = tooltipHtml({
-        title: clockLabel(h),
-        lines: scrobbleLine(count, clockTotal)
-      });
-      // Wedges are angled paths -- their axis-aligned bounding box can extend
-      // well past the visible shape (worse near diagonal hours), so anchor to
-      // the actual cursor entry point instead, same as the map does.
-      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
-      showTooltip(tt);
+    // Wedges are angled paths — AABB can extend past the shape, so anchor to
+    // the cursor entry point (same as the map), not the element rect.
+    bindHoverTooltip(bar, {
+      resolve(){
+        const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
+        return {
+          title: clockLabel(h),
+          lines: scrobbleLine(count, clockTotal),
+          clickTarget: null
+        };
+      },
+      position(tt, evt){ positionTooltipAtPoint(tt, evt.clientX, evt.clientY); }
     });
-    bar.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
   });
 
   const best = busiestHour(hourCounts);
@@ -1707,7 +1712,7 @@ function paintOverview(DATA){
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
+          // string[] so every line lands in tip.body for chartJsExternalTooltip
           label: c => {
             const row = DATA.decade[c.dataIndex];
             const lines = [scrobbleLine(c.parsed.x, DATA.total_scrobbles)];
@@ -1716,18 +1721,13 @@ function paintOverview(DATA){
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
             }
             return lines;
-          },
-          footer: items => libraryFooter(items[0] && DATA.decade[items[0].dataIndex])
+          }
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        onClick: (evt, elements) => {
-          if(!elements.length) return;
-          const row = DATA.decade[elements[0].index];
-          if(row) goToLibraryByDecade(row.decade);
-        },
-        onHover: (evt, elements) => {
-          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        }
+        ...libraryLink(
+          (di, i) => { const row = DATA.decade[i]; return row ? row.decade : null; },
+          goToLibraryByDecade
+        )
       }
     });
   }
@@ -1872,24 +1872,18 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
       plugins:{
         legend:{display:false},
         tooltip:{ callbacks:{
-          label: ctx => scrobbleLine(ctx.parsed.y, counts.reduce((a,b)=>a+b, 0)),
-          footer: () => libraryFooter(true)
+          label: ctx => scrobbleLine(ctx.parsed.y, counts.reduce((a,b)=>a+b, 0))
         } }
       },
       scales:{
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
         y:{ grid:{color:cssColor('--color-chart-grid')}, beginAtZero:true, ticks:{ precision:0 } }
       },
-      // Each bar is one calendar day of the month → click opens Library → Scrobbles filtered to that day.
-      onClick: (evt, elements) => {
-        if(!elements.length) return;
-        const day = elements[0].index + 1;
-        const dateStr = monthKey + '-' + String(day).padStart(2,'0');
-        goToLibraryScrobblesByDate(dateStr);
-      },
-      onHover: (evt, elements) => {
-        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-      }
+      // Each bar is one calendar day of the month → Library scrobbles for that day.
+      ...libraryLink(
+        (di, i) => monthKey + '-' + String(i+1).padStart(2,'0'),
+        goToLibraryScrobblesByDate
+      )
     }
   });
 }
@@ -1986,27 +1980,21 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
   el.querySelectorAll('path[data-code]').forEach(path=>{
     if(path.dataset.tooltipBound) return; // avoid double-binding if called more than once
     path.dataset.tooltipBound = '1';
-    path.addEventListener('mouseenter', evt=>{
-      const m = meta[path.getAttribute('data-code')];
-      if(!m) return; // no scrobbles matched to this country
-      const tt = getSharedTooltip();
-      tt.innerHTML = tooltipHtml({
-        title: m.country,
-        lines: [
-          scrobbleLine(m.count, totalScrobbles),
-          `Top Artist: ${m.topArtist}`
-        ],
-        footer: libraryFooter(!!m.iso)
-      });
-      positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
-      showTooltip(tt);
-    });
-    path.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
-    path.addEventListener('click', ()=>{
-      const m = meta[path.getAttribute('data-code')];
-      if(!m || !m.iso) return;
-      hideTooltip(getSharedTooltip());
-      goToLibraryByCountry(m.iso, m.country);
+    bindHoverTooltip(path, {
+      resolve(){
+        const m = meta[path.getAttribute('data-code')];
+        if(!m) return null; // no scrobbles matched to this country
+        return {
+          title: m.country,
+          lines: [scrobbleLine(m.count, totalScrobbles), 'Top Artist: '+m.topArtist],
+          clickTarget: m.iso ? { iso: m.iso, country: m.country } : null
+        };
+      },
+      position(tt, evt){ positionTooltipAtPoint(tt, evt.clientX, evt.clientY); },
+      navigate(t){
+        hideTooltip(getSharedTooltip());
+        goToLibraryByCountry(t.iso, t.country);
+      }
     });
   });
 }
@@ -2148,20 +2136,10 @@ function renderReport(){
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{ callbacks:{
         title: items => items[0] ? items[0].label+' · '+items[0].dataset.label : '',
-        label: c => scrobbleLine(c.parsed.y, c.datasetIndex === 0 ? cur.n : (prev && prev.n)),
-        footer: items => libraryFooter(items[0] && weekBarDate(items[0].datasetIndex, items[0].dataIndex))
+        label: c => scrobbleLine(c.parsed.y, c.datasetIndex === 0 ? cur.n : (prev && prev.n))
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
-      onClick: (evt, elements) => {
-        if(!elements.length) return;
-        const {datasetIndex, index} = elements[0];
-        const dateStr = weekBarDate(datasetIndex, index);
-        if(dateStr) goToLibraryScrobblesByDate(dateStr);
-      },
-      onHover: (evt, elements) => {
-        const clickable = elements.length && weekBarDate(elements[0].datasetIndex, elements[0].index);
-        evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
-      }
+      ...libraryLink(weekBarDate, goToLibraryScrobblesByDate)
     }
   });
   {
@@ -2213,18 +2191,13 @@ function renderReport(){
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
             }
             return lines;
-          },
-          footer: items => libraryFooter(items[0] && cur.decades[items[0].dataIndex])
+          }
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        onClick: (evt, elements) => {
-          if(!elements.length) return;
-          const row = cur.decades[elements[0].index];
-          if(row) goToLibraryByDecade(row.decade);
-        },
-        onHover: (evt, elements) => {
-          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        }
+        ...libraryLink(
+          (di, i) => { const row = cur.decades[i]; return row ? row.decade : null; },
+          goToLibraryByDecade
+        )
       }
     });
   } else {

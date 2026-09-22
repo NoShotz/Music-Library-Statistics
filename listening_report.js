@@ -255,15 +255,48 @@ function scrobbleLine(count, total){
 function libraryFooter(clickable){
   return clickable ? 'Click to view in Library' : '';
 }
-// Wires up onClick + the onHover cursor for a Chart.js chart from ONE
-// resolveTarget(datasetIndex, dataIndex) function, which should return the
-// value to navigate to, or a falsy value if that bar/point isn't clickable.
-// chartJsExternalTooltip looks for this on the chart instance (see below)
-// and generates the "Click to view in Library" tooltip footer from the same
-// resolveTarget automatically -- so a chart's tooltip.callbacks never has to
-// remember a footer, and the footer can never disagree with what a click
-// actually does.
-function libraryLink(resolveTarget, navigate){
+// Unified library-navigation helper for both Chart.js charts and plain DOM
+// hover surfaces. One name, two call shapes:
+//
+//   // Chart.js — return value is spread into options. resolveTarget(datasetIndex,
+//   // dataIndex) returns the navigation target (or falsy if not clickable).
+//   // chartJsExternalTooltip reads options.resolveTarget to auto-append the
+//   // "Click to view in Library" footer, so callbacks never manage a footer.
+//   options: {
+//     ...libraryLink((di, i) => rowOrNull, goToLibrary…),
+//     plugins: { tooltip: { callbacks: { label: … } } }
+//   }
+//
+//   // DOM (heatmap cells, clock wedges, map regions) — resolve(evt) returns
+//   // null (no tooltip) or {title, lines, clickTarget}; footer + click are
+//   // driven by clickTarget, same as Chart.js resolveTarget.
+//   libraryLink(el, { resolve, position, navigate })
+//
+function libraryLink(a, b){
+  // DOM overload: first arg is an Element
+  if(a && a.nodeType === 1){
+    const el = a;
+    const {resolve, position, navigate} = b || {};
+    el.addEventListener('mouseenter', evt=>{
+      const r = resolve(evt);
+      if(!r) return;
+      const tt = getSharedTooltip();
+      tt.innerHTML = tooltipHtml({title: r.title, lines: r.lines, footer: libraryFooter(r.clickTarget)});
+      position(tt, evt);
+      showTooltip(tt);
+    });
+    el.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
+    if(navigate){
+      el.addEventListener('click', evt => {
+        const r = resolve(evt);
+        if(r && r.clickTarget) navigate(r.clickTarget);
+      });
+    }
+    return;
+  }
+  // Chart.js overload: first arg is resolveTarget(datasetIndex, dataIndex)
+  const resolveTarget = a;
+  const navigate = b;
   return {
     resolveTarget,
     onClick(evt, elements){
@@ -277,29 +310,6 @@ function libraryLink(resolveTarget, navigate){
       evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
     }
   };
-}
-// DOM equivalent of libraryLink() above, for the hover surfaces that aren't
-// Chart.js (heatmap cells, listening clock wedges, country map regions).
-// resolve(evt) returns null to show no tooltip at all, or
-// {title, lines, clickTarget}; when clickTarget is truthy the footer appears
-// and a click calls navigate(clickTarget) -- both automatic, driven by the
-// one resolve() function, so nothing here has to separately add a footer.
-function bindHoverTooltip(el, {resolve, position, navigate}){
-  el.addEventListener('mouseenter', evt=>{
-    const r = resolve(evt);
-    if(!r) return;
-    const tt = getSharedTooltip();
-    tt.innerHTML = tooltipHtml({title: r.title, lines: r.lines, footer: libraryFooter(r.clickTarget)});
-    position(tt, evt);
-    showTooltip(tt);
-  });
-  el.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
-  if(navigate){
-    el.addEventListener('click', evt => {
-      const r = resolve(evt);
-      if(r && r.clickTarget) navigate(r.clickTarget);
-    });
-  }
 }
 
 // ---------- artist/album art ----------
@@ -1223,9 +1233,8 @@ function chartJsExternalTooltip(context){
   // Flatten body lines; Chart.js stores each callback result as {lines: string[]}
   const bodyLines = (tip.body || []).flatMap(b => b.lines || []).filter(Boolean);
   let footers = (tip.footer || []).filter(Boolean);
-  // When the chart was wired with libraryLink(), options.resolveTarget is the
-  // same function onClick uses — auto-append the library footer so callbacks
-  // never have to remember it (and can never disagree with clickability).
+  // libraryLink(resolveTarget, navigate) stores resolveTarget on options —
+  // auto-append the library footer so it always matches clickability.
   if(!footers.length && tip.dataPoints && tip.dataPoints.length){
     const resolve = context.chart.options && context.chart.options.resolveTarget;
     if(typeof resolve === 'function'){
@@ -1319,7 +1328,7 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
-    bindHoverTooltip(cell, {
+    libraryLink(cell, {
       resolve(){
         const count = Number(cell.dataset.count);
         return {
@@ -1490,9 +1499,9 @@ function renderListeningClock(containerId, statElId, hourCounts){
 
   const clockTotal = hourCounts.reduce((a,b)=>a+b, 0);
   el.querySelectorAll('.clock-bar').forEach(bar=>{
-    // Wedges are angled paths — AABB can extend past the shape, so anchor to
-    // the cursor entry point (same as the map), not the element rect.
-    bindHoverTooltip(bar, {
+    // Wedges are angled — AABB can extend past the shape, so anchor to the
+    // cursor entry point (same as the map), not the element rect.
+    libraryLink(bar, {
       resolve(){
         const h = Number(bar.dataset.hour), count = Number(bar.dataset.count);
         return {
@@ -1712,7 +1721,7 @@ function paintOverview(DATA){
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
       options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          // string[] so every line lands in tip.body for chartJsExternalTooltip
+          // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
           label: c => {
             const row = DATA.decade[c.dataIndex];
             const lines = [scrobbleLine(c.parsed.x, DATA.total_scrobbles)];
@@ -1721,7 +1730,7 @@ function paintOverview(DATA){
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
             }
             return lines;
-          }
+          },
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         ...libraryLink(
@@ -1879,7 +1888,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
         y:{ grid:{color:cssColor('--color-chart-grid')}, beginAtZero:true, ticks:{ precision:0 } }
       },
-      // Each bar is one calendar day of the month → Library scrobbles for that day.
+      // Each bar is one calendar day → Library scrobbles for that day.
       ...libraryLink(
         (di, i) => monthKey + '-' + String(i+1).padStart(2,'0'),
         goToLibraryScrobblesByDate
@@ -1980,10 +1989,10 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
   el.querySelectorAll('path[data-code]').forEach(path=>{
     if(path.dataset.tooltipBound) return; // avoid double-binding if called more than once
     path.dataset.tooltipBound = '1';
-    bindHoverTooltip(path, {
+    libraryLink(path, {
       resolve(){
         const m = meta[path.getAttribute('data-code')];
-        if(!m) return null; // no scrobbles matched to this country
+        if(!m) return null;
         return {
           title: m.country,
           lines: [scrobbleLine(m.count, totalScrobbles), 'Top Artist: '+m.topArtist],
@@ -2191,7 +2200,7 @@ function renderReport(){
               lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
             }
             return lines;
-          }
+          },
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         ...libraryLink(

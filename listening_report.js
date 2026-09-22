@@ -247,6 +247,60 @@ function scrobbleLine(count, total){
   const pct = pct1(count, total);
   return `${fmtNum(count)} scrobble${count===1?'':'s'}${pct!=null ? ' ('+pct+'%)' : ''}`;
 }
+// Standard tooltip footer for anything that navigates to the Library on
+// click. `clickable` should be the exact same value/expression the caller
+// uses to decide whether its click handler actually navigates (a truthy
+// target, a resolved row, etc.), so this footer can never appear on
+// something that isn't actually clickable, or stay silent on something that is.
+function libraryFooter(clickable){
+  return clickable ? 'Click to view in Library' : '';
+}
+// Wires up onClick + the onHover cursor for a Chart.js chart from ONE
+// resolveTarget(datasetIndex, dataIndex) function, which should return the
+// value to navigate to, or a falsy value if that bar/point isn't clickable.
+// chartJsExternalTooltip looks for this on the chart instance (see below)
+// and generates the "Click to view in Library" tooltip footer from the same
+// resolveTarget automatically -- so a chart's tooltip.callbacks never has to
+// remember a footer, and the footer can never disagree with what a click
+// actually does.
+function libraryLink(resolveTarget, navigate){
+  return {
+    resolveTarget,
+    onClick(evt, elements){
+      if(!elements.length) return;
+      const {datasetIndex, index} = elements[0];
+      const target = resolveTarget(datasetIndex, index);
+      if(target) navigate(target);
+    },
+    onHover(evt, elements){
+      const clickable = elements.length && resolveTarget(elements[0].datasetIndex, elements[0].index);
+      evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
+    }
+  };
+}
+// DOM equivalent of libraryLink() above, for the hover surfaces that aren't
+// Chart.js (heatmap cells, listening clock wedges, country map regions).
+// resolve(evt) returns null to show no tooltip at all, or
+// {title, lines, clickTarget}; when clickTarget is truthy the footer appears
+// and a click calls navigate(clickTarget) -- both automatic, driven by the
+// one resolve() function, so nothing here has to separately add a footer.
+function bindHoverTooltip(el, {resolve, position, navigate}){
+  el.addEventListener('mouseenter', evt=>{
+    const r = resolve(evt);
+    if(!r) return;
+    const tt = getSharedTooltip();
+    tt.innerHTML = tooltipHtml({title: r.title, lines: r.lines, footer: libraryFooter(r.clickTarget)});
+    position(tt, evt);
+    showTooltip(tt);
+  });
+  el.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
+  if(navigate){
+    el.addEventListener('click', evt => {
+      const r = resolve(evt);
+      if(r && r.clickTarget) navigate(r.clickTarget);
+    });
+  }
+}
 
 // ---------- artist/album art ----------
 // Matches the same sanitization used to name the files on disk (Windows-
@@ -1254,6 +1308,7 @@ function renderHeatmap(containerId, heat, opts){
 
 
   el.querySelectorAll('.heatmap-cell[data-date]').forEach(cell=>{
+    const clickTarget = (opts.dateClickable && cell.dataset.rawDate) ? cell.dataset.rawDate : null;
     cell.addEventListener('mouseenter', ()=>{
       const tt = getSharedTooltip();
       const count = Number(cell.dataset.count);
@@ -1261,16 +1316,14 @@ function renderHeatmap(containerId, heat, opts){
       tt.innerHTML = tooltipHtml({
         title: cell.dataset.date,
         lines: scrobbleLine(count, total),
-        footer: (opts.dateClickable && cell.dataset.rawDate) ? 'Click to view in Library' : null
+        footer: libraryFooter(clickTarget)
       });
       positionTooltipAtElement(tt, cell);
       showTooltip(tt);
     });
     cell.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
-    if(opts.dateClickable){
-      cell.addEventListener('click', () => {
-        if(cell.dataset.rawDate) goToLibraryScrobblesByDate(cell.dataset.rawDate);
-      });
+    if(clickTarget){
+      cell.addEventListener('click', () => goToLibraryScrobblesByDate(clickTarget));
     }
   });
 
@@ -1664,7 +1717,7 @@ function paintOverview(DATA){
             }
             return lines;
           },
-          footer: () => 'Click to view in Library'
+          footer: items => libraryFooter(items[0] && DATA.decade[items[0].dataIndex])
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {
@@ -1820,7 +1873,7 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
         legend:{display:false},
         tooltip:{ callbacks:{
           label: ctx => scrobbleLine(ctx.parsed.y, counts.reduce((a,b)=>a+b, 0)),
-          footer: () => 'Click to view in Library'
+          footer: () => libraryFooter(true)
         } }
       },
       scales:{
@@ -1943,7 +1996,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
           scrobbleLine(m.count, totalScrobbles),
           `Top Artist: ${m.topArtist}`
         ],
-        footer: 'Click to view in Library'
+        footer: libraryFooter(!!m.iso)
       });
       positionTooltipAtPoint(tt, evt.clientX, evt.clientY);
       showTooltip(tt);
@@ -2076,6 +2129,16 @@ function renderReport(){
   const weekDayDates = (type==='week') ? datesForWeekKey(key) : null;
   const prevWeekDayDates = (type==='week' && prevKey) ? datesForWeekKey(prevKey) : null;
   const weekClickDates = [weekDayDates, prevWeekDayDates];
+  // The single source of truth for "does this bar navigate, and to what
+  // date" -- used by the tooltip footer, onClick, and onHover cursor alike,
+  // so a bar can never claim to be clickable (footer/cursor) without
+  // actually being clickable, or vice versa. Returns null for non-week
+  // reports, and also for the "previous period" series when there's no
+  // earlier week to link to (e.g. the very first tracked week).
+  const weekBarDate = (datasetIndex, index) => {
+    const dates = weekClickDates[datasetIndex];
+    return (dates && dates[index]) || null;
+  };
   CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
@@ -2086,19 +2149,19 @@ function renderReport(){
       plugins:{ legend:{display:true, labels:{boxWidth:10}}, tooltip:{ callbacks:{
         title: items => items[0] ? items[0].label+' · '+items[0].dataset.label : '',
         label: c => scrobbleLine(c.parsed.y, c.datasetIndex === 0 ? cur.n : (prev && prev.n)),
-        footer: () => weekDayDates ? 'Click to view in Library' : ''
+        footer: items => libraryFooter(items[0] && weekBarDate(items[0].datasetIndex, items[0].dataIndex))
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
-      onClick: weekDayDates ? (evt, elements) => {
+      onClick: (evt, elements) => {
         if(!elements.length) return;
         const {datasetIndex, index} = elements[0];
-        const dates = weekClickDates[datasetIndex];
-        const dateStr = dates && dates[index];
+        const dateStr = weekBarDate(datasetIndex, index);
         if(dateStr) goToLibraryScrobblesByDate(dateStr);
-      } : undefined,
-      onHover: weekDayDates ? (evt, elements) => {
-        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-      } : undefined
+      },
+      onHover: (evt, elements) => {
+        const clickable = elements.length && weekBarDate(elements[0].datasetIndex, elements[0].index);
+        evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
+      }
     }
   });
   {
@@ -2151,7 +2214,7 @@ function renderReport(){
             }
             return lines;
           },
-          footer: () => 'Click to view in Library'
+          footer: items => libraryFooter(items[0] && cur.decades[items[0].dataIndex])
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
         onClick: (evt, elements) => {

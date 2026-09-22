@@ -260,7 +260,7 @@ function libraryFooter(clickable){
 //
 //   // Chart.js — return value is spread into options. resolveTarget(datasetIndex,
 //   // dataIndex) returns the navigation target (or falsy if not clickable).
-//   // chartJsExternalTooltip reads options.resolveTarget to auto-append the
+//   // chartJsExternalTooltip reads the stashed resolveTarget to auto-append the
 //   // "Click to view in Library" footer, so callbacks never manage a footer.
 //   options: {
 //     ...libraryLink((di, i) => rowOrNull, goToLibrary…),
@@ -294,23 +294,29 @@ function libraryLink(a, b){
     }
     return;
   }
-  // Chart.js overload: first arg is resolveTarget(datasetIndex, dataIndex)
+  // Chart.js overload: first arg is resolveTarget(datasetIndex, dataIndex).
+  // Do NOT put resolveTarget on the options object — Chart.js's option proxy
+  // treats that key specially and hits "Recursion detected: resolveTarget…".
+  // Stash it on a WeakMap keyed by the chart instance instead (registered from
+  // onHover/onClick, which receive the chart as their 3rd argument).
   const resolveTarget = a;
   const navigate = b;
   return {
-    resolveTarget,
-    onClick(evt, elements){
+    onClick(evt, elements, chart){
+      if(chart) LIBRARY_RESOLVE_BY_CHART.set(chart, resolveTarget);
       if(!elements.length) return;
       const {datasetIndex, index} = elements[0];
       const target = resolveTarget(datasetIndex, index);
       if(target) navigate(target);
     },
-    onHover(evt, elements){
+    onHover(evt, elements, chart){
+      if(chart) LIBRARY_RESOLVE_BY_CHART.set(chart, resolveTarget);
       const clickable = elements.length && resolveTarget(elements[0].datasetIndex, elements[0].index);
       evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
     }
   };
 }
+const LIBRARY_RESOLVE_BY_CHART = new WeakMap();
 
 // ---------- artist/album art ----------
 // Matches the same sanitization used to name the files on disk (Windows-
@@ -1233,10 +1239,10 @@ function chartJsExternalTooltip(context){
   // Flatten body lines; Chart.js stores each callback result as {lines: string[]}
   const bodyLines = (tip.body || []).flatMap(b => b.lines || []).filter(Boolean);
   let footers = (tip.footer || []).filter(Boolean);
-  // libraryLink(resolveTarget, navigate) stores resolveTarget on options —
-  // auto-append the library footer so it always matches clickability.
+  // libraryLink stashes resolveTarget on LIBRARY_RESOLVE_BY_CHART (not options,
+  // which would recurse inside Chart.js). Auto-append the library footer.
   if(!footers.length && tip.dataPoints && tip.dataPoints.length){
-    const resolve = context.chart.options && context.chart.options.resolveTarget;
+    const resolve = LIBRARY_RESOLVE_BY_CHART.get(context.chart);
     if(typeof resolve === 'function'){
       const dp = tip.dataPoints[0];
       const f = libraryFooter(resolve(dp.datasetIndex, dp.dataIndex));

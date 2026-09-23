@@ -2329,6 +2329,21 @@ function resetLibraryFilters(){
   LIBRARY_STATE.subTab = 'artists';
 }
 
+// Scopes the Library's date range to the active Report period (year/month/
+// week) when a click-to-Library handler fires from the Report tab, or
+// leaves it at "all time" for an Overview click. Shared by every
+// goToLibrary* handler that doesn't set its own explicit date range
+// (goToLibraryScrobblesByDate is the one exception, since a date-heatmap
+// click already knows the exact date).
+function scopeLibraryDateToActiveView(){
+  const reportTab = document.getElementById('tab-report');
+  const onReport = reportTab && reportTab.style.display !== 'none';
+  if(onReport){
+    const b = reportPeriodDateBounds();
+    if(b) setLibraryCustomDateRange(b.from, b.to);
+  }
+}
+
 // Drop drill-down filters that don't apply to the given sub-tab.
 // Hierarchy: artists (none) ← albums (artist) ← tracks (artist, album) ← scrobbles (artist, album, track)
 function pruneLibraryFiltersForSubTab(subTab){
@@ -2499,27 +2514,8 @@ function switchToLibraryTab(){
 }
 
 function goToLibrary(itemType, item){
-  LIBRARY_STATE.filterArtist = null;
-  LIBRARY_STATE.filterAlbumKey = null;
-  LIBRARY_STATE.filterAlbumLabel = null;
-  LIBRARY_STATE.filterTrackKey = null;
-  LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterCountryIso = null;
-  LIBRARY_STATE.filterCountryLabel = null;
-  LIBRARY_STATE.filterDecade = null;
-  clearLibrarySearch();
-  LIBRARY_STATE.page = 0;
-
-  // Overview → all time; Report → current year/month/week range
-  const onReport = document.getElementById('tab-report') &&
-    document.getElementById('tab-report').style.display !== 'none';
-  if(onReport){
-    const b = reportPeriodDateBounds();
-    if(b) setLibraryCustomDateRange(b.from, b.to);
-    else clearLibraryDateRange();
-  } else {
-    clearLibraryDateRange();
-  }
+  resetLibraryFilters();
+  scopeLibraryDateToActiveView();
 
   if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
@@ -2544,18 +2540,9 @@ function goToLibrary(itemType, item){
 }
 
 function goToLibraryScrobblesByDate(dateStr){
-  LIBRARY_STATE.filterArtist = null;
-  LIBRARY_STATE.filterAlbumKey = null;
-  LIBRARY_STATE.filterAlbumLabel = null;
-  LIBRARY_STATE.filterTrackKey = null;
-  LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterCountryIso = null;
-  LIBRARY_STATE.filterCountryLabel = null;
-  LIBRARY_STATE.filterDecade = null;
-  clearLibrarySearch();
+  resetLibraryFilters();
   setLibraryCustomDateRange(dateStr, dateStr);
   LIBRARY_STATE.subTab = 'scrobbles';
-  LIBRARY_STATE.page = 0;
 
   switchToLibraryTab();
   renderLibraryTab();
@@ -2566,27 +2553,10 @@ function goToLibraryScrobblesByDate(dateStr){
 // countries in library_data.json (semicolon-separated) match if any segment
 // resolves to the clicked ISO2 code.
 function goToLibraryByCountry(iso, countryLabel){
-  LIBRARY_STATE.filterArtist = null;
-  LIBRARY_STATE.filterAlbumKey = null;
-  LIBRARY_STATE.filterAlbumLabel = null;
-  LIBRARY_STATE.filterTrackKey = null;
-  LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterDecade = null;
-  clearLibrarySearch();
+  resetLibraryFilters();
   LIBRARY_STATE.filterCountryIso = iso || null;
   LIBRARY_STATE.filterCountryLabel = countryLabel || iso || null;
-  LIBRARY_STATE.subTab = 'artists';
-  LIBRARY_STATE.page = 0;
-
-  const onReport = document.getElementById('tab-report') &&
-    document.getElementById('tab-report').style.display !== 'none';
-  if(onReport){
-    const b = reportPeriodDateBounds();
-    if(b) setLibraryCustomDateRange(b.from, b.to);
-    else clearLibraryDateRange();
-  } else {
-    clearLibraryDateRange();
-  }
+  scopeLibraryDateToActiveView();
 
   switchToLibraryTab();
   renderLibraryTab();
@@ -2596,27 +2566,10 @@ function goToLibraryByCountry(iso, countryLabel){
 // Overview = all time; Reports = active year/month/week. Decade is the 10-year
 // bucket of the track's release year from library_data.json (via TRACK_META).
 function goToLibraryByDecade(decade){
-  LIBRARY_STATE.filterArtist = null;
-  LIBRARY_STATE.filterAlbumKey = null;
-  LIBRARY_STATE.filterAlbumLabel = null;
-  LIBRARY_STATE.filterTrackKey = null;
-  LIBRARY_STATE.filterTrackLabel = null;
-  LIBRARY_STATE.filterCountryIso = null;
-  LIBRARY_STATE.filterCountryLabel = null;
-  clearLibrarySearch();
+  resetLibraryFilters();
   LIBRARY_STATE.filterDecade = (decade == null ? null : Number(decade));
   LIBRARY_STATE.subTab = 'albums';
-  LIBRARY_STATE.page = 0;
-
-  const onReport = document.getElementById('tab-report') &&
-    document.getElementById('tab-report').style.display !== 'none';
-  if(onReport){
-    const b = reportPeriodDateBounds();
-    if(b) setLibraryCustomDateRange(b.from, b.to);
-    else clearLibraryDateRange();
-  } else {
-    clearLibraryDateRange();
-  }
+  scopeLibraryDateToActiveView();
 
   switchToLibraryTab();
   renderLibraryTab();

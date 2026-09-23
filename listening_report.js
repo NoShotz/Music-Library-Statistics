@@ -1830,6 +1830,21 @@ function initTabs(){
 // ============================================================
 // REPORT TAB
 // ============================================================
+// Steps STATE.reportKey by `delta` positions within the current report
+// type's period list (prev = -1, next = +1), clamped to the list's bounds.
+// Shared by the periodPrev/periodNext buttons so they can't drift apart on
+// how a step is resolved.
+function stepPeriod(delta){
+  const list = PERIOD_INDEXES[STATE.reportType];
+  const i = list.indexOf(STATE.reportKey);
+  if(i < 0) return; // current period not found in list (shouldn't normally happen)
+  const next = i + delta;
+  if(next < 0 || next >= list.length) return;
+  STATE.reportKey = list[next];
+  document.getElementById('periodSelect').value = STATE.reportKey;
+  renderReport();
+}
+
 function initReportControls(){
   STATE.reportType = 'year';
   STATE.reportKey = PERIOD_INDEXES.year[PERIOD_INDEXES.year.length-1];
@@ -1850,16 +1865,8 @@ function initReportControls(){
     renderReport();
   });
 
-  document.getElementById('periodPrev').addEventListener('click', ()=>{
-    const list = PERIOD_INDEXES[STATE.reportType];
-    const i = list.indexOf(STATE.reportKey);
-    if(i>0){ STATE.reportKey = list[i-1]; document.getElementById('periodSelect').value = STATE.reportKey; renderReport(); }
-  });
-  document.getElementById('periodNext').addEventListener('click', ()=>{
-    const list = PERIOD_INDEXES[STATE.reportType];
-    const i = list.indexOf(STATE.reportKey);
-    if(i>=0 && i<list.length-1){ STATE.reportKey = list[i+1]; document.getElementById('periodSelect').value = STATE.reportKey; renderReport(); }
-  });
+  document.getElementById('periodPrev').addEventListener('click', ()=> stepPeriod(-1));
+  document.getElementById('periodNext').addEventListener('click', ()=> stepPeriod(1));
 
   populatePeriodSelect();
 }
@@ -2839,13 +2846,8 @@ function renderLibraryTab(){
   const searchEl = document.getElementById('librarySearch');
   if(searchEl){
     if(searchEl.value !== LIBRARY_STATE.searchQuery) searchEl.value = LIBRARY_STATE.searchQuery;
-    const placeholders = {
-      artists: 'Search artists, albums, or tracks…',
-      albums: 'Search artists, albums, or tracks…',
-      tracks: 'Search artists, albums, or tracks…',
-      scrobbles: 'Search artists, albums, or tracks…'
-    };
-    searchEl.placeholder = placeholders[LIBRARY_STATE.subTab] || 'Search…';
+    // Same placeholder for every sub-tab -- search always spans artists/albums/tracks.
+    searchEl.placeholder = 'Search artists, albums, or tracks…';
   }
 
   const presetEl = document.getElementById('libraryDatePreset');

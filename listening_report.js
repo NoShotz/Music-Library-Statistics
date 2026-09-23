@@ -554,29 +554,36 @@ function fmtHour(h){
   const hh = (h%12===0?12:h%12);
   return hh+':00'+(h<12?'am':'pm');
 }
-function fmtDuration(totalSeconds){
-  if(totalSeconds==null) return '—';
+// Decomposes a duration into days/hours/minutes, or null for no data.
+// Shared by fmtDuration (abbreviated, "3d 4h 12m") and fmtDurationWords
+// (word-form, "3 days, 4 hours"), which otherwise differ only in how they
+// join these same three numbers into text.
+function durationParts(totalSeconds){
+  if(totalSeconds==null) return null;
   const totalMin = Math.round(totalSeconds/60);
-  const days = Math.floor(totalMin/1440);
-  const hours = Math.floor((totalMin%1440)/60);
-  const mins = totalMin%60;
+  return {
+    days: Math.floor(totalMin/1440),
+    hours: Math.floor((totalMin%1440)/60),
+    mins: totalMin%60
+  };
+}
+function fmtDuration(totalSeconds){
+  const d = durationParts(totalSeconds);
+  if(!d) return '—';
   const parts = [];
-  if(days) parts.push(days+'d');
-  if(hours||days) parts.push(hours+'h');
-  parts.push(mins+'m');
+  if(d.days) parts.push(d.days+'d');
+  if(d.hours||d.days) parts.push(d.hours+'h');
+  parts.push(d.mins+'m');
   return parts.join(' ');
 }
 // word-form duration for the quick-facts cards, e.g. "1 day, 6 hours"
 function fmtDurationWords(totalSeconds){
-  if(totalSeconds==null) return '—';
-  const totalMin = Math.round(totalSeconds/60);
-  const days = Math.floor(totalMin/1440);
-  const hours = Math.floor((totalMin%1440)/60);
-  const mins = totalMin%60;
+  const d = durationParts(totalSeconds);
+  if(!d) return '—';
   const parts = [];
-  if(days) parts.push(days+' day'+(days===1?'':'s'));
-  if(hours) parts.push(hours+' hour'+(hours===1?'':'s'));
-  if(!days && !hours) parts.push(mins+' minute'+(mins===1?'':'s'));
+  if(d.days) parts.push(d.days+' day'+(d.days===1?'':'s'));
+  if(d.hours) parts.push(d.hours+' hour'+(d.hours===1?'':'s'));
+  if(!d.days && !d.hours) parts.push(d.mins+' minute'+(d.mins===1?'':'s'));
   return parts.join(', ');
 }
 // compact "10 Aug" for the busiest-day quick fact
@@ -1736,33 +1743,7 @@ function paintOverview(DATA){
 
   if(DATA.decade && DATA.decade.length){
     document.getElementById('decadeChartCard').style.display = 'block';
-    const decadeCanvas = document.getElementById('decadeChart');
-    const decadeLink = libraryLink(decadeCanvas, {
-      resolveTarget: (di, i) => { const row = DATA.decade[i]; return row ? row.decade : null; },
-      navigate: goToLibraryByDecade
-    });
-    new Chart(decadeCanvas, {
-      type:'bar',
-      data:{ labels: DATA.decade.map(d=>d.decade+'s'),
-        datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
-          label: c => {
-            const row = DATA.decade[c.dataIndex];
-            const lines = [scrobbleLine(c.parsed.x, DATA.total_scrobbles)];
-            if(row && row.topAlbum){
-              const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-              lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
-            }
-            return lines;
-          },
-        } } },
-        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        onClick: decadeLink.onClick,
-        onHover: decadeLink.onHover
-      }
-    });
+    renderDecadeBarChart('decadeChart', DATA.decade, DATA.total_scrobbles, goToLibraryByDecade);
   }
 
 
@@ -1880,6 +1861,39 @@ function populatePeriodSelect(){
 
 function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
+}
+
+// "Music by decade" bar chart, shared by the Overview tab (all-time) and the
+// Report tab (current period) -- same layout, tooltip, and click-to-library
+// wiring in both places, differing only in which rows/total feed it.
+function renderDecadeBarChart(canvasId, rows, total, navigate){
+  const canvas = document.getElementById(canvasId);
+  const link = libraryLink(canvas, {
+    resolveTarget: (di, i) => { const row = rows[i]; return row ? row.decade : null; },
+    navigate
+  });
+  return new Chart(canvas, {
+    type:'bar',
+    data:{ labels: rows.map(d=>d.decade+'s'),
+      datasets:[{ data: rows.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+        // Return a string[] so every line is in tip.body and chartJsExternalTooltip shows it
+        label: c => {
+          const row = rows[c.dataIndex];
+          const lines = [scrobbleLine(c.parsed.x, total)];
+          if(row && row.topAlbum){
+            const title = formatAlbumTitle(row.topArtist, row.topAlbum);
+            lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
+          }
+          return lines;
+        },
+      } } },
+      scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
+      onClick: link.onClick,
+      onHover: link.onHover
+    }
+  });
 }
 
 // Bar chart alternative to the heatmap for a single month's daily scrobbles --
@@ -2221,32 +2235,7 @@ function renderReport(){
   if(cur.decades && cur.decades.length){
     document.getElementById('reportDecadeCard').style.display = 'block';
     destroyChart('decade');
-    const reportDecadeCanvas = document.getElementById('reportDecadeChart');
-    const reportDecadeLink = libraryLink(reportDecadeCanvas, {
-      resolveTarget: (di, i) => { const row = cur.decades[i]; return row ? row.decade : null; },
-      navigate: goToLibraryByDecade
-    });
-    CHART_REFS.decade = new Chart(reportDecadeCanvas, {
-      type:'bar',
-      data:{ labels: cur.decades.map(d=>d.decade+'s'),
-        datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
-      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-          label: c => {
-            const row = cur.decades[c.dataIndex];
-            const lines = [scrobbleLine(c.parsed.x, cur.n)];
-            if(row && row.topAlbum){
-              const title = formatAlbumTitle(row.topArtist, row.topAlbum);
-              lines.push(row.topArtist ? 'Top album: '+title+' by '+row.topArtist : 'Top album: '+title);
-            }
-            return lines;
-          },
-        } } },
-        scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        onClick: reportDecadeLink.onClick,
-        onHover: reportDecadeLink.onHover
-      }
-    });
+    CHART_REFS.decade = renderDecadeBarChart('reportDecadeChart', cur.decades, cur.n, goToLibraryByDecade);
   } else {
     document.getElementById('reportDecadeCard').style.display = 'none';
   }
@@ -2606,18 +2595,16 @@ function paginateLibraryRows(rows){
       <button class="nav-arrow" id="libPageNext" ${atEnd?'disabled':''} title="Next page">›</button>
       <button class="nav-arrow" id="libPageLast" ${atEnd?'disabled':''} title="Last page">»</button>
     `;
-    document.getElementById('libPageFirst').addEventListener('click', ()=>{
-      if(LIBRARY_STATE.page>0){ LIBRARY_STATE.page = 0; renderLibraryTab(); }
-    });
-    document.getElementById('libPagePrev').addEventListener('click', ()=>{
-      if(LIBRARY_STATE.page>0){ LIBRARY_STATE.page--; renderLibraryTab(); }
-    });
-    document.getElementById('libPageNext').addEventListener('click', ()=>{
-      if(LIBRARY_STATE.page<totalPages-1){ LIBRARY_STATE.page++; renderLibraryTab(); }
-    });
-    document.getElementById('libPageLast').addEventListener('click', ()=>{
-      if(LIBRARY_STATE.page<totalPages-1){ LIBRARY_STATE.page = totalPages-1; renderLibraryTab(); }
-    });
+    const gotoLibraryPage = target => {
+      const clamped = Math.max(0, Math.min(totalPages-1, target));
+      if(clamped === LIBRARY_STATE.page) return;
+      LIBRARY_STATE.page = clamped;
+      renderLibraryTab();
+    };
+    document.getElementById('libPageFirst').addEventListener('click', ()=> gotoLibraryPage(0));
+    document.getElementById('libPagePrev').addEventListener('click', ()=> gotoLibraryPage(page-1));
+    document.getElementById('libPageNext').addEventListener('click', ()=> gotoLibraryPage(page+1));
+    document.getElementById('libPageLast').addEventListener('click', ()=> gotoLibraryPage(totalPages-1));
   }
 
   const start = LIBRARY_STATE.page * LIBRARY_PAGE_SIZE;

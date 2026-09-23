@@ -256,67 +256,81 @@ function libraryFooter(clickable){
   return clickable ? 'Click to view in Library' : '';
 }
 // Unified library-navigation helper for both Chart.js charts and plain DOM
-// hover surfaces. One name, two call shapes:
+// hover surfaces -- one function, one call shape: libraryLink(el, config).
 //
-//   // Chart.js — return value is spread into options. resolveTarget(datasetIndex,
-//   // dataIndex) returns the navigation target (or falsy if not clickable).
-//   // chartJsExternalTooltip reads the stashed resolveTarget to auto-append the
-//   // "Click to view in Library" footer, so callbacks never manage a footer.
-//   options: {
-//     ...libraryLink((di, i) => rowOrNull, goToLibrary…),
-//     plugins: { tooltip: { callbacks: { label: … } } }
-//   }
+//   // Chart.js -- el is the <canvas> passed to `new Chart(...)`. config is
+//   // {resolveTarget, navigate}: resolveTarget(datasetIndex, dataIndex)
+//   // returns the navigation target (or falsy if not clickable). Returns
+//   // {onClick, onHover} to spread into the chart's options.
+//   const canvas = document.getElementById('reportDowChart');
+//   const link = libraryLink(canvas, {resolveTarget: weekBarDate, navigate: goToLibraryScrobblesByDate});
+//   new Chart(canvas, { options: { onClick: link.onClick, onHover: link.onHover, ... } });
+//   // chartJsExternalTooltip reads resolveTarget back off the canvas element
+//   // itself (see the WARNING below for why it's stashed there and not in
+//   // Chart.js's options), so there's nothing else to wire up.
 //
-//   // DOM (heatmap cells, clock wedges, map regions) — resolve(evt) returns
-//   // null (no tooltip) or {title, lines, clickTarget}; footer + click are
-//   // driven by clickTarget, same as Chart.js resolveTarget.
-//   libraryLink(el, { resolve, position, navigate })
+//   // DOM (heatmap cells, clock wedges, map regions) -- config is
+//   // {resolve, position, navigate}: resolve(evt) returns null (no tooltip)
+//   // or {title, lines, clickTarget}; footer + click are driven by
+//   // clickTarget, the same idea as resolveTarget above.
+//   libraryLink(cell, {resolve, position, navigate});
 //
-function libraryLink(a, b){
-  // DOM overload: first arg is an Element
-  if(a && a.nodeType === 1){
-    const el = a;
-    const {resolve, position, navigate} = b || {};
-    el.addEventListener('mouseenter', evt=>{
-      const r = resolve(evt);
-      if(!r) return;
-      const tt = getSharedTooltip();
-      tt.innerHTML = tooltipHtml({title: r.title, lines: r.lines, footer: libraryFooter(r.clickTarget)});
-      position(tt, evt);
-      showTooltip(tt);
-    });
-    el.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
-    if(navigate){
-      el.addEventListener('click', evt => {
-        const r = resolve(evt);
-        if(r && r.clickTarget) navigate(r.clickTarget);
-      });
-    }
-    return;
+// Both overloads hide the shared tooltip before navigating -- a click never
+// moves the mouse, so without this the floating tooltip is left stranded
+// over whatever tab/panel the click just navigated to. Callers never need
+// to remember this themselves.
+function libraryLink(el, config){
+  if(el instanceof HTMLCanvasElement){
+    const {resolveTarget, navigate} = config;
+    // WARNING: never put resolveTarget (or any function value) anywhere
+    // inside the options object passed to `new Chart(...)` -- Chart.js's
+    // option proxy treats any function it finds there as a "scriptable
+    // option" and tries to auto-invoke it, which for this shape throws
+    // "Recursion detected: resolveTarget->valueOf->resolveTarget". Stashing
+    // it as a plain property on the canvas element itself sidesteps that
+    // entirely -- it's a regular DOM node, untouched by Chart.js's options
+    // machinery -- and it's readable the instant this call returns, so
+    // there's no separate registration step and no dependency on Chart.js's
+    // internal event-callback ordering (unlike stashing it lazily from
+    // inside onHover/onClick, which could miss the chart's very first hover).
+    el._libraryResolveTarget = resolveTarget;
+    return {
+      onClick(evt, elements){
+        if(!elements.length) return;
+        const {datasetIndex, index} = elements[0];
+        const target = resolveTarget(datasetIndex, index);
+        if(target){
+          hideTooltip(getSharedTooltip());
+          navigate(target);
+        }
+      },
+      onHover(evt, elements){
+        const clickable = elements.length && resolveTarget(elements[0].datasetIndex, elements[0].index);
+        evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
+      }
+    };
   }
-  // Chart.js overload: first arg is resolveTarget(datasetIndex, dataIndex).
-  // Do NOT put resolveTarget on the options object — Chart.js's option proxy
-  // treats that key specially and hits "Recursion detected: resolveTarget…".
-  // Stash it on a WeakMap keyed by the chart instance instead (registered from
-  // onHover/onClick, which receive the chart as their 3rd argument).
-  const resolveTarget = a;
-  const navigate = b;
-  return {
-    onClick(evt, elements, chart){
-      if(chart) LIBRARY_RESOLVE_BY_CHART.set(chart, resolveTarget);
-      if(!elements.length) return;
-      const {datasetIndex, index} = elements[0];
-      const target = resolveTarget(datasetIndex, index);
-      if(target) navigate(target);
-    },
-    onHover(evt, elements, chart){
-      if(chart) LIBRARY_RESOLVE_BY_CHART.set(chart, resolveTarget);
-      const clickable = elements.length && resolveTarget(elements[0].datasetIndex, elements[0].index);
-      evt.native.target.style.cursor = clickable ? 'pointer' : 'default';
-    }
-  };
+  // DOM overload (heatmap cells, clock wedges, map regions)
+  const {resolve, position, navigate} = config;
+  el.addEventListener('mouseenter', evt=>{
+    const r = resolve(evt);
+    if(!r) return;
+    const tt = getSharedTooltip();
+    tt.innerHTML = tooltipHtml({title: r.title, lines: r.lines, footer: libraryFooter(r.clickTarget)});
+    position(tt, evt);
+    showTooltip(tt);
+  });
+  el.addEventListener('mouseleave', () => hideTooltip(getSharedTooltip()));
+  if(navigate){
+    el.addEventListener('click', evt => {
+      const r = resolve(evt);
+      if(r && r.clickTarget){
+        hideTooltip(getSharedTooltip());
+        navigate(r.clickTarget);
+      }
+    });
+  }
 }
-const LIBRARY_RESOLVE_BY_CHART = new WeakMap();
 
 // ---------- artist/album art ----------
 // Matches the same sanitization used to name the files on disk (Windows-
@@ -1239,10 +1253,11 @@ function chartJsExternalTooltip(context){
   // Flatten body lines; Chart.js stores each callback result as {lines: string[]}
   const bodyLines = (tip.body || []).flatMap(b => b.lines || []).filter(Boolean);
   let footers = (tip.footer || []).filter(Boolean);
-  // libraryLink stashes resolveTarget on LIBRARY_RESOLVE_BY_CHART (not options,
-  // which would recurse inside Chart.js). Auto-append the library footer.
+  // libraryLink() stashes resolveTarget directly on the chart's canvas
+  // element (never on options -- see the warning inside libraryLink()).
+  // Auto-append the library footer for any chart wired up that way.
   if(!footers.length && tip.dataPoints && tip.dataPoints.length){
-    const resolve = LIBRARY_RESOLVE_BY_CHART.get(context.chart);
+    const resolve = context.chart.canvas && context.chart.canvas._libraryResolveTarget;
     if(typeof resolve === 'function'){
       const dp = tip.dataPoints[0];
       const f = libraryFooter(resolve(dp.datasetIndex, dp.dataIndex));
@@ -1721,7 +1736,12 @@ function paintOverview(DATA){
 
   if(DATA.decade && DATA.decade.length){
     document.getElementById('decadeChartCard').style.display = 'block';
-    new Chart(document.getElementById('decadeChart'), {
+    const decadeCanvas = document.getElementById('decadeChart');
+    const decadeLink = libraryLink(decadeCanvas, {
+      resolveTarget: (di, i) => { const row = DATA.decade[i]; return row ? row.decade : null; },
+      navigate: goToLibraryByDecade
+    });
+    new Chart(decadeCanvas, {
       type:'bar',
       data:{ labels: DATA.decade.map(d=>d.decade+'s'),
         datasets:[{ data: DATA.decade.map(d=>d.count), backgroundColor: cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
@@ -1739,13 +1759,12 @@ function paintOverview(DATA){
           },
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        ...libraryLink(
-          (di, i) => { const row = DATA.decade[i]; return row ? row.decade : null; },
-          goToLibraryByDecade
-        )
+        onClick: decadeLink.onClick,
+        onHover: decadeLink.onHover
       }
     });
   }
+
 
   renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
   renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
@@ -1872,7 +1891,13 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
     const d = Number(r.dateStr.split('-')[2]);
     counts[d-1]++;
   });
-  CHART_REFS.subPeriod = new Chart(document.getElementById('subPeriodBarChart'), {
+  // Each bar is one calendar day → Library scrobbles for that day.
+  const subPeriodCanvas = document.getElementById('subPeriodBarChart');
+  const subPeriodLink = libraryLink(subPeriodCanvas, {
+    resolveTarget: (di, i) => monthKey + '-' + String(i+1).padStart(2,'0'),
+    navigate: goToLibraryScrobblesByDate
+  });
+  CHART_REFS.subPeriod = new Chart(subPeriodCanvas, {
     type:'bar',
     data:{
       labels: counts.map((_,i)=>String(i+1)),
@@ -1894,11 +1919,8 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
         x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:false, font:{size:10} } },
         y:{ grid:{color:cssColor('--color-chart-grid')}, beginAtZero:true, ticks:{ precision:0 } }
       },
-      // Each bar is one calendar day → Library scrobbles for that day.
-      ...libraryLink(
-        (di, i) => monthKey + '-' + String(i+1).padStart(2,'0'),
-        goToLibraryScrobblesByDate
-      )
+      onClick: subPeriodLink.onClick,
+      onHover: subPeriodLink.onHover
     }
   });
 }
@@ -2006,10 +2028,7 @@ function bindMapTooltips(containerId, meta, totalScrobbles){
         };
       },
       position(tt, evt){ positionTooltipAtPoint(tt, evt.clientX, evt.clientY); },
-      navigate(t){
-        hideTooltip(getSharedTooltip());
-        goToLibraryByCountry(t.iso, t.country);
-      }
+      navigate(t){ goToLibraryByCountry(t.iso, t.country); }
     });
   });
 }
@@ -2142,7 +2161,9 @@ function renderReport(){
     const dates = weekClickDates[datasetIndex];
     return (dates && dates[index]) || null;
   };
-  CHART_REFS.dow = new Chart(document.getElementById('reportDowChart'), {
+  const dowCanvas = document.getElementById('reportDowChart');
+  const dowLink = libraryLink(dowCanvas, {resolveTarget: weekBarDate, navigate: goToLibraryScrobblesByDate});
+  CHART_REFS.dow = new Chart(dowCanvas, {
     type:'bar',
     data:{ labels: dowLabels, datasets:[
       { label: periodLabel(type,key), data: cur.weekday, backgroundColor:cssColor('--color-weekly-scrobble-bars'), borderRadius:2, barPercentage:0.6 },
@@ -2154,7 +2175,8 @@ function renderReport(){
         label: c => scrobbleLine(c.parsed.y, c.datasetIndex === 0 ? cur.n : (prev && prev.n))
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
-      ...libraryLink(weekBarDate, goToLibraryScrobblesByDate)
+      onClick: dowLink.onClick,
+      onHover: dowLink.onHover
     }
   });
   {
@@ -2192,7 +2214,12 @@ function renderReport(){
   if(cur.decades && cur.decades.length){
     document.getElementById('reportDecadeCard').style.display = 'block';
     destroyChart('decade');
-    CHART_REFS.decade = new Chart(document.getElementById('reportDecadeChart'), {
+    const reportDecadeCanvas = document.getElementById('reportDecadeChart');
+    const reportDecadeLink = libraryLink(reportDecadeCanvas, {
+      resolveTarget: (di, i) => { const row = cur.decades[i]; return row ? row.decade : null; },
+      navigate: goToLibraryByDecade
+    });
+    CHART_REFS.decade = new Chart(reportDecadeCanvas, {
       type:'bar',
       data:{ labels: cur.decades.map(d=>d.decade+'s'),
         datasets:[{ data: cur.decades.map(d=>d.count), backgroundColor:cssColor('--color-decade-bars'), borderRadius:2, barPercentage:0.65 }] },
@@ -2209,10 +2236,8 @@ function renderReport(){
           },
         } } },
         scales:{ x:{ grid:{color:cssColor('--color-chart-grid')} }, y:{ grid:{display:false} } },
-        ...libraryLink(
-          (di, i) => { const row = cur.decades[i]; return row ? row.decade : null; },
-          goToLibraryByDecade
-        )
+        onClick: reportDecadeLink.onClick,
+        onHover: reportDecadeLink.onHover
       }
     });
   } else {

@@ -849,8 +849,6 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`;
   }).join('');
-  // viewAllKind === 'discoveries': label says "new …" and all navigation
-  // (rows + See all) keeps filterDiscoveries on in the Library.
   const fromDiscoveries = viewAllKind === 'discoveries';
   const showViewAll = itemType && totalCount != null && totalCount > items.length;
   const viewAllHtml = showViewAll
@@ -2568,13 +2566,11 @@ function switchToLibraryTab(){
 function goToLibrary(itemType, item, opts){
   resetLibraryFilters();
   scopeLibraryDateToActiveView();
-  // opts.discoveries: came from the Reports Discoveries lists — keep the
-  // "newly discovered" library filter so drill-downs stay in that scope.
+  // opts.discoveries: from Reports Discoveries lists — keep "newly discovered".
   if(opts && opts.discoveries) LIBRARY_STATE.filterDiscoveries = true;
 
   if(!item){
     // No specific item -- e.g. the ranked list's "See all N in Library" row.
-    // Just show the type's unfiltered list for the active time period.
     LIBRARY_STATE.subTab = itemType + 's';
   } else if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
@@ -2634,7 +2630,6 @@ function goToLibraryByDecade(decade){
   renderLibraryTab();
 }
 
-// Reports Discoveries "See all N new … in Library" (no specific item).
 function goToLibraryDiscoveries(itemType){
   goToLibrary(itemType, null, {discoveries: true});
 }
@@ -2919,8 +2914,18 @@ function renderLibraryTab(){
 
   const notice = document.getElementById('libraryFilterNotice');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
-  let kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
-  if(LIBRARY_STATE.filterDiscoveries) kind = 'newly discovered ' + kind;
+  // Discoveries: "newly discovered artists/albums/tracks", but for the
+  // scrobbles tab the natural reading is "scrobbles of newly discovered tracks".
+  let kind;
+  if(LIBRARY_STATE.filterDiscoveries){
+    kind = LIBRARY_STATE.subTab === 'scrobbles' ? 'scrobbles of newly discovered tracks'
+         : LIBRARY_STATE.subTab === 'artists'  ? 'newly discovered artists'
+         : LIBRARY_STATE.subTab === 'albums'   ? 'newly discovered albums'
+         : LIBRARY_STATE.subTab === 'tracks'   ? 'newly discovered tracks'
+         : 'newly discovered results';
+  } else {
+    kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
+  }
 
   let scope = ENRICHED, filtered = false;
 
@@ -2955,8 +2960,6 @@ function renderLibraryTab(){
     filtered = true;
     filterParts.push(`from the <b>${dec}s</b>`);
   }
-  // Newly discovered: only entities whose first-ever play is inside the active
-  // library date range (bounds already applied above).
   if(LIBRARY_STATE.filterDiscoveries){
     const b = bounds;
     const inRange = (dateStr) => {

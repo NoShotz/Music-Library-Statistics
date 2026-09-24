@@ -849,21 +849,23 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`;
   }).join('');
-  // viewAllKind: 'discoveries' → "See all N new …" + goToLibraryDiscoveries;
-  // otherwise the default top-list "See all N … in Library".
+  // viewAllKind === 'discoveries': label says "new …" and all navigation
+  // (rows + See all) keeps filterDiscoveries on in the Library.
+  const fromDiscoveries = viewAllKind === 'discoveries';
   const showViewAll = itemType && totalCount != null && totalCount > items.length;
   const viewAllHtml = showViewAll
-    ? `<li class="rank-viewall"><span class="rank-viewall-label">See all ${fmtNum(totalCount)} ${viewAllKind==='discoveries'?'new ':''}${itemType}s in Library →</span></li>`
+    ? `<li class="rank-viewall"><span class="rank-viewall-label">See all ${fmtNum(totalCount)} ${fromDiscoveries?'new ':''}${itemType}s in Library →</span></li>`
     : '';
   el.innerHTML = rowsHtml + viewAllHtml;
   bindArtThumbs(el);
   if(itemType){
+    const libOpts = fromDiscoveries ? {discoveries: true} : null;
     el.querySelectorAll('.lib-row').forEach(row=>{
-      row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
+      row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)], libOpts));
     });
     if(showViewAll){
       el.querySelector('.rank-viewall').addEventListener('click', ()=>{
-        if(viewAllKind === 'discoveries') goToLibraryDiscoveries(itemType);
+        if(fromDiscoveries) goToLibraryDiscoveries(itemType);
         else goToLibrary(itemType);
       });
     }
@@ -2336,7 +2338,7 @@ const LIBRARY_STATE = {
   filterCountryIso: null, filterCountryLabel: null,
   filterDecade: null,
   // When true, list only entities whose first-ever scrobble falls inside the
-  // active library date range (set by Reports "See all N new … in Library").
+  // active library date range (Reports Discoveries → Library).
   filterDiscoveries: false,
   searchQuery: '',
   datePreset: 'all', dateFrom: null, dateTo: null,
@@ -2563,9 +2565,12 @@ function switchToLibraryTab(){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function goToLibrary(itemType, item){
+function goToLibrary(itemType, item, opts){
   resetLibraryFilters();
   scopeLibraryDateToActiveView();
+  // opts.discoveries: came from the Reports Discoveries lists — keep the
+  // "newly discovered" library filter so drill-downs stay in that scope.
+  if(opts && opts.discoveries) LIBRARY_STATE.filterDiscoveries = true;
 
   if(!item){
     // No specific item -- e.g. the ranked list's "See all N in Library" row.
@@ -2629,18 +2634,9 @@ function goToLibraryByDecade(decade){
   renderLibraryTab();
 }
 
-// Reports Discoveries "See all N new … in Library" → Library list of entities
-// whose first-ever scrobble falls in the active report period (date range is
-// scoped the same way as other report→library links).
+// Reports Discoveries "See all N new … in Library" (no specific item).
 function goToLibraryDiscoveries(itemType){
-  resetLibraryFilters();
-  scopeLibraryDateToActiveView();
-  LIBRARY_STATE.filterDiscoveries = true;
-  LIBRARY_STATE.subTab = itemType === 'artist' ? 'artists'
-                      : itemType === 'album'  ? 'albums'
-                      : 'tracks';
-  switchToLibraryTab();
-  renderLibraryTab();
+  goToLibrary(itemType, null, {discoveries: true});
 }
 
 
@@ -2959,10 +2955,10 @@ function renderLibraryTab(){
     filtered = true;
     filterParts.push(`from the <b>${dec}s</b>`);
   }
-  // Newly discovered: keep only scrobbles of entities whose first-ever play
-  // falls inside the active library date range (bounds already applied above).
+  // Newly discovered: only entities whose first-ever play is inside the active
+  // library date range (bounds already applied above).
   if(LIBRARY_STATE.filterDiscoveries){
-    const b = bounds; // from libraryDateBounds() earlier in this function
+    const b = bounds;
     const inRange = (dateStr) => {
       if(!dateStr) return false;
       if(b && b.from && dateStr < b.from) return false;

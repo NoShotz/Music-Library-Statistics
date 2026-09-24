@@ -429,7 +429,7 @@
     font-size:13px;color:var(--color-rank-count);white-space:nowrap;
   }
   .ranked li.rank-viewall{
-    justify-content:center; cursor:pointer;max-height:22px;
+    justify-content:center; cursor:pointer;height:36px;
   }
   .ranked li.rank-viewall:hover{background:var(--color-surface-raised);}
   .rank-viewall-label{

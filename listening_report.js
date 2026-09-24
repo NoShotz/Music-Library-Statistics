@@ -537,13 +537,19 @@ function fmtDateNice(dateStr){
   const d = new Date(dateStr+'T00:00:00Z');
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric', timeZone:'UTC'});
 }
-// Last calendar day of month (1–12), leap-year aware via UTC Date math.
+// Last calendar day of a month (month is 1–12). Leap-year aware.
+//
+// dateStr values elsewhere are REPORT_TIMEZONE wall dates (enrich() → localDate()
+// → ymd()): the Y/M/D numbers already represent the report timezone's calendar,
+// not the browser's. So once we have those integers, pure UTC Date arithmetic
+// on them is the right way to ask "how many days does this calendar month have"
+// — same pattern reportPeriodDateBounds uses for month ranges.
 function daysInMonth(year, month){
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
-// Library callout phrase for a {from,to} date-str range. Collapses whole
-// calendar years ("in 2026") and whole months ("in January 2026"), including
-// leap-year Februaries; single days stay "on …"; everything else is "from … – …".
+// Library callout phrase for a {from,to} YYYY-MM-DD range (REPORT_TIMEZONE wall
+// dates). Collapses whole calendar years and months; single day → "on …"; else
+// "from … – …".
 function fmtLibraryDateRangePhrase(from, to){
   if(from && to && from === to){
     return `on <b>${fmtDateNice(from)}</b>`;
@@ -2410,7 +2416,7 @@ function reportPeriodDateBounds(){
   }
   if(type === 'month'){
     const [y, m] = key.split('-').map(Number);
-    const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const lastDay = daysInMonth(y, m);
     return {
       from: key + '-01',
       to: key + '-' + String(lastDay).padStart(2, '0')
@@ -2905,7 +2911,6 @@ function renderLibraryTab(){
     if(bounds.to) scope = scope.filter(r => r.dateStr <= bounds.to);
     filtered = true;
     if(LIBRARY_STATE.datePreset === 'custom'){
-      // Collapse full calendar years ("in 2026") and months ("in January 2026").
       datePhrase = fmtLibraryDateRangePhrase(bounds.from, bounds.to);
     } else {
       const labels = {7:'Last 7 days',30:'Last 30 days',90:'Last 90 days',180:'Last 180 days',365:'Last 365 days'};

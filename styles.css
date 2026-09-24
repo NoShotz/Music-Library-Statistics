@@ -428,6 +428,13 @@
     font-family:'JetBrains Mono',monospace;
     font-size:13px;color:var(--color-rank-count);white-space:nowrap;
   }
+  .ranked li.rank-viewall{
+    justify-content:center; cursor:pointer;
+  }
+  .ranked li.rank-viewall:hover{background:var(--color-surface-raised);}
+  .rank-viewall-label{
+    font-size:13px; font-weight:500; color:var(--color-accent);
+  }
 
   /* ---------- CALLOUT ---------- */
   .callout{

@@ -783,7 +783,11 @@ function renderChartSideStat(elId, groups){
 // never actually be empty).
 // detailFn: optional third line (album on track rows). Always rendered so
 // artist/album/track rows share the same height.
-function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn){
+// totalCount: when given and greater than items.length (i.e. this list was
+// truncated to its top N), appends a "See all N artists/albums/tracks in
+// Library" row -- scoped the same way any other click-to-Library link is
+// (goToLibrary(itemType) with no item -- see below).
+function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn, totalCount){
   const el = document.getElementById(elId);
   if(!items.length && emptyMsg){
     el.innerHTML = `
@@ -798,7 +802,7 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
       </li>`;
     return;
   }
-  el.innerHTML = items.map((it,i)=>{
+  const rowsHtml = items.map((it,i)=>{
     const detail = detailFn ? (detailFn(it) || '') : '';
     return `
       <li${itemType ? ' class="lib-row"' : ''} data-idx="${i}">
@@ -812,11 +816,19 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`;
   }).join('');
+  const showViewAll = itemType && totalCount != null && totalCount > items.length;
+  const viewAllHtml = showViewAll
+    ? `<li class="rank-viewall"><span class="rank-viewall-label">See all ${fmtNum(totalCount)} ${itemType}s in Library →</span></li>`
+    : '';
+  el.innerHTML = rowsHtml + viewAllHtml;
   bindArtThumbs(el);
   if(itemType){
     el.querySelectorAll('.lib-row').forEach(row=>{
       row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
     });
+    if(showViewAll){
+      el.querySelector('.rank-viewall').addEventListener('click', ()=> goToLibrary(itemType));
+    }
   }
 }
 
@@ -1747,9 +1759,9 @@ function paintOverview(DATA){
   }
 
 
-  renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist');
-  renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
-  renderRankedList('albumList', DATA.top_albums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
+  renderRankedList('artistList', DATA.top_artists, d=>d.artist, d=>'', 'artist', null, null, DATA.unique_artists);
+  renderRankedList('trackList', DATA.top_tracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '', DATA.unique_tracks);
+  renderRankedList('albumList', DATA.top_albums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', null, null, DATA.unique_albums);
 
   renderListeningClock('hourChart', 'hourChartBusiest', DATA.hour_of_day.map(d=>d.count));
 
@@ -2129,9 +2141,9 @@ function renderReport(){
   }
 
   // ---- top lists + new stats ----
-  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', 'artist');
-  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
-  renderRankedList('reportAlbumList', cur.topAlbums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album');
+  renderRankedList('reportArtistList', cur.topArtists, d=>d.artist, ()=>'', 'artist', null, null, cur.newArtists.uniqueCount);
+  renderRankedList('reportTrackList', cur.topTracks, d=>d.track, d=>d.artist, 'track', null, d=>d.album ? formatAlbumTitle(d.artist, d.album) : '', cur.newTracks.uniqueCount);
+  renderRankedList('reportAlbumList', cur.topAlbums, d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', null, null, cur.newAlbums.uniqueCount);
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
@@ -2513,7 +2525,11 @@ function goToLibrary(itemType, item){
   resetLibraryFilters();
   scopeLibraryDateToActiveView();
 
-  if(itemType==='artist'){
+  if(!item){
+    // No specific item -- e.g. the ranked list's "See all N in Library" row.
+    // Just show the type's unfiltered list for the active time period.
+    LIBRARY_STATE.subTab = itemType + 's';
+  } else if(itemType==='artist'){
     LIBRARY_STATE.subTab = 'albums';
     LIBRARY_STATE.filterArtist = item.artist;
   } else if(itemType==='album'){
@@ -2570,6 +2586,7 @@ function goToLibraryByDecade(decade){
   switchToLibraryTab();
   renderLibraryTab();
 }
+
 
 // Renders the pager controls (reusing the same .nav-arrow buttons the Report
 // tab's period navigator uses) and returns just this page's slice of rows,

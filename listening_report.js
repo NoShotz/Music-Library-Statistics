@@ -820,7 +820,7 @@ function renderChartSideStat(elId, groups){
 // truncated to its top N), appends a "See all N artists/albums/tracks in
 // Library" row -- scoped the same way any other click-to-Library link is
 // (goToLibrary(itemType) with no item -- see below).
-function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn, totalCount){
+function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detailFn, totalCount, viewAllKind){
   const el = document.getElementById(elId);
   if(!items.length && emptyMsg){
     el.innerHTML = `
@@ -849,9 +849,11 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
         <span class="rank-count">${fmtNum(it.count)}</span>
       </li>`;
   }).join('');
+  // viewAllKind: 'discoveries' → "See all N new …" + goToLibraryDiscoveries;
+  // otherwise the default top-list "See all N … in Library".
   const showViewAll = itemType && totalCount != null && totalCount > items.length;
   const viewAllHtml = showViewAll
-    ? `<li class="rank-viewall"><span class="rank-viewall-label">See all ${fmtNum(totalCount)} ${itemType}s in Library →</span></li>`
+    ? `<li class="rank-viewall"><span class="rank-viewall-label">See all ${fmtNum(totalCount)} ${viewAllKind==='discoveries'?'new ':''}${itemType}s in Library →</span></li>`
     : '';
   el.innerHTML = rowsHtml + viewAllHtml;
   bindArtThumbs(el);
@@ -860,7 +862,10 @@ function renderRankedList(elId, items, mainFn, subFn, itemType, emptyMsg, detail
       row.addEventListener('click', ()=> goToLibrary(itemType, items[Number(row.dataset.idx)]));
     });
     if(showViewAll){
-      el.querySelector('.rank-viewall').addEventListener('click', ()=> goToLibrary(itemType));
+      el.querySelector('.rank-viewall').addEventListener('click', ()=>{
+        if(viewAllKind === 'discoveries') goToLibraryDiscoveries(itemType);
+        else goToLibrary(itemType);
+      });
     }
   }
 }
@@ -2180,9 +2185,9 @@ function renderReport(){
 
   // ---- discoveries: full lists of new artists/albums/tracks this period ----
   const DISCOVERY_LIMIT = 5;
-  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'artist', 'No new artists discovered this period.');
-  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.', d=>d.album ? formatAlbumTitle(d.artist, d.album) : '');
-  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', 'No new albums discovered this period.');
+  renderRankedList('reportNewArtistList', cur.discoveries.artists.slice(0,DISCOVERY_LIMIT), d=>d.artist, ()=>'', 'artist', 'No new artists discovered this period.', null, cur.discoveries.artists.length, 'discoveries');
+  renderRankedList('reportNewTrackList', cur.discoveries.tracks.slice(0,DISCOVERY_LIMIT), d=>d.track, d=>d.artist, 'track', 'No new tracks discovered this period.', d=>d.album ? formatAlbumTitle(d.artist, d.album) : '', cur.discoveries.tracks.length, 'discoveries');
+  renderRankedList('reportNewAlbumList', cur.discoveries.albums.slice(0,DISCOVERY_LIMIT), d=>formatAlbumTitle(d.artist, d.album), d=>d.artist, 'album', 'No new albums discovered this period.', null, cur.discoveries.albums.length, 'discoveries');
 
   setText('reportNewArtistsDesc',
     `${fmtNum(cur.newArtists.newCount)} new artist${cur.newArtists.newCount===1?'':'s'} this period` +
@@ -2330,6 +2335,9 @@ const LIBRARY_STATE = {
   filterTrackKey: null, filterTrackLabel: null,
   filterCountryIso: null, filterCountryLabel: null,
   filterDecade: null,
+  // When true, list only entities whose first-ever scrobble falls inside the
+  // active library date range (set by Reports "See all N new … in Library").
+  filterDiscoveries: false,
   searchQuery: '',
   datePreset: 'all', dateFrom: null, dateTo: null,
   page: 0
@@ -2364,6 +2372,7 @@ function resetLibraryFilters(){
   LIBRARY_STATE.filterCountryIso = null;
   LIBRARY_STATE.filterCountryLabel = null;
   LIBRARY_STATE.filterDecade = null;
+  LIBRARY_STATE.filterDiscoveries = false;
   clearLibrarySearch();
   clearLibraryDateRange();
   LIBRARY_STATE.page = 0;
@@ -2616,6 +2625,20 @@ function goToLibraryByDecade(decade){
   LIBRARY_STATE.subTab = 'albums';
   scopeLibraryDateToActiveView();
 
+  switchToLibraryTab();
+  renderLibraryTab();
+}
+
+// Reports Discoveries "See all N new … in Library" → Library list of entities
+// whose first-ever scrobble falls in the active report period (date range is
+// scoped the same way as other report→library links).
+function goToLibraryDiscoveries(itemType){
+  resetLibraryFilters();
+  scopeLibraryDateToActiveView();
+  LIBRARY_STATE.filterDiscoveries = true;
+  LIBRARY_STATE.subTab = itemType === 'artist' ? 'artists'
+                      : itemType === 'album'  ? 'albums'
+                      : 'tracks';
   switchToLibraryTab();
   renderLibraryTab();
 }
@@ -2900,7 +2923,8 @@ function renderLibraryTab(){
 
   const notice = document.getElementById('libraryFilterNotice');
   const q = (LIBRARY_STATE.searchQuery || '').trim();
-  const kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
+  let kind = {artists:'artists', albums:'albums', tracks:'tracks', scrobbles:'scrobbles of tracks'}[LIBRARY_STATE.subTab] || 'results';
+  if(LIBRARY_STATE.filterDiscoveries) kind = 'newly discovered ' + kind;
 
   let scope = ENRICHED, filtered = false;
 
@@ -2934,6 +2958,34 @@ function renderLibraryTab(){
     scope = scope.filter(r => scrobbleMatchesDecade(r, dec));
     filtered = true;
     filterParts.push(`from the <b>${dec}s</b>`);
+  }
+  // Newly discovered: keep only scrobbles of entities whose first-ever play
+  // falls inside the active library date range (bounds already applied above).
+  if(LIBRARY_STATE.filterDiscoveries){
+    const b = bounds; // from libraryDateBounds() earlier in this function
+    const inRange = (dateStr) => {
+      if(!dateStr) return false;
+      if(b && b.from && dateStr < b.from) return false;
+      if(b && b.to && dateStr > b.to) return false;
+      return true;
+    };
+    if(LIBRARY_STATE.subTab === 'artists'){
+      scope = scope.filter(r => {
+        const first = GLOBAL_FIRST && GLOBAL_FIRST.firstArtist[r.artist];
+        return first && inRange(first.dateStr);
+      });
+    } else if(LIBRARY_STATE.subTab === 'albums'){
+      scope = scope.filter(r => {
+        const first = GLOBAL_FIRST && GLOBAL_FIRST.firstAlbum[albumKey(r)];
+        return first && inRange(first.dateStr);
+      });
+    } else if(LIBRARY_STATE.subTab === 'tracks' || LIBRARY_STATE.subTab === 'scrobbles'){
+      scope = scope.filter(r => {
+        const first = GLOBAL_FIRST && GLOBAL_FIRST.firstTrack[trackKey(r.artist, r.track)];
+        return first && inRange(first.dateStr);
+      });
+    }
+    filtered = true;
   }
   if(LIBRARY_STATE.filterArtist && LIBRARY_STATE.subTab !== 'artists'){
     const na = normArtist(LIBRARY_STATE.filterArtist);

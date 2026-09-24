@@ -537,6 +537,33 @@ function fmtDateNice(dateStr){
   const d = new Date(dateStr+'T00:00:00Z');
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric', timeZone:'UTC'});
 }
+// Last calendar day of month (1–12), leap-year aware via UTC Date math.
+function daysInMonth(year, month){
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+// Library callout phrase for a {from,to} date-str range. Collapses whole
+// calendar years ("in 2026") and whole months ("in January 2026"), including
+// leap-year Februaries; single days stay "on …"; everything else is "from … – …".
+function fmtLibraryDateRangePhrase(from, to){
+  if(from && to && from === to){
+    return `on <b>${fmtDateNice(from)}</b>`;
+  }
+  if(from && to){
+    const [fy, fm, fd] = from.split('-').map(Number);
+    const [ty, tm, td] = to.split('-').map(Number);
+    if(fy === ty && fm === 1 && fd === 1 && tm === 12 && td === 31){
+      return `in <b>${fy}</b>`;
+    }
+    if(fy === ty && fm === tm && fd === 1 && td === daysInMonth(fy, fm)){
+      const label = new Date(Date.UTC(fy, fm-1, 1))
+        .toLocaleDateString('en-US',{month:'long', year:'numeric', timeZone:'UTC'});
+      return `in <b>${label}</b>`;
+    }
+  }
+  const fromLbl = from ? fmtDateNice(from) : '…';
+  const toLbl = to ? fmtDateNice(to) : '…';
+  return `from <b>${fromLbl}</b> – <b>${toLbl}</b>`;
+}
 // Full local date+time for a scrobble's raw epoch-ms timestamp, e.g. "Aug 19, 2026, 3:45 PM".
 // Follows the same convention as the rest of the file: localDate() shifts the
 // Date's internal value by the REPORT_TIMEZONE offset at that instant, then UTC
@@ -2877,12 +2904,9 @@ function renderLibraryTab(){
     if(bounds.from) scope = scope.filter(r => r.dateStr >= bounds.from);
     if(bounds.to) scope = scope.filter(r => r.dateStr <= bounds.to);
     filtered = true;
-    if(bounds.from && bounds.to && bounds.from === bounds.to){
-      datePhrase = `on <b>${fmtDateNice(bounds.from)}</b>`;
-    } else if(LIBRARY_STATE.datePreset === 'custom'){
-      const fromLbl = bounds.from ? fmtDateNice(bounds.from) : '…';
-      const toLbl = bounds.to ? fmtDateNice(bounds.to) : '…';
-      datePhrase = `from <b>${fromLbl}</b> – <b>${toLbl}</b>`;
+    if(LIBRARY_STATE.datePreset === 'custom'){
+      // Collapse full calendar years ("in 2026") and months ("in January 2026").
+      datePhrase = fmtLibraryDateRangePhrase(bounds.from, bounds.to);
     } else {
       const labels = {7:'Last 7 days',30:'Last 30 days',90:'Last 90 days',180:'Last 180 days',365:'Last 365 days'};
       datePhrase = `in <b>${labels[LIBRARY_STATE.datePreset] || LIBRARY_STATE.datePreset}</b>`;

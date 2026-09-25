@@ -2254,6 +2254,7 @@
     },
     {
       "artist": "Glukoza",
+	  "aliases": ["Глюкоза"],
       "artistCountry": "Russia",
       "albums": [
         {
@@ -3522,7 +3523,7 @@
       ]
     },
     {
-      "artist": "Marty Robins",
+      "artist": "Marty Robbins",
       "artistCountry": "United States",
       "albums": [
         {
@@ -7043,7 +7044,7 @@
       ]
     },
     {
-      "artist": "Wagner",
+      "artist": "Richard Wagner",
       "artistCountry": "Germany",
       "albums": [
         {

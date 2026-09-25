@@ -118,13 +118,28 @@ function buildLibraryLookups(){
   COUNTRY_BY_ARTIST = {};
   TRACK_META = {};
   ALBUM_RELATED = {};
+  ARTIST_ALIAS_TO_CANON = {};
   if(!LIBRARY || !Array.isArray(LIBRARY.artists)) return;
 
-  // First pass: build TRACK_META and collect raw otherArtists relationships
+  // First pass: build TRACK_META and collect raw otherArtists relationships.
+  // Each artist may list aliases[] (e.g. Cyrillic "Глюкоза" for "Glukoza") so
+  // scrobbles under any known spelling resolve to the same library metadata.
   const relatedRaw = {}; // normArtist|||normAlbum -> Set of normArtists
   LIBRARY.artists.forEach(a=>{
-    const na = normArtist(a.artist);
+    const canon = a.artist;
+    const nameForms = [canon].concat(Array.isArray(a.aliases) ? a.aliases : []);
+    // Primary + every alias normalize to the same canonical display name.
+    nameForms.forEach(n=>{
+      const nn = normArtist(n);
+      if(nn) ARTIST_ALIAS_TO_CANON[nn] = canon;
+    });
+    const na = normArtist(canon);
     COUNTRY_BY_ARTIST[na] = a.artistCountry;
+    // Also index country under each alias norm so scrobble-side lookups hit.
+    nameForms.forEach(n=>{
+      const nn = normArtist(n);
+      if(nn) COUNTRY_BY_ARTIST[nn] = a.artistCountry;
+    });
     (a.albums||[]).forEach(al=>{
       const nal = normAlbum(al.album);
       const baseKey = joinKey(na, nal);
@@ -134,12 +149,17 @@ function buildLibraryLookups(){
         relatedRaw[baseKey].add(normArtist(other));
       });
       (al.tracks||[]).forEach(t=>{
-        const key = joinKey(na, normTrack(t.title));
-        TRACK_META[key] = {
+        const trackMeta = {
           year: al.year,
           length_sec: parseLength(t.length),
           album: al.album
         };
+        // Index track meta under primary artist AND each alias so a scrobble
+        // credited as "Глюкоза" still finds Glukoza's library row.
+        nameForms.forEach(n=>{
+          const key = joinKey(normArtist(n), normTrack(t.title));
+          TRACK_META[key] = trackMeta;
+        });
       });
     });
   });
@@ -166,10 +186,13 @@ function parseLength(str){
 }
 
 // ---------- normalization / date helpers ----------
+// Keep Unicode letters/numbers so non-Latin names (e.g. Cyrillic "Глюкоза")
+// are not wiped to "". Matching a Latin library spelling still needs either
+// the same script or an explicit aliases[] entry on the library artist.
 function normArtist(s){
   return String(s).toLowerCase()
     .replace(/&/g,'and')
-    .replace(/[^a-z0-9 ]/g,'')
+    .replace(/[^\p{L}\p{N} ]/gu,'')
     .replace(/\s+/g,' ')
     .trim()
     .replace(/^the /,'');
@@ -177,12 +200,21 @@ function normArtist(s){
 function normTrack(s){
   return String(s).toLowerCase()
     .replace(/&/g,'and')
-    .replace(/[^a-z0-9 ]/g,'')
+    .replace(/[^\p{L}\p{N} ]/gu,'')
     .replace(/\s+/g,' ')
     .trim();
 }
 function normAlbum(s){
   return normTrack(s);
+}
+
+// norm(alias or primary name) -> canonical library artist spelling.
+// Built in buildLibraryLookups from each artist's name + optional aliases[].
+let ARTIST_ALIAS_TO_CANON = null;
+function resolveLibraryArtist(artistName){
+  if(!ARTIST_ALIAS_TO_CANON) return artistName;
+  const canon = ARTIST_ALIAS_TO_CANON[normArtist(artistName)];
+  return canon || artistName;
 }
 
 // ---------- composite key helpers ----------
@@ -365,6 +397,10 @@ function canonicalName(kind, artistName, name){
   return findCanonicalTrack(artistName, name);
 }
 function findCanonicalArtist(artistName){
+  if(ARTIST_ALIAS_TO_CANON){
+    const via = ARTIST_ALIAS_TO_CANON[normArtist(artistName)];
+    if(via) return via;
+  }
   const na = normArtist(artistName);
   for(const artistData of LIBRARY.artists){
     if(normArtist(artistData.artist) === na) return artistData.artist;

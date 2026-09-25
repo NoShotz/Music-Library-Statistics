@@ -1912,7 +1912,7 @@ function paintOverview(DATA){
     });
     const co = document.getElementById('canCallout');
     co.style.display = 'block';
-    co.innerHTML = `Lifetime average sits at <b>${DATA.can.lifetimePct}%</b> Canadian (matched ${DATA.can.matchRate.toFixed(1)}% of scrobbles to a known artist country). Last 30 days: <b>${DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—'}</b>.`;
+    co.innerHTML = `Lifetime average sits at <b>${DATA.can.lifetimePct}%</b> Canadian. Last 30 days: <b>${DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—'}</b>.`;
   }
 
   // Top countries -- replaces the old Canada-only chart
@@ -2199,7 +2199,7 @@ function renderReportCanChart(type, key, curScrobbles){
           if(c.datasetIndex===1) return '35% target';
           const row = rows[c.dataIndex];
           if(row.pct==null) return 'No data yet';
-          return row.total>0 ? `${row.pct}% Canadian (${fmtNum(row.total)} matched)` : 'No scrobbles matched to a known country';
+          return row.total>0 ? `${row.pct}% Canadian` : 'No scrobbles for this period';
         }
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } }
@@ -2488,7 +2488,7 @@ function renderReport(){
     const co = document.getElementById('reportCanCallout');
     co.style.display = 'block';
     const prevBit = (prev.canadian && prev.canadian.pct!=null) ? ` Previous period: <b>${prev.canadian.pct}%</b>.` : '';
-    co.innerHTML = `<b>${cur.canadian.pct}%</b> Canadian this period (matched ${cur.canadian.matchRate.toFixed(1)}% of scrobbles to a known artist country).${prevBit}`;
+    co.innerHTML = `<b>${cur.canadian.pct}%</b> Canadian this period.${prevBit}`;
   } else {
     document.getElementById('reportCanCallout').style.display = 'none';
   }

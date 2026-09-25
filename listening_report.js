@@ -1004,6 +1004,63 @@ function canadianYearlyFor(scrobbles){
   }));
 }
 
+// Canadian-content % by month, for a Report-tab Year period's sub-period chart.
+// scrobbles is already scoped to the one active year, so grouping by
+// calendar month within it is enough -- no need to also check r.year.
+function canadianMonthlyFor(scrobbles, year){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const totalByMonth = Array(12).fill(0), canByMonth = Array(12).fill(0);
+  scrobbles.forEach(r=>{
+    const country = COUNTRY_BY_ARTIST[r.na];
+    if(country===undefined) return;
+    const m = Number(r.monthKey.split('-')[1]) - 1; // 0-11
+    totalByMonth[m]++;
+    if(/canada/i.test(country)) canByMonth[m]++;
+  });
+  return totalByMonth.map((total,i)=>({ month:i+1, pct: pct1(canByMonth[i], total), total }));
+}
+
+// Canadian-content % by week, for a Report-tab Month period's sub-period chart.
+// Weeks are Monday-start, same convention as everywhere else in the file, and
+// may dip a few days into the adjacent month -- scrobbles is already scoped
+// to just this month, so each bucket only reflects the days that actually
+// fall inside monthKey.
+function canadianWeeklyFor(scrobbles, monthKey){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const [y,m] = monthKey.split('-').map(Number);
+  const dim = daysInMonth(y,m);
+  const firstWeek = mondayOf(monthKey+'-01');
+  const lastWeek = mondayOf(monthKey+'-'+String(dim).padStart(2,'0'));
+  const weeks = [];
+  let wd = new Date(firstWeek+'T00:00:00Z');
+  const lastWd = new Date(lastWeek+'T00:00:00Z');
+  while(wd<=lastWd){ weeks.push(ymd(wd)); wd = new Date(wd.getTime()+7*86400000); }
+
+  const totalByWeek = {}, canByWeek = {};
+  scrobbles.forEach(r=>{
+    const country = COUNTRY_BY_ARTIST[r.na];
+    if(country===undefined) return;
+    totalByWeek[r.weekStart] = (totalByWeek[r.weekStart]||0)+1;
+    if(/canada/i.test(country)) canByWeek[r.weekStart] = (canByWeek[r.weekStart]||0)+1;
+  });
+  return weeks.map(w=>({ weekStart:w, pct: pct1(canByWeek[w]||0, totalByWeek[w]||0), total: totalByWeek[w]||0 }));
+}
+
+// Canadian-content % by day, for a Report-tab Week period's sub-period chart.
+function canadianDailyFor(scrobbles, weekKey){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const start = new Date(weekKey+'T00:00:00Z');
+  const days = Array.from({length:7}, (_,i)=>ymd(new Date(start.getTime()+i*86400000)));
+  const totalByDay = {}, canByDay = {};
+  scrobbles.forEach(r=>{
+    const country = COUNTRY_BY_ARTIST[r.na];
+    if(country===undefined) return;
+    totalByDay[r.dateStr] = (totalByDay[r.dateStr]||0)+1;
+    if(/canada/i.test(country)) canByDay[r.dateStr] = (canByDay[r.dateStr]||0)+1;
+  });
+  return days.map(d=>({ date:d, pct: pct1(canByDay[d]||0, totalByDay[d]||0), total: totalByDay[d]||0 }));
+}
+
 function countryRowsFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
   const totals = {}, byArtist = {}, displayName = {};
@@ -2029,6 +2086,62 @@ function renderMonthBarChart(containerId, monthKey, scrobbles){
   });
 }
 
+// Report tab "Canadian content" sub-period chart -- one bucket size per
+// report type, one level finer than what that report already shows up top
+// (year → per month, month → per week, week → per day). Same line+target-
+// line shape as the Overview year-over-year chart, just scoped to the active
+// period instead of all-time. Unlike the sub-period heatmap (which buckets
+// year/month reports down to individual days), this stays one notch
+// coarser than that -- a day-level % Canadian reading is mostly noise
+// (a handful of scrobbles flips it between 0/25/50/75/100%), whereas month
+// buckets (for a year) and week buckets (for a month) still carry a
+// reasonable sample. Week reports have no finer bucket to fall back to, so
+// they get daily buckets and lean on the fixed 35% target line -- since
+// that's a constant property of the library's block design, not a
+// statistical trend, it stays meaningful even when the data points either
+// side of it are noisy.
+function renderReportCanChart(type, key, curScrobbles){
+  const card = document.getElementById('reportCanChartCard');
+  destroyChart('reportCan');
+  if(!COUNTRY_BY_ARTIST){ card.style.display = 'none'; return; }
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let rows, labels;
+  if(type==='year'){
+    rows = canadianMonthlyFor(curScrobbles, Number(key));
+    labels = rows.map(r=>monthNames[r.month-1]);
+  } else if(type==='month'){
+    rows = canadianWeeklyFor(curScrobbles, key);
+    labels = rows.map(r=>fmtDayMonth(r.weekStart));
+  } else {
+    rows = canadianDailyFor(curScrobbles, key);
+    labels = dayNames;
+  }
+
+  if(!rows || !rows.some(r=>r.total>0)){ card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  CHART_REFS.reportCan = new Chart(document.getElementById('reportCanChart'), {
+    type:'line',
+    data:{ labels,
+      datasets:[
+        { data: rows.map(r=>r.pct), borderColor: cssColor('--color-canadian-line'), backgroundColor:cssColor('--color-canadian-fill'), fill:true, tension:0.3, spanGaps:true, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line') },
+        { data: rows.map(()=>35), borderColor:cssColor('--color-canadian-target'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+        label: c => {
+          if(c.datasetIndex===1) return '35% target';
+          const row = rows[c.dataIndex];
+          return row.pct!=null ? `${row.pct}% Canadian (${fmtNum(row.total)} matched)` : 'No matched scrobbles';
+        }
+      } } },
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } }
+    }
+  });
+}
+
 // ---- manual color scale (see renderCountryMap comment for why this is
 // computed by hand instead of handed to jsvectormap's built-in scale/
 // normalizeFunction) ----
@@ -2305,6 +2418,7 @@ function renderReport(){
   }
 
   // ---- Canadian content, this period vs. previous ----
+  renderReportCanChart(type, key, curScrobbles);
   if(cur.canadian && cur.canadian.pct!=null){
     const co = document.getElementById('reportCanCallout');
     co.style.display = 'block';

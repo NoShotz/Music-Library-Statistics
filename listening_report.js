@@ -989,6 +989,14 @@ function canadianStatsFor(scrobbles){
   };
 }
 
+// The most recent calendar day the dataset actually covers -- the boundary
+// that tells a data-less bucket "hasn't happened yet" (still genuinely
+// unknown, left as a gap in the chart) apart from one that already happened
+// with nothing matched (a real 0%, not a gap).
+function lastKnownDateStr(){
+  return (ENRICHED && ENRICHED.length) ? ENRICHED[ENRICHED.length-1].dateStr : null;
+}
+
 // Canadian-content % by year, for the year-over-year trend chart on the Overview tab
 function canadianYearlyFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
@@ -1017,7 +1025,17 @@ function canadianMonthlyFor(scrobbles, year){
     totalByMonth[m]++;
     if(/canada/i.test(country)) canByMonth[m]++;
   });
-  return totalByMonth.map((total,i)=>({ month:i+1, pct: pct1(canByMonth[i], total), total }));
+  const cutoff = lastKnownDateStr();
+  return totalByMonth.map((total,i)=>{
+    const monthStart = year+'-'+String(i+1).padStart(2,'0')+'-01';
+    const isPast = cutoff!=null && monthStart <= cutoff;
+    // A month with matched scrobbles gets its real %; a data-less month that's
+    // already happened gets an explicit 0 instead of a gap; a data-less month
+    // still ahead of the dataset stays null so the line doesn't pretend to
+    // know about it.
+    const pct = total>0 ? pct1(canByMonth[i], total) : (isPast ? 0 : null);
+    return { month:i+1, pct, total };
+  });
 }
 
 // Canadian-content % by week, for a Report-tab Month period's sub-period chart.
@@ -1043,7 +1061,13 @@ function canadianWeeklyFor(scrobbles, monthKey){
     totalByWeek[r.weekStart] = (totalByWeek[r.weekStart]||0)+1;
     if(/canada/i.test(country)) canByWeek[r.weekStart] = (canByWeek[r.weekStart]||0)+1;
   });
-  return weeks.map(w=>({ weekStart:w, pct: pct1(canByWeek[w]||0, totalByWeek[w]||0), total: totalByWeek[w]||0 }));
+  const cutoff = lastKnownDateStr();
+  return weeks.map(w=>{
+    const total = totalByWeek[w]||0;
+    const isPast = cutoff!=null && w <= cutoff;
+    const pct = total>0 ? pct1(canByWeek[w], total) : (isPast ? 0 : null);
+    return { weekStart:w, pct, total };
+  });
 }
 
 // Canadian-content % by day, for a Report-tab Week period's sub-period chart.
@@ -1058,7 +1082,13 @@ function canadianDailyFor(scrobbles, weekKey){
     totalByDay[r.dateStr] = (totalByDay[r.dateStr]||0)+1;
     if(/canada/i.test(country)) canByDay[r.dateStr] = (canByDay[r.dateStr]||0)+1;
   });
-  return days.map(d=>({ date:d, pct: pct1(canByDay[d]||0, totalByDay[d]||0), total: totalByDay[d]||0 }));
+  const cutoff = lastKnownDateStr();
+  return days.map(d=>{
+    const total = totalByDay[d]||0;
+    const isPast = cutoff!=null && d <= cutoff;
+    const pct = total>0 ? pct1(canByDay[d], total) : (isPast ? 0 : null);
+    return { date:d, pct, total };
+  });
 }
 
 function countryRowsFor(scrobbles){
@@ -2134,7 +2164,8 @@ function renderReportCanChart(type, key, curScrobbles){
         label: c => {
           if(c.datasetIndex===1) return '35% target';
           const row = rows[c.dataIndex];
-          return row.pct!=null ? `${row.pct}% Canadian (${fmtNum(row.total)} matched)` : 'No matched scrobbles';
+          if(row.pct==null) return 'No data yet';
+          return row.total>0 ? `${row.pct}% Canadian (${fmtNum(row.total)} matched)` : 'No scrobbles matched to a known country';
         }
       } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } }

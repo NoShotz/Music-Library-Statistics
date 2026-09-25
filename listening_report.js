@@ -1833,7 +1833,19 @@ function paintOverview(DATA){
     ] : null);
   }
 
-  new Chart(document.getElementById('discoveryChart'), {
+  const discoveryCanvas = document.getElementById('discoveryChart');
+  // datasetIndex 0/1/2 = artists/albums/tracks (same order as the datasets
+  // below); index = position along the year axis. Navigates into the Library
+  // pre-filtered to "newly discovered" for that item type, scoped to that year.
+  const discoveryItemTypes = ['artist','album','track'];
+  const discoveryLink = libraryLink(discoveryCanvas, {
+    resolveTarget: (datasetIndex, index) => {
+      const row = DATA.discovery[index];
+      return row ? { itemType: discoveryItemTypes[datasetIndex], year: row.year } : null;
+    },
+    navigate: goToLibraryDiscoveriesByYear
+  });
+  new Chart(discoveryCanvas, {
     type:'bar',
     data:{ labels: DATA.discovery.map(d=>d.year),
       datasets:[
@@ -1845,7 +1857,9 @@ function paintOverview(DATA){
       plugins:{ legend:{display:true, labels:{boxWidth:12, boxHeight:12}}, tooltip:{ callbacks:{
         label: c => `${fmtNum(c.parsed.y)} ${c.dataset.label.toLowerCase()}`
       } } },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } },
+      onClick: discoveryLink.onClick,
+      onHover: discoveryLink.onHover }
   });
 }
 
@@ -2584,7 +2598,14 @@ function switchToLibraryTab(){
 
 function goToLibrary(itemType, item, opts){
   resetLibraryFilters();
-  scopeLibraryDateToActiveView();
+  // opts.dateRange lets a caller that already knows the exact range it means
+  // (e.g. one year's bar on the discovery chart) override the default of
+  // scoping to whatever Report period happens to be active.
+  if(opts && opts.dateRange){
+    setLibraryCustomDateRange(opts.dateRange.from, opts.dateRange.to);
+  } else {
+    scopeLibraryDateToActiveView();
+  }
   // opts.discoveries: from Reports Discoveries lists — keep "newly discovered".
   if(opts && opts.discoveries) LIBRARY_STATE.filterDiscoveries = true;
 
@@ -2651,6 +2672,19 @@ function goToLibraryByDecade(decade){
 
 function goToLibraryDiscoveries(itemType){
   goToLibrary(itemType, null, {discoveries: true});
+}
+
+// Overview "New artists/albums/tracks per year" chart click → Library, filtered
+// to "newly discovered" for that item type and scoped to that one calendar year.
+// Passes an explicit dateRange (see goToLibrary) rather than relying on the
+// active-view scoping, since the chart is itself already broken down by year --
+// the bar the user clicked IS the date range they mean, regardless of which
+// tab they clicked it from.
+function goToLibraryDiscoveriesByYear(target){
+  goToLibrary(target.itemType, null, {
+    discoveries: true,
+    dateRange: { from: target.year + '-01-01', to: target.year + '-12-31' }
+  });
 }
 
 

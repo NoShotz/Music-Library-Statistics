@@ -1006,21 +1006,59 @@ function artistMatchesCountryIso(na, iso){
   return String(country).split(';').some(part => isoForCountry(part.trim()) === iso);
 }
 
+// The Canadian-content target line drawn on both Canadian-content charts
+// (Overview's year-over-year trend and the Report tab's per-period trend).
+const CANADIAN_TARGET_PCT = 35;
+
+// Resolves a scrobble's artist-country string, or null when the artist isn't
+// in library_data.json / has no country on file. Every Canadian-content
+// helper below funnels its per-scrobble country lookup through this.
+function countryOf(r){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const country = COUNTRY_BY_ARTIST[r.na];
+  return country===undefined ? null : country;
+}
+function isCanadian(country){ return /canada/i.test(country); }
+
 // Canadian-content stats for a set of scrobbles -- lifetime %, match rate, etc.
 function canadianStatsFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
   let matched=0, canCount=0;
   scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
+    const country = countryOf(r);
+    if(country===null) return;
     matched++;
-    if(/canada/i.test(country)) canCount++;
+    if(isCanadian(country)) canCount++;
   });
   return {
     matched, total: scrobbles.length,
     matchRate: scrobbles.length ? matched/scrobbles.length*100 : 0,
     pct: pct1(canCount, matched)
   };
+}
+
+// Shared aggregator behind canadianYearlyFor/MonthlyFor/WeeklyFor/DailyFor
+// below. `buckets` is the full ordered list of bucket keys to walk (so a
+// bucket with zero matched scrobbles still gets a real value instead of the
+// series silently skipping it); `keyOf(r)` maps a scrobble to its bucket
+// key; `isPast(bucketKey)` decides whether a data-less bucket already
+// happened (-> explicit 0%) or is still ahead of the dataset (-> null, so
+// the line doesn't pretend to know about it).
+function canadianBucketsFor(scrobbles, buckets, keyOf, isPast){
+  if(!COUNTRY_BY_ARTIST) return null;
+  const totalByBucket = {}, canByBucket = {};
+  scrobbles.forEach(r=>{
+    const country = countryOf(r);
+    if(country===null) return;
+    const k = keyOf(r);
+    totalByBucket[k] = (totalByBucket[k]||0)+1;
+    if(isCanadian(country)) canByBucket[k] = (canByBucket[k]||0)+1;
+  });
+  return buckets.map(k=>{
+    const total = totalByBucket[k]||0;
+    const pct = total>0 ? pct1(canByBucket[k]||0, total) : (isPast(k) ? 0 : null);
+    return { key:k, pct, total };
+  });
 }
 
 // The most recent calendar day the dataset actually covers -- the boundary
@@ -1031,45 +1069,31 @@ function lastKnownDateStr(){
   return (ENRICHED && ENRICHED.length) ? ENRICHED[ENRICHED.length-1].dateStr : null;
 }
 
-// Canadian-content % by year, for the year-over-year trend chart on the Overview tab
+// Canadian-content % by year, for the year-over-year trend chart on the Overview tab.
+// All-time, so there's no "future" bucket to gap-fill -- every year already happened.
 function canadianYearlyFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
-  const yearTotal={}, yearCan={};
-  scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
-    yearTotal[r.year] = (yearTotal[r.year]||0)+1;
-    if(/canada/i.test(country)) yearCan[r.year] = (yearCan[r.year]||0)+1;
-  });
-  return Object.keys(yearTotal).map(Number).sort((a,b)=>a-b).map(y=>({
-    year:y, pct: pct1(yearCan[y]||0, yearTotal[y])
-  }));
+  const years = Array.from(new Set(scrobbles.map(r=>r.year))).sort((a,b)=>a-b);
+  return canadianBucketsFor(scrobbles, years, r=>r.year, ()=>true)
+    .map(row=>({ year: row.key, pct: row.pct }));
 }
 
 // Canadian-content % by month, for a Report-tab Year period's sub-period chart.
 // scrobbles is already scoped to the one active year, so grouping by
 // calendar month within it is enough -- no need to also check r.year.
+// A month with matched scrobbles gets its real %; a data-less month that's
+// already happened gets an explicit 0 instead of a gap; a data-less month
+// still ahead of the dataset stays null so the line doesn't pretend to know
+// about it (see canadianBucketsFor's isPast).
 function canadianMonthlyFor(scrobbles, year){
   if(!COUNTRY_BY_ARTIST) return null;
-  const totalByMonth = Array(12).fill(0), canByMonth = Array(12).fill(0);
-  scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
-    const m = Number(r.monthKey.split('-')[1]) - 1; // 0-11
-    totalByMonth[m]++;
-    if(/canada/i.test(country)) canByMonth[m]++;
-  });
   const cutoff = lastKnownDateStr();
-  return totalByMonth.map((total,i)=>{
-    const monthStart = year+'-'+String(i+1).padStart(2,'0')+'-01';
-    const isPast = cutoff!=null && monthStart <= cutoff;
-    // A month with matched scrobbles gets its real %; a data-less month that's
-    // already happened gets an explicit 0 instead of a gap; a data-less month
-    // still ahead of the dataset stays null so the line doesn't pretend to
-    // know about it.
-    const pct = total>0 ? pct1(canByMonth[i], total) : (isPast ? 0 : null);
-    return { month:i+1, pct, total };
-  });
+  const months = Array.from({length:12}, (_,i)=>i+1); // 1-12
+  return canadianBucketsFor(
+    scrobbles, months,
+    r => Number(r.monthKey.split('-')[1]),
+    m => cutoff!=null && (year+'-'+String(m).padStart(2,'0')+'-01') <= cutoff
+  ).map(row=>({ month: row.key, pct: row.pct, total: row.total }));
 }
 
 // Canadian-content % by week, for a Report-tab Month period's sub-period chart.
@@ -1088,20 +1112,12 @@ function canadianWeeklyFor(scrobbles, monthKey){
   const lastWd = new Date(lastWeek+'T00:00:00Z');
   while(wd<=lastWd){ weeks.push(ymd(wd)); wd = new Date(wd.getTime()+7*86400000); }
 
-  const totalByWeek = {}, canByWeek = {};
-  scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
-    totalByWeek[r.weekStart] = (totalByWeek[r.weekStart]||0)+1;
-    if(/canada/i.test(country)) canByWeek[r.weekStart] = (canByWeek[r.weekStart]||0)+1;
-  });
   const cutoff = lastKnownDateStr();
-  return weeks.map(w=>{
-    const total = totalByWeek[w]||0;
-    const isPast = cutoff!=null && w <= cutoff;
-    const pct = total>0 ? pct1(canByWeek[w], total) : (isPast ? 0 : null);
-    return { weekStart:w, pct, total };
-  });
+  return canadianBucketsFor(
+    scrobbles, weeks,
+    r => r.weekStart,
+    w => cutoff!=null && w <= cutoff
+  ).map(row=>({ weekStart: row.key, pct: row.pct, total: row.total }));
 }
 
 // Canadian-content % by day, for a Report-tab Week period's sub-period chart.
@@ -1109,28 +1125,20 @@ function canadianDailyFor(scrobbles, weekKey){
   if(!COUNTRY_BY_ARTIST) return null;
   const start = new Date(weekKey+'T00:00:00Z');
   const days = Array.from({length:7}, (_,i)=>ymd(new Date(start.getTime()+i*86400000)));
-  const totalByDay = {}, canByDay = {};
-  scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
-    totalByDay[r.dateStr] = (totalByDay[r.dateStr]||0)+1;
-    if(/canada/i.test(country)) canByDay[r.dateStr] = (canByDay[r.dateStr]||0)+1;
-  });
   const cutoff = lastKnownDateStr();
-  return days.map(d=>{
-    const total = totalByDay[d]||0;
-    const isPast = cutoff!=null && d <= cutoff;
-    const pct = total>0 ? pct1(canByDay[d], total) : (isPast ? 0 : null);
-    return { date:d, pct, total };
-  });
+  return canadianBucketsFor(
+    scrobbles, days,
+    r => r.dateStr,
+    d => cutoff!=null && d <= cutoff
+  ).map(row=>({ date: row.key, pct: row.pct, total: row.total }));
 }
 
 function countryRowsFor(scrobbles){
   if(!COUNTRY_BY_ARTIST) return null;
   const totals = {}, byArtist = {}, displayName = {};
   scrobbles.forEach(r=>{
-    const country = COUNTRY_BY_ARTIST[r.na];
-    if(country===undefined) return;
+    const country = countryOf(r);
+    if(country===null) return;
     const primary = primaryCountry(country);
     const iso = isoForCountry(primary);
     // group by ISO2 code when we recognize the name (so "England"/"Scotland"/
@@ -1899,17 +1907,10 @@ function paintOverview(DATA){
   // Canadian content, year over year
   if(DATA.can && DATA.can.yearlyCanadian && DATA.can.yearlyCanadian.length){
     document.getElementById('canChartCard').style.display = 'block';
-    new Chart(document.getElementById('canChart'), {
-      type:'line',
-      data:{ labels: DATA.can.yearlyCanadian.map(d=>d.year),
-        datasets:[
-          { data: DATA.can.yearlyCanadian.map(d=>d.pct), borderColor: cssColor('--color-canadian-line'), backgroundColor:cssColor('--color-canadian-fill'), fill:true, tension:0.3, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line') },
-          { data: DATA.can.yearlyCanadian.map(()=>35), borderColor:cssColor('--color-canadian-target'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
-        ]},
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.datasetIndex===0 ? c.parsed.y+'% Canadian' : '35% target' } } },
-        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } } }
-    });
+    buildCanadianLineChart('canChart',
+      DATA.can.yearlyCanadian.map(d=>d.year),
+      DATA.can.yearlyCanadian.map(d=>d.pct),
+      c => c.datasetIndex===0 ? c.parsed.y+'% Canadian' : `${CANADIAN_TARGET_PCT}% target`);
     const co = document.getElementById('canCallout');
     co.style.display = 'block';
     co.innerHTML = `Lifetime average sits at <b>${DATA.can.lifetimePct}%</b> Canadian. Last 30 days: <b>${DATA.can.recentPct!=null ? DATA.can.recentPct+'%' : '—'}</b>.`;
@@ -2067,6 +2068,29 @@ function destroyChart(key){
   if(CHART_REFS[key]){ CHART_REFS[key].destroy(); CHART_REFS[key]=null; }
 }
 
+// "% Canadian, with dashed target line" chart, shared by the Overview tab's
+// year-over-year trend (canChart) and the Report tab's per-period trend
+// (reportCanChart). `pcts` may contain nulls for periods that haven't
+// happened yet (see canadianBucketsFor) -- spanGaps keeps the line
+// continuous across those instead of breaking it. `tooltipLabelFn` gets the
+// full Chart.js tooltip context, so callers can tell the data line and the
+// target line apart, or add period-specific messaging (e.g. "no scrobbles
+// yet" vs "not there yet" on the Report tab).
+function buildCanadianLineChart(canvasId, labels, pcts, tooltipLabelFn){
+  return new Chart(document.getElementById(canvasId), {
+    type:'line',
+    data:{ labels,
+      datasets:[
+        { data: pcts, borderColor: cssColor('--color-canadian-line'), backgroundColor:cssColor('--color-canadian-fill'), fill:true, tension:0.3, spanGaps:true, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line') },
+        { data: pcts.map(()=>CANADIAN_TARGET_PCT), borderColor:cssColor('--color-canadian-target'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: tooltipLabelFn } } },
+      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } }
+    }
+  });
+}
+
 // "Music by decade" bar chart, shared by the Overview tab (all-time) and the
 // Report tab (current period) -- same layout, tooltip, and click-to-library
 // wiring in both places, differing only in which rows/total feed it.
@@ -2186,24 +2210,11 @@ function renderReportCanChart(type, key, curScrobbles){
   if(!rows || !rows.some(r=>r.total>0)){ card.style.display = 'none'; return; }
   card.style.display = '';
 
-  CHART_REFS.reportCan = new Chart(document.getElementById('reportCanChart'), {
-    type:'line',
-    data:{ labels,
-      datasets:[
-        { data: rows.map(r=>r.pct), borderColor: cssColor('--color-canadian-line'), backgroundColor:cssColor('--color-canadian-fill'), fill:true, tension:0.3, spanGaps:true, pointRadius:3, pointBackgroundColor: cssColor('--color-canadian-line') },
-        { data: rows.map(()=>35), borderColor:cssColor('--color-canadian-target'), borderDash:[4,4], pointRadius:0, borderWidth:1 }
-      ]},
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
-        label: c => {
-          if(c.datasetIndex===1) return '35% target';
-          const row = rows[c.dataIndex];
-          if(row.pct==null) return 'No data yet';
-          return row.total>0 ? `${row.pct}% Canadian` : 'No scrobbles for this period';
-        }
-      } } },
-      scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')}, ticks:{ callback: v=>v+'%' }, suggestedMax:40 } }
-    }
+  CHART_REFS.reportCan = buildCanadianLineChart('reportCanChart', labels, rows.map(r=>r.pct), c => {
+    if(c.datasetIndex===1) return `${CANADIAN_TARGET_PCT}% target`;
+    const row = rows[c.dataIndex];
+    if(row.pct==null) return 'No data yet';
+    return row.total>0 ? `${row.pct}% Canadian` : 'No scrobbles for this period';
   });
 }
 

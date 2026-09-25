@@ -1671,9 +1671,21 @@ function renderOverview(){
   const weekdayArr = weekdayPattern(s);
   const dayOfWeek = dowOrder.map((d,i)=>({day:d, count:weekdayArr[i]}));
 
-  const discoveryByYear = {};
-  Object.values(GLOBAL_FIRST.firstArtist).forEach(r=>{ discoveryByYear[r.year] = (discoveryByYear[r.year]||0)+1; });
-  const discovery = Object.keys(discoveryByYear).map(Number).sort((a,b)=>a-b).map(y=>({year:y,count:discoveryByYear[y]}));
+  // Mirrors the Report tab's Discoveries lists (new artists/albums/tracks),
+  // just bucketed by year and rendered as a grouped bar chart instead of lists.
+  const discoveryArtistsByYear = {}, discoveryAlbumsByYear = {}, discoveryTracksByYear = {};
+  Object.values(GLOBAL_FIRST.firstArtist).forEach(r=>{ discoveryArtistsByYear[r.year] = (discoveryArtistsByYear[r.year]||0)+1; });
+  Object.values(GLOBAL_FIRST.firstAlbum).forEach(r=>{ discoveryAlbumsByYear[r.year] = (discoveryAlbumsByYear[r.year]||0)+1; });
+  Object.values(GLOBAL_FIRST.firstTrack).forEach(r=>{ discoveryTracksByYear[r.year] = (discoveryTracksByYear[r.year]||0)+1; });
+  // Walk the full continuous year range (not just years that show up in each
+  // map) so a year with, say, no brand-new albums still gets a zero-height
+  // bar instead of the three series silently drifting out of alignment.
+  const discovery = PERIOD_INDEXES.year.map(y=>({
+    year: y,
+    artists: discoveryArtistsByYear[y]||0,
+    albums: discoveryAlbumsByYear[y]||0,
+    tracks: discoveryTracksByYear[y]||0
+  }));
 
   const {activeDays, longestStreak} = streakStats(s);
 
@@ -1824,8 +1836,15 @@ function paintOverview(DATA){
   new Chart(document.getElementById('discoveryChart'), {
     type:'bar',
     data:{ labels: DATA.discovery.map(d=>d.year),
-      datasets:[{ data: DATA.discovery.map(d=>d.count), backgroundColor: cssColor('--color-discovery-bars'), borderRadius:2, barPercentage:0.7 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
+      datasets:[
+        { label:'New artists', data: DATA.discovery.map(d=>d.artists), backgroundColor: cssColor('--color-discovery-artists'), borderRadius:2, barPercentage:0.8, categoryPercentage:0.8 },
+        { label:'New albums', data: DATA.discovery.map(d=>d.albums), backgroundColor: cssColor('--color-discovery-albums'), borderRadius:2, barPercentage:0.8, categoryPercentage:0.8 },
+        { label:'New tracks', data: DATA.discovery.map(d=>d.tracks), backgroundColor: cssColor('--color-discovery-tracks'), borderRadius:2, barPercentage:0.8, categoryPercentage:0.8 }
+      ] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:true, labels:{boxWidth:12, boxHeight:12}}, tooltip:{ callbacks:{
+        label: c => `${fmtNum(c.parsed.y)} ${c.dataset.label.toLowerCase()}`
+      } } },
       scales:{ x:{ grid:{display:false} }, y:{ grid:{color:cssColor('--color-chart-grid')} } } }
   });
 }

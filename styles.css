@@ -56,7 +56,9 @@
     --color-listening-clock-ring: var(--deep-brown);
     --color-chart-bar-hover: var(--ochre-bright);
     --color-decade-bars: var(--ochre);
-    --color-discovery-bars: var(--ochre-soft);
+    --color-discovery-artists: var(--ochre);
+    --color-discovery-albums: var(--teal);
+    --color-discovery-tracks: var(--sage);
     --color-heatmap-low: var(--deep-brown);
     --color-heatmap-high: var(--ochre);
     --color-heatmap-empty: var(--deep-brown);

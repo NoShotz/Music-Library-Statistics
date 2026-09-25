@@ -2247,6 +2247,16 @@ function renderCountryMap(containerId, refKey, countryRows, totalScrobbles){
   if(!el) return;
   el.innerHTML = '';
 
+  // jsvectormap computes its pan/zoom transform from the container's
+  // rendered size. At boot, renderReport() builds reportCountryMap once
+  // before the user has ever opened the Report tab, while its wrapper is
+  // still display:none -- a 0x0 container, which makes jsvectormap compute
+  // "scale(NaN) translate(NaN, NaN)" and log a console warning. Skip
+  // building the map while hidden; renderReport() runs again (and rebuilds
+  // this) every time the Report tab is opened, by which point the container
+  // has a real size.
+  if(el.offsetWidth===0 && el.offsetHeight===0) return;
+
   const withIso = (countryRows||[]).filter(c=>c.iso);
   if(!withIso.length) return;
 

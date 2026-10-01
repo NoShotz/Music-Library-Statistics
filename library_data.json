@@ -1742,6 +1742,22 @@
       ]
     },
     {
+      "artist": "Edvard Grieg",
+      "artistCountry": "Norway",
+      "albums": [
+        {
+          "album": "Peer Gynt",
+          "year": 1876,
+          "tracks": [
+            {
+              "title": "In The Hall Of The Mountain King",
+              "length": "2:46"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "Edwin Starr",
       "artistCountry": "United States",
       "albums": [

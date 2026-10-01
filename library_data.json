@@ -45,6 +45,22 @@
       ]
     },
     {
+      "artist": "4 Non Blondes",
+      "artistCountry": "United States",
+      "albums": [
+        {
+          "album": "Bigger, Better, Faster, More!",
+          "year": 1992,
+          "tracks": [
+            {
+              "title": "What's Up?",
+              "length": "4:55"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "artist": "54-40",
       "artistCountry": "Canada",
       "albums": [
